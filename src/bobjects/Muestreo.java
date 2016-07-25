@@ -49,6 +49,7 @@ public class Muestreo {
     private ArrayList<Instrumento> instrumentos;
     private ArrayList<Usuario> usuarios;
     private ArrayList<Muestra> muestras;
+    private ArrayList<Medicion> mediciones;
 
     public Muestreo() {
         instrumentos = new ArrayList<Instrumento>();
@@ -72,6 +73,18 @@ public class Muestreo {
     public void addNewMuestra(Muestra muestra){
         this.muestras.add(muestra);
     }
+     public void addNewMedicion(Medicion medicion){
+        this.mediciones.add(medicion);
+    }
+    
+    public ArrayList<Medicion> getMediciones() {
+        return mediciones;
+    }
+
+    public void setMediciones(ArrayList<Medicion> mediciones) {
+        this.mediciones = mediciones;
+    }
+    
     public int getIdMuestreo() {
         return idMuestreo;
     }
