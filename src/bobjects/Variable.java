@@ -13,6 +13,11 @@ import java.util.ArrayList;
  * @author Alejandro
  */
 public class Variable {
+    public static int TEMPERATURA=1;
+    public static int SALINIDAD=6;
+    public static int PH=2;
+    public static int O2_DISUELTO=3;
+    public static int FLUORESCENCIA=7;
     private int idVariable;
     private int idTipoVariable;
     private int idTipoDato;
