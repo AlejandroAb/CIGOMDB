@@ -114,8 +114,8 @@ public class MyCoord {
                 grados = Integer.parseInt(st.nextToken().trim());
                 minutos = Integer.parseInt(st.nextToken().trim());
                 segundos = Float.parseFloat(st.nextToken().trim());
-                coords = (grados) + ((double) minutos + (segundos / 60)) / 60;
-                coordenadas = "" + coords;
+              //  coords = (grados) + ((double) minutos + (segundos / 60)) / 60;
+              //  coordenadas = "" + coords;
             } else {
                 int tok = 0;
                 while (st.hasMoreTokens()) {
