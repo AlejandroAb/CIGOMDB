@@ -14,18 +14,18 @@ public class Instrumento {
     static int INST_MEDICION = 1;
     static int INST_MUESTREO = 2;
     //ids instrumentos actuales
-    static int CTD = 1;
-    static int NISKIN_20L = 2;
-    static int ROSSETTA = 3;
-    static int NUC_KASTEN = 4;    
-    private int idInsrumento;
-    private int idTipoInstrumento;
-    private String nombre;
-    private String marca;
-    private String modelo;
-    private String descripcion;
-    private String cantidad; //wild key para muestreo_instrumento
-    private String comentarios;//wild key para muestreo_instrumento
+    public static int CTD = 1;
+    public static int NISKIN_20L = 2;
+    public static int ROSSETTA = 3;
+    public static int NUC_KASTEN = 4;    
+    private int idInsrumento=-1;
+    private int idTipoInstrumento=-1;
+    private String nombre="";
+    private String marca="";
+    private String modelo="";
+    private String descripcion="";
+    private String cantidad=""; //wild key para muestreo_instrumento
+    private String comentarios="";//wild key para muestreo_instrumento
     public Instrumento() {
     }
 
