@@ -8,7 +8,7 @@ package bobjects;
  */
 public class Medicion {
 
-    int idMuestra;
+    int idMuestra; //o id_muestreo
     int idVariable;
     int orden;
     int idMetodoMedida;
