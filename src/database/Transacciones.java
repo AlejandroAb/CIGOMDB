@@ -11,6 +11,7 @@ package database;
 //import database.Conexion;
 //import java.sql.SQLException;
 import bobjects.EstacionObj;
+import bobjects.Muestreo;
 import java.util.ArrayList;
 
 /**
@@ -111,13 +112,29 @@ public class Transacciones {
         }
     }
 
-    public ArrayList<ArrayList> getOrgsByPhylo(String phyloCond) {
-        String query = "SELECT org_id FROM orgs WHERE org_phylo " + phyloCond;
-        //conexion.executePreparedS(query);
+    /**
+     * Obtiene cual es el max id de muestro para poder asignar nuevos ya que no
+     * esta declarado como auto_increment
+     *
+     * @param est
+     * @return
+     */
+    public int getMaxIDMuestreo() {
+        String query = "SELECT MAX(id_muestreo) FROM muestreo";
         conexion.executeStatement(query);
-        //Vector paraRegresar = conexion.getFilas();
         ArrayList<ArrayList> dbResult = conexion.getTabla();
-        return dbResult;
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            id = -1;
+        } else {
+            try {
+                id = Integer.parseInt((String) dbResult.get(0).get(0));
+            } catch (NumberFormatException nfe) {
+                id = -1;
+            }
+        }
+        return id;
+
     }
 
     /**
@@ -139,6 +156,62 @@ public class Transacciones {
             id = conexion.queryUpdateWithKey(query);
             query = "INSERT INTO estacion_tipo_estacion VALUES(" + id + "," + est.getTipo_est() + ")";
             conexion.queryUpdate(query);
+        } else {
+            try {
+                id = Integer.parseInt((String) dbResult.get(0).get(0));
+            } catch (NumberFormatException nfe) {
+                id = -1;
+            }
+        }
+        return id;
+    }
+
+    /**
+     * Recibe un objeto de tipo estacion y en base a su nombe ve si este existe
+     * A diferencia del otro testEstacionByName pero con param Estacion, este
+     * solo verifica y regresa el ID, no inserta nada a la BD
+     *
+     * @param est
+     * @return
+     */
+    public int testEstacionByName(String est) {
+        String query = "SELECT idEstacion from estacion WHERE estacion_nombre = '" + est + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            id = -1;
+        } else {
+            try {
+                id = Integer.parseInt((String) dbResult.get(0).get(0));
+            } catch (NumberFormatException nfe) {
+                id = -1;
+            }
+        }
+        return id;
+
+    }
+
+    /**
+     * Esste metodo se encarga de obtener el ID del derrotero es decir la
+     * convinación estacion y campaña. Es usado durante la carga de los
+     * muestreos, dado que este es el ID que se relaciona con el muestreo. El
+     * único problema es que si se visita mas de una vez la misma estación en
+     * una sola campaña este método tiende aa fallar por lo que hay que hacer
+     * uso de la fecha o algún otro campo para realizar la correcta validación.
+     *
+     * @param idEst id de la estación
+     * @param idCampana id de la campaña.
+     * @return
+     */
+    public int getIDDerrotero(int idEst, int idCampana) {
+        String query = "SELECT idDerrotero from derrotero "
+                + "WHERE idEstacion = " + idEst +  " AND idCampana = " + idCampana;
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            id = -1;
         } else {
             try {
                 id = Integer.parseInt((String) dbResult.get(0).get(0));
@@ -177,26 +250,28 @@ public class Transacciones {
         }
 
     }
-    public boolean updateHierarchyNCBINode(String taxid, String hierarchy){
-        String query = "UPDATE NCBI_NODE SET hierarchy = '"+hierarchy+"' WHERE tax_id ="+taxid;
-         if(conexion.queryUpdate(query)){
+
+    public boolean updateHierarchyNCBINode(String taxid, String hierarchy) {
+        String query = "UPDATE NCBI_NODE SET hierarchy = '" + hierarchy + "' WHERE tax_id =" + taxid;
+        if (conexion.queryUpdate(query)) {
             return true;
-        }else{
+        } else {
             System.out.println(conexion.getLog());
             return false;
         }
     }
+
     public boolean insertaQuery(String query) {
         if (debug) {
             System.out.println(query);
         }
-        if(conexion.queryUpdate(query)){
+        if (conexion.queryUpdate(query)) {
             return true;
-        }else{
+        } else {
             System.out.println(conexion.getLog());
             return false;
         }
-        
+
     }
 
     public boolean insertSwissProt(String uniprotID, String uniprotACC, String taxID, String uniprotName, String sequence, int seqLength, String clusterId, String clusterName, String clusterTax) {
@@ -216,6 +291,8 @@ public class Transacciones {
         }
         return conexion.queryUpdate(query);
     }
+     
+    
 
     public boolean writeFastaFileByOrg(String orgID, String seqType, String extra, String fileName) {
         String query = " SELECT DISTINCT(CONCAT('>',seq_gen_id,char(10),seq_seq)) "
