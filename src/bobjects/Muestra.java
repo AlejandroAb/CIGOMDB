@@ -20,11 +20,20 @@ public class Muestra {
     private String contenedor="";//isolation growth conditions
     private String process=""; //samp_mat_process
     private String notas=""; //comentarios
+    private String samp_size="ND";//
     private ArrayList<Medicion> mediciones;
     private ArrayList<Usuario> usuarios;
 
     public Muestra(int idMuestra) {
         this.idMuestra = idMuestra;
+    }
+
+    public String getSamp_size() {
+        return samp_size;
+    }
+
+    public void setSamp_size(String samp_size) {
+        this.samp_size = samp_size;
     }
 
     public Muestra(int idMuestra, int idMuestreo) {
