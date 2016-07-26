@@ -20,13 +20,22 @@ public class EstacionObj {
     private String comentarios="";
     private int tipo_est;
     private Transacciones transacciones;
-
+    private String region;
+    
     public EstacionObj(int idEstacion) {
         this.idEstacion = idEstacion;
     }
 
     public int getTipo_est() {
         return tipo_est;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
     }
 
     public void setTipo_est(int tipo_est) {
