@@ -106,6 +106,30 @@ public class MyDate {
 
     }
 
+    public boolean splitMMDDYY() {
+
+        if (fecha.length() >= 6) {
+            try {
+                StringTokenizer st = new StringTokenizer(fecha, "/");
+                mes = Integer.parseInt(st.nextToken());
+                dia = Integer.parseInt(st.nextToken());
+                anio = Integer.parseInt(st.nextToken());
+                return true;
+            } catch (NumberFormatException nfe) {
+                System.out.println("Error NFE splitDDMMYY(): " + fecha);
+                return false;
+
+            } catch (NoSuchElementException nsee) {
+                System.out.println("Error nsee splitDDMMYY(): " + fecha);
+                return false;
+            }
+
+        } else {
+            return false;
+        }
+
+    }
+
     public String toSQLString(boolean withTime) {
         String date = "";
         if (fecha.length() > 6) {
