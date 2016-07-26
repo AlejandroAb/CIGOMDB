@@ -43,7 +43,7 @@ public class Muestreo {
     private String bioma = "";
     private String env_feature = "";
     private String env_material = "";
-    private String tamano = ""; //cantidad y unidades
+    private String tamano = "ND"; //cantidad y unidades
     private double profundidad = -1;
     private String tipo_prof = "";
     private ArrayList<Instrumento> instrumentos;
@@ -55,6 +55,7 @@ public class Muestreo {
         instrumentos = new ArrayList<Instrumento>();
         usuarios = new ArrayList<Usuario>();
         muestras = new ArrayList<Muestra>();
+        mediciones = new ArrayList<Medicion>(); 
     }
 
     public Muestreo(int idMuestreo) {
