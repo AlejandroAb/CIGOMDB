@@ -31,6 +31,7 @@ import utils.MyDate;
 public class EventProcesor {
 
     private int nextIDMuestreo = -1;
+    private int nextIDMuestra = -1;
     public Transacciones transacciones;
 
     public EventProcesor(Transacciones transacciones) {
@@ -39,6 +40,14 @@ public class EventProcesor {
 
     public int getNextIDMuestreo() {
         return nextIDMuestreo;
+    }
+    
+    public int getNextIDMuestra() {
+        return nextIDMuestra;
+    }
+
+    public void setNextIDMuestra(int nextIDMuestra) {
+        this.nextIDMuestra = nextIDMuestra;
     }
 
     public void setNextIDMuestreo(int nextIDMuestreo) {
@@ -534,7 +543,7 @@ public class EventProcesor {
                              * muestras por muestreo
                              */
                             if (muestreo.getIdTipoMuestra() == Muestreo.MATRIZ_AGUA) {
-                                Muestra muestra = new Muestra(0, muestreo.getIdMuestreo());//0 ID de la muestra auto_increment
+                                Muestra muestra = new Muestra(nextIDMuestra, muestreo.getIdMuestreo());//0 ID de la muestra auto_increment
                                 muestra.setProfundidad(muestreo.getProfundidad());
                                 muestra.setEtiqueta(muestreo.getEtiqueta() + ".millipore");
                                 muestra.setProcess("100 ml filtrados con filtros de membrana de "
@@ -542,26 +551,29 @@ public class EventProcesor {
                                         + "los filtros fueron depositados en tubos Falcon de 15 ml");
                                 muestra.setContenedor("Nitrógeno líquido");//isol growth conditions
                                 muestra.setSamp_size("100 ml");
+                                nextIDMuestra++;
 
-                                Muestra muestra2 = new Muestra(0, muestreo.getIdMuestreo());//0 ID de la muestra auto_increment
+                                Muestra muestra2 = new Muestra(nextIDMuestra, muestreo.getIdMuestreo());//0 ID de la muestra auto_increment
                                 muestra2.setProfundidad(muestreo.getProfundidad());
                                 muestra2.setEtiqueta(muestreo.getEtiqueta() + ".falcon");
                                 muestra2.setProcess("100 ml almacenados en dos tubos Falcon de 50ml cada uno ");
                                 muestra2.setContenedor("Almacenado a 4 grados centigrados");//isol growth conditions
                                 muestra2.setSamp_size("100 ml");
+                                nextIDMuestra++;
 
-                                Muestra muestra3 = new Muestra(0, muestreo.getIdMuestreo());//0 ID de la muestra auto_increment
+                                Muestra muestra3 = new Muestra(nextIDMuestra, muestreo.getIdMuestreo());//0 ID de la muestra auto_increment
                                 muestra3.setProfundidad(muestreo.getProfundidad());
                                 muestra3.setEtiqueta(muestreo.getEtiqueta() + ".sterivex");
                                 muestra3.setProcess("Agua filtrada con Sterivex");
                                 muestra3.setSamp_size("Entre 2 y 3 lt.");
                                 muestra3.setContenedor("Almacenado a 4 grados centigrados");//isol growth conditions
+                                nextIDMuestra++;
 
                                 muestreo.addNewMuestra(muestra);
                                 muestreo.addNewMuestra(muestra2);
                                 muestreo.addNewMuestra(muestra3);
                             } else if (muestreo.getIdTipoMuestra() == Muestreo.MATRIZ_SEDIMENTO) {
-                                Muestra muestra = new Muestra(0, muestreo.getIdMuestreo());//0 ID de la muestra auto_increment
+                                Muestra muestra = new Muestra(nextIDMuestra, muestreo.getIdMuestreo());//0 ID de la muestra auto_increment
                                 /**
                                  * En sedimentos el muestreo lleva la
                                  * profundidad a la cual se encuentra el
@@ -578,8 +590,9 @@ public class EventProcesor {
                                 muestra.setContenedor("Nitrógeno líquido");//isol growth conditions
                                 muestra.setSamp_size("73.51 cc");
                                 muestreo.addNewMuestra(muestra);
+                                nextIDMuestra++;
                                 if (muestreo.getComentarios().contains("Se tomaron muestras")) {//Se tomaron muestras anaeróbicas.
-                                    Muestra muestra2 = new Muestra(0, muestreo.getIdMuestreo());//0 ID de la muestra auto_increment
+                                    Muestra muestra2 = new Muestra(nextIDMuestra, muestreo.getIdMuestreo());//0 ID de la muestra auto_increment
                                     muestra2.setProfundidad(0.05);
                                     muestra2.setEtiqueta(muestreo.getEtiqueta() + ".anaerobio");
                                     muestra2.setProcess("Una vez puesto en cubierta el sedimento, "
@@ -589,17 +602,18 @@ public class EventProcesor {
                                     muestra2.setContenedor("Tubo anaerobio inoculado con sedimento y almacenado en obscuridad");//isol growth conditions
                                     muestra2.setSamp_size("5 cc");
                                     muestreo.addNewMuestra(muestra2);
+                                    nextIDMuestra++;
                                 }
                                 /**
                                  * !!!!!!!!!!!!!! Importante!!!!!!!!!!!!!!!!!!!!
                                  * el tamaño de muestra se calcula mas arriba,
-                                 * pero para sedimentos hay probleas (ver
+                                 * pero para sedimentos hay problemas (ver
                                  * documentacion del proyecto) razón por la cual
                                  * aca lo hardcodeamos pero en un futuro dejar
                                  * el bueno, es decir el que viene en el archivo
                                  * original.
                                  */
-                                muestreo.setTamano(linea);
+                                muestreo.setTamano("1200cc");
                             }
                             MuestreoDAO muestreoDAO = new MuestreoDAO(transacciones);
                             muestreoDAO.almacenaMuestreo(muestreo, toFile, outputFile, toFile, true, true, true);
