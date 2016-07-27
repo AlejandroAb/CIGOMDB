@@ -73,7 +73,7 @@ public class EventProcesor {
             }
         }
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile)));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), "ISO-8859-1"));
             String linea;
             int numLinea = 0;
             //defaults
@@ -556,7 +556,7 @@ public class EventProcesor {
                                 muestra3.setProcess("Agua filtrada con Sterivex");
                                 muestra3.setSamp_size("Entre 2 y 3 lt.");
                                 muestra3.setContenedor("Almacenado a 4 grados centigrados");//isol growth conditions
-                                
+
                                 muestreo.addNewMuestra(muestra);
                                 muestreo.addNewMuestra(muestra2);
                                 muestreo.addNewMuestra(muestra3);
