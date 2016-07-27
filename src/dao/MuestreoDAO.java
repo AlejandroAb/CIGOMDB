@@ -6,6 +6,7 @@
 package dao;
 
 import bobjects.Instrumento;
+import bobjects.Medicion;
 import bobjects.Muestra;
 import bobjects.Muestreo;
 import bobjects.Usuario;
@@ -96,6 +97,25 @@ public class MuestreoDAO {
                 log = "Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n";
             }
         }
+        //MEDICIONES
+        for (Medicion medicion : muestreo.getMediciones()) {
+            String queryMedicion = "INSERT INTO muestreo_varible(idMuestreo, idVariable"
+                    + "idOrden, idMetodo, medicion_t1, comentarios) VALUES ("
+                    + muestreo.getIdMuestreo() + "," + medicion.getIdVariable() + ","
+                    + medicion.getOrden() + ", '" + medicion.getMedicion_t1() + "','" + medicion.getComentarios() + "')";
+            if (!toFile) {
+                if (!transacciones.insertaQuery(queryMedicion)) {
+                    log += "Error insertando relación muestreo-variable: "
+                            + muestreo.getIdMuestreo() + "(idmuestreo) - " + medicion.getIdVariable() + "(idVariable) - " + query + "\n";
+                }
+            } else {
+                try {
+                    writer.write(query + ";\n");
+                } catch (IOException ex) {
+                    log = "Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n";
+                }
+            }
+        }
         if (addInstrumentos) {
             for (Instrumento instrumento : muestreo.getInstrumentos()) {
                 String queryInstrumento = "INSERT INTO muestreo_instrumento(idMuestreo, "
@@ -155,6 +175,33 @@ public class MuestreoDAO {
                         log = "Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n";
                     }
                 }
+                //MEDICIONES
+                for (Medicion medicion : muestreo.getMediciones()) {
+                    String queryMedicion = "INSERT INTO muestra_valor(idMuestra, idVariable"
+                            + "orden, idMetodo, medicion_t1, medicion_t2, medicion_t3, comentarios) VALUES ("
+                            + muestra.getIdMuestra() + "," + medicion.getIdVariable() + ","
+                            + medicion.getOrden() + ", '" + medicion.getMedicion_t1() + "','','','" + medicion.getComentarios() + "')";
+                    if (!toFile) {
+                        if (!transacciones.insertaQuery(queryMedicion)) {
+                            log += "Error insertando relación muestra_valor: "
+                                    + muestra.getIdMuestra() + "(idmuestra) - " + medicion.getIdVariable() + "(idVariable) - " + query + "\n";
+                        }
+                    } else {
+                        try {
+                            writer.write(query + ";\n");
+                        } catch (IOException ex) {
+                            log = "Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n";
+                        }
+                    }
+                }
+            }
+        }
+        if (toFile) {
+            try {
+                writer.close();
+            } catch (IOException ex) {
+                Logger.getLogger(MuestreoDAO.class.getName()).log(Level.SEVERE, null, ex);
+                log += "Error cerrando archivo: " + outFile + "\n";
             }
         }
         return log;
