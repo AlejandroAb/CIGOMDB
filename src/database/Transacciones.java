@@ -116,11 +116,10 @@ public class Transacciones {
      * Obtiene cual es el max id de muestro para poder asignar nuevos ya que no
      * esta declarado como auto_increment
      *
-     * @param est
      * @return
      */
     public int getMaxIDMuestreo() {
-        String query = "SELECT MAX(id_muestreo) FROM muestreo";
+        String query = "SELECT MAX(idMuestreo) FROM muestreo";
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         int id = -1;
@@ -133,7 +132,30 @@ public class Transacciones {
                 id = -1;
             }
         }
-        return id;
+        return id++;
+
+    }
+
+    /**
+     * Obtiene cual es el max id de muestra para poder asignar nuevos. 
+     *
+     * @return
+     */
+    public int getMaxIDMuestra() {
+        String query = "SELECT MAX(idMuestra) FROM muestra";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            id = -1;
+        } else {
+            try {
+                id = Integer.parseInt((String) dbResult.get(0).get(0));
+            } catch (NumberFormatException nfe) {
+                id = -1;
+            }
+        }
+        return id++;
 
     }
 
@@ -206,7 +228,7 @@ public class Transacciones {
      */
     public int getIDDerrotero(int idEst, int idCampana) {
         String query = "SELECT idDerrotero from derrotero "
-                + "WHERE idEstacion = " + idEst +  " AND idCampana = " + idCampana;
+                + "WHERE idEstacion = " + idEst + " AND idCampana = " + idCampana;
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         int id = -1;
@@ -291,8 +313,6 @@ public class Transacciones {
         }
         return conexion.queryUpdate(query);
     }
-     
-    
 
     public boolean writeFastaFileByOrg(String orgID, String seqType, String extra, String fileName) {
         String query = " SELECT DISTINCT(CONCAT('>',seq_gen_id,char(10),seq_seq)) "
