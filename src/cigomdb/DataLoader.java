@@ -19,11 +19,15 @@ public class DataLoader {
      */
     public static void main(String[] args) {
         //args for derrotero: derrotero -i "C://Users//Alejandro//Documents//Projects//pemex//6 cruceros//MGMF I//derrotero.txt" -campania 2 
+        //args para muestreo agua MMF 01: -i C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Agua.txt
+        //-o C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Agua.out
+        //parte de args para swissprot: -i "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\4 db\\swissprot\\uniref100.5k.xml";
         String database = "cigomdb";
         String user = "root";
         String host = "localhost";
         String password = "amorphis";
-        String input = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\4 db\\swissprot\\uniref100.5k.xml";
+        String input = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Agua.txt";
+        String output = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Agua.sqll";
         String mapPrefix = "gen_id_";
         String idPrefix = "M1SE3";
         String gffIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.gff";
@@ -39,6 +43,7 @@ public class DataLoader {
         modes.add("genes");
         modes.add("derrotero");
         modes.add("ncbitax");
+        modes.add("muestreo");
         String mode = "";
         for (int i = 0; i < args.length; i++) {
             if (i == 0 && (!args[i].equals("-h") && !args[i].equals("-help"))) {
@@ -55,6 +60,15 @@ public class DataLoader {
                     i++;
                 } catch (ArrayIndexOutOfBoundsException aiobe) {
                     System.out.println("Opcion i - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            } else if (args[i].equals("-o")) {
+                try {
+                    output = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion o - Se esperaba un argumento\n\n");
                     printHelp();
                     System.exit(1);
                 }
@@ -213,6 +227,10 @@ public class DataLoader {
                 NCBITaxCreator ncbi = new NCBITaxCreator(transacciones);
                 log += ncbi.createTaxaListFromNCBI(nodes, names);
                 //System.out.println(log);
+            } else if (mode.equals("muestreo")) {
+                EventProcesor eventMuestreo = new EventProcesor(transacciones);
+                eventMuestreo.setNextIDMuestreo(4);
+                log += eventMuestreo.parseFileMMFI_Muestreo(input, output, true, delimiter, campania);
             }
             long end = System.currentTimeMillis() - start;
             System.out.println(end / 1000 + " s.");
