@@ -16,7 +16,7 @@ public class Medicion {
     private String medicion_t1;
     private String medicion_t2;
     private String medicion_t3;
-
+    private String comentarios="";
     /**
      * Se crea un constructor solo con la variable para que en casos de
      * necesitar dar de alta una medicion a algo que aún no se da de alta,
@@ -44,6 +44,14 @@ public class Medicion {
 
     public int getIdVariable() {
         return idVariable;
+    }
+
+    public String getComentarios() {
+        return comentarios;
+    }
+
+    public void setComentarios(String comentarios) {
+        this.comentarios = comentarios;
     }
 
     public void setIdVariable(int idVariable) {
