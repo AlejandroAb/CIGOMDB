@@ -228,8 +228,11 @@ public class DataLoader {
                 log += ncbi.createTaxaListFromNCBI(nodes, names);
                 //System.out.println(log);
             } else if (mode.equals("muestreo")) {
+                int idMuestra = transacciones.getMaxIDMuestra();
+                int idMuestreo = transacciones.getMaxIDMuestreo();
                 EventProcesor eventMuestreo = new EventProcesor(transacciones);
-                eventMuestreo.setNextIDMuestreo(4);
+                eventMuestreo.setNextIDMuestreo(idMuestreo);
+                eventMuestreo.setNextIDMuestra(idMuestra);
                 log += eventMuestreo.parseFileMMFI_Muestreo(input, output, true, delimiter, campania);
             }
             long end = System.currentTimeMillis() - start;
