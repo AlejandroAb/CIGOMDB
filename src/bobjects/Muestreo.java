@@ -33,10 +33,10 @@ public class Muestreo {
     private String etiqueta = "";
     private MyDate fechaInicial;
     private MyDate fechaFinal;
-    private MyCoord latitud_r;//real
-    private MyCoord longitud_r;//real
-    private MyCoord latitud_a;//ajustada --> requerimiento CIGOM preguntar a lex si las tenemos  // puede fungir como final
-    private MyCoord longitud_a;//ajustada --> requerimiento CIGOM preguntar a lex si las tenemos //puede fungir como final
+    private MyCoord latitud_r = new MyCoord("0");//real
+    private MyCoord longitud_r = new MyCoord("0");//real
+    private MyCoord latitud_a = new MyCoord("0");//ajustada --> requerimiento CIGOM preguntar a lex si las tenemos  // puede fungir como final
+    private MyCoord longitud_a = new MyCoord("0");//ajustada --> requerimiento CIGOM preguntar a lex si las tenemos //puede fungir como final
     private String protocolo = "";
     private String comentarios = "";
     private String lance = "";
@@ -55,7 +55,7 @@ public class Muestreo {
         instrumentos = new ArrayList<Instrumento>();
         usuarios = new ArrayList<Usuario>();
         muestras = new ArrayList<Muestra>();
-        mediciones = new ArrayList<Medicion>(); 
+        mediciones = new ArrayList<Medicion>();
     }
 
     public Muestreo(int idMuestreo) {
@@ -63,21 +63,25 @@ public class Muestreo {
         instrumentos = new ArrayList<Instrumento>();
         usuarios = new ArrayList<Usuario>();
         muestras = new ArrayList<Muestra>();
+        mediciones = new ArrayList<Medicion>();
     }
-    public void addNewInstrumento(Instrumento instrumento){
+
+    public void addNewInstrumento(Instrumento instrumento) {
         this.instrumentos.add(instrumento);
     }
-    
-    public void addNewUsuario(Usuario usuario){
+
+    public void addNewUsuario(Usuario usuario) {
         this.usuarios.add(usuario);
     }
-    public void addNewMuestra(Muestra muestra){
+
+    public void addNewMuestra(Muestra muestra) {
         this.muestras.add(muestra);
     }
-     public void addNewMedicion(Medicion medicion){
+
+    public void addNewMedicion(Medicion medicion) {
         this.mediciones.add(medicion);
     }
-    
+
     public ArrayList<Medicion> getMediciones() {
         return mediciones;
     }
@@ -85,7 +89,7 @@ public class Muestreo {
     public void setMediciones(ArrayList<Medicion> mediciones) {
         this.mediciones = mediciones;
     }
-    
+
     public int getIdMuestreo() {
         return idMuestreo;
     }

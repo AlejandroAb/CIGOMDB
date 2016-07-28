@@ -132,7 +132,7 @@ public class Transacciones {
                 id = -1;
             }
         }
-        return id++;
+        return ++id;
 
     }
 
@@ -155,7 +155,7 @@ public class Transacciones {
                 id = -1;
             }
         }
-        return id++;
+        return ++id;
 
     }
 

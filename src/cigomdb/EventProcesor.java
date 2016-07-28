@@ -106,7 +106,7 @@ public class EventProcesor {
                         while (headerST.hasMoreTokens()) {
                             toks++;
                             String tok = headerST.nextToken().trim().toUpperCase();
-                            if (tok.contains("EST")) {//estacion
+                            if (tok.contains("ESTACION")) {//estacion
                                 idxEst = toks;
                             } else if (tok.contains("ETIQ")) {//ETIQUETA
                                 idxEtiqueta = toks;
@@ -120,7 +120,7 @@ public class EventProcesor {
                                 idxBioma = toks;
                             } else if (tok.contains("CARACTERÍSTICA") || tok.contains("CARACTERISTICA") || tok.contains("FEATURE")) {//ENV FEATURE
                                 idxEnvFeat = toks;
-                            } else if (tok.contains("MATERIAL")) {//ENV MATERIAL
+                            } else if (tok.contains("MATERIA")) {//ENV MATERIAL
                                 idxEnvMat = toks;
                             } else if (tok.contains("TAMAÑO") || tok.contains("TAMANIO") || tok.contains("SIZE") || tok.contains("TAMA")) {//SAMPLE SIZE
                                 idxSampSize = toks;
@@ -144,9 +144,9 @@ public class EventProcesor {
                                 idxHoraI = toks;
                             } else if (tok.contains("HORA F")) {//HORA FINAL
                                 idxHoraF = toks;
-                            } else if (tok.contains("LATITUD I") || tok.contains("LAT I")) {//LAT INICIAL
+                            } else if ((tok.contains("LATITUD")&&tok.contains("INICIAL")) || tok.contains("LAT I")) {//LAT INICIAL
                                 idxLatI = toks;
-                            } else if (tok.contains("LONGITUD I") || tok.contains("LONG I")) {//LONG INICIAL
+                            } else if ((tok.contains("LONGITUD")&&tok.contains("INICIAL")) || tok.contains("LONG I")) {//LONG INICIAL
                                 idxLongI = toks;
                             } else if (tok.contains("LATITUD F") || tok.contains("LAT F")) {//LAT FINAL
                                 idxLatF = toks;
@@ -157,15 +157,15 @@ public class EventProcesor {
                             } else if (tok.contains("USUARIO")) {//INSTRUMENTO
                                 idxUsuarios.add(toks);
                             } else if (tok.contains("TEMPERATURA")) {//TEMPERATURA
-                                idxLongF = toks;
+                                idxTemp = toks;
                             } else if (tok.contains("SALINIDAD")) {//TEMPERATURA
-                                idxLongF = toks;
+                                idxSalinidad = toks;
                             } else if (tok.equals("PH")) {//SALINIDAD
-                                idxLongF = toks;
+                                idxpH = toks;
                             } else if (tok.contains("DISUELTO")) {//OXIGENO DISUELTO
-                                idxLongF = toks;
-                            } else if (tok.contains("FLUORES")) {//TEMPERATURA
-                                idxLongF = toks;
+                                idxODisuelto = toks;
+                            } else if (tok.contains("FLUORES")) {//FLUORESCENCIA
+                                idxFluor = toks;
                             }
                         }
                     } else {
