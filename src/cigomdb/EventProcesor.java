@@ -549,7 +549,7 @@ public class EventProcesor {
                                 muestra.setProcess("100 ml filtrados con filtros de membrana de "
                                         + "0.22 um GV en un sistema de filtración Millipore, "
                                         + "los filtros fueron depositados en tubos Falcon de 15 ml");
-                                muestra.setContenedor("Nitrógeno líquido");//isol growth conditions
+                                muestra.setContenedor("Tubos Falcon de 15 ml envueltos en papel egapack almacenados en nitrógeno líquido");//isol growth conditions
                                 muestra.setSamp_size("100 ml");
                                 nextIDMuestra++;
 
@@ -557,16 +557,16 @@ public class EventProcesor {
                                 muestra2.setProfundidad(muestreo.getProfundidad());
                                 muestra2.setEtiqueta(muestreo.getEtiqueta() + ".falcon");
                                 muestra2.setProcess("100 ml almacenados en dos tubos Falcon de 50ml cada uno ");
-                                muestra2.setContenedor("Almacenado a 4 grados centigrados");//isol growth conditions
+                                muestra2.setContenedor("Tubos Falcon almacenado a 4 grados centigrados");//isol growth conditions
                                 muestra2.setSamp_size("100 ml");
                                 nextIDMuestra++;
 
                                 Muestra muestra3 = new Muestra(nextIDMuestra, muestreo.getIdMuestreo());//0 ID de la muestra auto_increment
                                 muestra3.setProfundidad(muestreo.getProfundidad());
                                 muestra3.setEtiqueta(muestreo.getEtiqueta() + ".sterivex");
-                                muestra3.setProcess("Agua filtrada con Sterivex");
+                                muestra3.setProcess("Agua filtrada con filtros Sterivex");
                                 muestra3.setSamp_size("Entre 2 y 3 lt.");
-                                muestra3.setContenedor("Almacenado a 4 grados centigrados");//isol growth conditions
+                                muestra.setContenedor("Tubos Falcon de 15 ml envueltos en papel egapack almacenados en nitrógeno líquido");//isol growth conditions
                                 nextIDMuestra++;
 
                                 muestreo.addNewMuestra(muestra);

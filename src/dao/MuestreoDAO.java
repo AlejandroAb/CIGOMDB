@@ -159,10 +159,10 @@ public class MuestreoDAO {
         if (addMuestras) {
             for (Muestra muestra : muestreo.getMuestras()) {
                 String queryMuestra = "INSERT INTO muestra "
-                        + "(idMuestra, idMuestreo, profundidad, etiqueta, contenedor, tamano, notas) "
+                        + "(idMuestra, idMuestreo, profundidad, etiqueta, contenedor, tamano, protocolo, notas) "
                         + "VALUES (" + muestra.getIdMuestra() + ", " + muestra.getIdMuestreo() + ", "
                         + muestra.getProfundidad() + ", '" + muestra.getEtiqueta() + "', '"
-                        + muestra.getContenedor() + "', '" + muestra.getSamp_size() + "', '" + muestra.getNotas() + "')";
+                        + muestra.getContenedor() + "', '" + muestra.getSamp_size() + "', '" +muestra.getProcess()+"','"+ muestra.getNotas() + "')";
                 if (!toFile) {
                     if (!transacciones.insertaQuery(queryMuestra)) {
                         log += "Error insertando muestra - muestreo: "
