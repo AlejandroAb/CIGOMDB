@@ -215,7 +215,7 @@ public class EventProcesor {
                                 if (tmpString.toLowerCase().contains("agua")) {
                                     muestreo.setIdTipoMuestra(Muestreo.MATRIZ_AGUA);
                                     muestreo.setIdTipoMuestreo(Muestreo.M_AGUAS_PROFUNDAS);
-                                } else {
+                                } else if (tmpString.toLowerCase().contains("sedimento")){
                                     muestreo.setIdTipoMuestra(Muestreo.MATRIZ_SEDIMENTO);
                                     muestreo.setIdTipoMuestreo(Muestreo.M_SEDIMENTO);
                                 }
@@ -525,7 +525,7 @@ public class EventProcesor {
                                 /* if (!tmpString.equals("-") && !tmpString.equals("NA") && !tmpString.equals("ND") && !tmpString.equals("x")) {
                                  Hacer algo para leer usuarios y asignar acciones
                                  }*/
-                                Usuario usuario1 = new Usuario(3);//A estrada
+                                Usuario usuario1 = new Usuario(3);//A estradaSe inocul
                                 usuario1.setAcciones("Coordinación de toma de muestras");
                                 Usuario usuario2 = new Usuario(4);//D Ramirez
                                 usuario2.setAcciones("Toma de muestras");
@@ -587,8 +587,9 @@ public class EventProcesor {
                                 muestra.setEtiqueta(muestreo.getEtiqueta() + ".nucleos");
                                 muestra.setProcess("Una vez puesto en cubierta el sedimento, "
                                         + "se tomaron 4 subnúcleos en jeringas de 60 cc, empaquetadas en paper egapack");
-                                muestra.setContenedor("Nitrógeno líquido");//isol growth conditions
+                                muestra.setContenedor("Nucleos empaquetados con egapack y almacenados en nitrógeno líquido");//isol growth conditions
                                 muestra.setSamp_size("73.51 cc");
+                                muestra.setNotas("El tamaño de la muestra fue calculado en base al volumen de las jeringas o núcleos");
                                 muestreo.addNewMuestra(muestra);
                                 nextIDMuestra++;
                                 if (muestreo.getComentarios().contains("Se tomaron muestras")) {//Se tomaron muestras anaeróbicas.

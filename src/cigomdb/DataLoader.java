@@ -20,14 +20,14 @@ public class DataLoader {
     public static void main(String[] args) {
         //args for derrotero: derrotero -i "C://Users//Alejandro//Documents//Projects//pemex//6 cruceros//MGMF I//derrotero.txt" -campania 2 
         //args para muestreo agua MMF 01: -i C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Agua.txt
-        //-o C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Agua.out
+        //-o C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Agua.sql
         //parte de args para swissprot: -i "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\4 db\\swissprot\\uniref100.5k.xml";
         String database = "cigomdb";
         String user = "root";
         String host = "localhost";
         String password = "amorphis";
-        String input = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Agua.txt";
-        String output = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Agua.sql";
+        String input = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Sedimento.txt";
+        String output = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Sedimento.sql";
         String mapPrefix = "gen_id_";
         String idPrefix = "M1SE3";
         String gffIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.gff";

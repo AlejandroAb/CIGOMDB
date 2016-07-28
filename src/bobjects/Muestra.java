@@ -38,6 +38,7 @@ public class Muestra {
 
     public Muestra(int idMuestra, int idMuestreo) {
         this.idMuestreo = idMuestreo;
+        this.idMuestra = idMuestra;
     }
 
     public int getIdMuestra() {
