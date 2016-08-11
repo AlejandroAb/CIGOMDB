@@ -435,6 +435,8 @@ public class EventProcesor {
                                      lineaOK = false;
                                      break;
                                      }*/
+                                }else{
+                                    muestreo.setTamano("ND");
                                 }
                             } else if (tok == idxComentarios) { //comentarios
                                 tmpString = st.nextToken().trim();
@@ -584,12 +586,19 @@ public class EventProcesor {
                                  * profundidad
                                  */
                                 muestra.setProfundidad(0.1);
-                                muestra.setEtiqueta(muestreo.getEtiqueta() + ".nucleos");
-                                muestra.setProcess("Una vez puesto en cubierta el sedimento, "
-                                        + "se tomaron 4 subnúcleos en jeringas de 60 cc, empaquetadas en paper egapack");
-                                muestra.setContenedor("Nucleos empaquetados con egapack y almacenados en nitrógeno líquido");//isol growth conditions
-                                muestra.setSamp_size("73.51 cc");
-                                muestra.setNotas("El tamaño de la muestra fue calculado en base al volumen de las jeringas o núcleos");
+                               // muestra.setEtiqueta(muestreo.getEtiqueta() + ".nucleos");
+                                muestra.setEtiqueta(muestreo.getEtiqueta() + ".MET");
+                                //Process muestra MMF-I
+                                //muestra.setProcess("Una vez puesto en cubierta el sedimento, "
+                                //        + "se tomaron 4 subnúcleos en jeringas de 60 cc, empaquetadas en paper egapack");
+                                //muestra.setContenedor("Nucleos empaquetados con egapack y almacenados en nitrógeno líquido");//isol growth conditions
+                                //muestra.setSamp_size("73.51 cc");
+                                //muestra.setNotas("El tamaño de la muestra fue calculado en base al volumen de las jeringas o núcleos");
+                                //process sogom I
+                                muestra.setProcess("Se recibió el sedimento en bolsas etiquetas con la estación a la que corresponden");
+                                muestra.setContenedor("Bolsa cerrada y etiquetada, almacenada en cuarto frío a 4° C.");
+                                muestra.setSamp_size("140 gr.");
+                                muestra.setNotas("Son muestras compartidas por el grupo de SOGOM. Algunos datos están incompletos. 140gr es el tamaño de muestra estimado de las bolsas recibidas");
                                 muestreo.addNewMuestra(muestra);
                                 nextIDMuestra++;
                                 if (muestreo.getComentarios().contains("Se tomaron muestras")) {//Se tomaron muestras anaeróbicas.
@@ -614,7 +623,7 @@ public class EventProcesor {
                                  * el bueno, es decir el que viene en el archivo
                                  * original.
                                  */
-                                muestreo.setTamano("1200cc");
+                                //muestreo.setTamano("1200cc");
                             }
                             MuestreoDAO muestreoDAO = new MuestreoDAO(transacciones);
                             muestreoDAO.almacenaMuestreo(muestreo, toFile, outputFile, toFile, true, true, true);

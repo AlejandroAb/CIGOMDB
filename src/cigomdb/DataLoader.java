@@ -22,12 +22,19 @@ public class DataLoader {
         //args para muestreo agua MMF 01: -i C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Agua.txt
         //-o C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Agua.sql
         //parte de args para swissprot: -i "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\4 db\\swissprot\\uniref100.5k.xml";
+        //muestras de sedimento METMFI
+        // String input = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Sedimento.txt";
+        //String output = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Sedimento.sql";
+        //muestras SOGOM
+        //  String input = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\sogom\\Muestras.txt";
+        //String output = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\sogom\\Muestras.sql";
+        
         String database = "cigomdb";
         String user = "root";
         String host = "localhost";
         String password = "amorphis";
-        String input = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Sedimento.txt";
-        String output = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\MGMF I\\Tablas Datos\\Muestreo_Sedimento.sql";
+        String input = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\4 db\\Pfam\\Pfam-A.clans.tsv\\Pfam-A.clans.tsv";
+        String output = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\4 db\\Pfam\\Pfam-A.clans.tsv\\Pfam-A.clans.sql";
         String mapPrefix = "gen_id_";
         String idPrefix = "M1SE3";
         String gffIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.gff";
@@ -44,6 +51,7 @@ public class DataLoader {
         modes.add("derrotero");
         modes.add("ncbitax");
         modes.add("muestreo");
+         modes.add("pfam");
         String mode = "";
         for (int i = 0; i < args.length; i++) {
             if (i == 0 && (!args[i].equals("-h") && !args[i].equals("-help"))) {
@@ -234,6 +242,9 @@ public class DataLoader {
                 eventMuestreo.setNextIDMuestreo(idMuestreo);
                 eventMuestreo.setNextIDMuestra(idMuestra);
                 log += eventMuestreo.parseFileMMFI_Muestreo(input, output, true, delimiter, campania);
+            }else if(mode.equals("pfam")){
+                PfamProcesor pProcessor = new PfamProcesor(transacciones);
+                 log += pProcessor.parsePfamAClans(input, true, output);
             }
             long end = System.currentTimeMillis() - start;
             System.out.println(end / 1000 + " s.");
