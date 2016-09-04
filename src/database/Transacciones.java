@@ -137,7 +137,7 @@ public class Transacciones {
     }
 
     /**
-     * Obtiene cual es el max id de muestra para poder asignar nuevos. 
+     * Obtiene cual es el max id de muestra para poder asignar nuevos.
      *
      * @return
      */
@@ -250,6 +250,31 @@ public class Transacciones {
                 + "VALUES(0," + idCampana + "," + idEstacion + ",'" + nombre + "'," + fPlaneada + "," + fEjecutada
                 + "," + numEstP + "," + numEstE + ",'" + comentarios + "')";
         return conexion.queryUpdateWithKey(query);
+    }
+
+    public int insertaMarcadorWithKey(String idMuestra, String idTipoMarcador, String idTipoSecuenciacion, String idSecuenciador, String idPcr, String raw_data_path, String pro_data_path) {
+        String query = "INSERT INTO marcador "
+                + "VALUES(0," + idMuestra + "," + idTipoMarcador + "," + idTipoSecuenciacion + "," + idSecuenciador + "," + idPcr
+                + ",'" + raw_data_path + "','" + pro_data_path + "')";
+        return conexion.queryUpdateWithKey(query);
+    }
+
+    public boolean insertaMarcador(String mark_id, String idMuestra, String idTipoMarcador, String idTipoSecuenciacion, String idSecuenciador, String idPcr, String raw_data_path, String pro_data_path, String data_pre_process, String data_qc) {
+        String query = "INSERT INTO marcador "
+                + "VALUES(" + mark_id + "," + idMuestra + "," + idTipoMarcador + "," + idTipoSecuenciacion + "," + idSecuenciador + "," + idPcr
+                + ",'" + raw_data_path + "','" + pro_data_path + "','" + data_qc + "')";
+        return conexion.queryUpdate(query);
+    }
+
+    public boolean updateSeqNumMarcador(String idMarcador, int seq_num) {
+        String query = "UPDATE marcador set seq_num_total = " + seq_num +" WHERE idmarcador = " + idMarcador;
+        return conexion.queryUpdate(query);
+    }
+
+    public boolean insertaSeqMarcador(String idSeq, String idMarcador, String raw_id, String seq) {
+        String query = "INSERT INTO seq_marcador VALUES('"
+                + idSeq + "'," + idMarcador + ",'" + raw_id + "','" + seq + "'," + seq.length() + ")";
+        return conexion.queryUpdate(query);
     }
 
     public boolean testConnection() {
