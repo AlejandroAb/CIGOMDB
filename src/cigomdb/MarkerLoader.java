@@ -30,11 +30,16 @@ public class MarkerLoader {
      * Parsea un archivo hecho a la medida para cargar los amplicones procesados
      * en la campaña SOGOM-I. Archivo:
      *
+     * @param inputFile Archivo tab delim con header ID BD	TAG	raw_data_pah
+     * pro_data_path	idMarcador	idTipoMarcador	tipo_sec	idsecuenciador	idPcr
+     * pre_proc
+     *
      */
-    public void parseSOGOMMarkerFile(String inputFile) {
+    public String parseSOGOMMarkerFile(String inputFile) {
+        String log="";
         try {
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-            String linea;
+            String linea;           
             while ((linea = reader.readLine()) != null) {
                 StringTokenizer st = new StringTokenizer(linea, "\t");
                 String sample_db_id = st.nextToken();
@@ -62,6 +67,7 @@ public class MarkerLoader {
                             String sec = extendedReader.readLine();
                             if (!transacciones.insertaSeqMarcador(idSec, "" + mark_id, raw_seq_id, sec)) {
                                 System.out.println("Error insertando secuencia: " + idSec);
+                                log += "Error insertando secuencia: " + idSec+"\n";
                             }
                         }
                     }
@@ -74,6 +80,8 @@ public class MarkerLoader {
                             String sec = extendedReader.readLine();
                             if (!transacciones.insertaSeqMarcador(idSec, "" + mark_id, raw_seq_id, sec)) {
                                 System.out.println("Error insertando secuencia: " + idSec);
+                                log +="Error insertando secuencia: " + idSec+"\n";
+                                
                             }
                         }
                     }
@@ -86,21 +94,30 @@ public class MarkerLoader {
                             String sec = extendedReader.readLine();
                             if (!transacciones.insertaSeqMarcador(idSec, "" + mark_id, raw_seq_id, sec)) {
                                 System.out.println("Error insertando secuencia: " + idSec);
+                                log+="Error insertando secuencia: " + idSec+"\n";
                             }
                         }
                     }
                     nc2Reader.close();
-                    transacciones.updateSeqNumMarcador(idMarcador, sec_num);
+                    if(!transacciones.updateSeqNumMarcador(idMarcador, sec_num)){
+                        log += "Error actualizando marcador id : sec_num_t : " + idMarcador + ":"+sec_num;
+                    }
                 } else {
                     System.out.println("ERROR QUERY:  INSERT INTO marcador VALUES"
                             + "(0," + sample_db_id + "," + idTipoMarcador + "," + idTipoSec + "," + idSecuenciador + "," + idPcr + ","
                             + raw_data_path + "','" + proc_data_path + "')\n");
+                    log +="ERROR QUERY:  INSERT INTO marcador VALUES"
+                            + "(0," + sample_db_id + "," + idTipoMarcador + "," + idTipoSec + "," + idSecuenciador + "," + idPcr + ","
+                            + raw_data_path + "','" + proc_data_path + "')\n";
                 }
             }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(MarkerLoader.class.getName()).log(Level.SEVERE, null, ex);
+            log += "No existe el archivo ";
         } catch (IOException ex) {
             Logger.getLogger(MarkerLoader.class.getName()).log(Level.SEVERE, null, ex);
+            log += "No existe el archivo " + ex.getLocalizedMessage();
         }
+        return log;
     }
 }

@@ -28,7 +28,7 @@ public class DataLoader {
         //muestras SOGOM
         //  String input = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\sogom\\Muestras.txt";
         //String output = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\sogom\\Muestras.sql";
-        
+
         String database = "cigomdb";
         String user = "root";
         String host = "localhost";
@@ -43,6 +43,7 @@ public class DataLoader {
         String names = "C:\\Users\\Alejandro\\Documents\\Projects\\taxonomydb\\taxdmp\\names.dmp";
         String nodes = "C:\\Users\\Alejandro\\Documents\\Projects\\taxonomydb\\taxdmp\\nodes.dmp";
         int campania = -1;
+        String marker_meth = "";//para escoger el metodo de processamiento en modo markers 
         String delimiter = "\t";
         boolean debug = false;
         ArrayList<String> modes = new ArrayList<String>();
@@ -51,10 +52,11 @@ public class DataLoader {
         modes.add("derrotero");
         modes.add("ncbitax");
         modes.add("muestreo");
-         modes.add("pfam");
+        modes.add("pfam");
+        modes.add("markers");
         String mode = "";
         for (int i = 0; i < args.length; i++) {
-            if (i == 0 && (!args[i].equals("-h") && !args[i].equals("-help"))) {
+            if (i == 0 && (!args[i].equals("-h") && !args[i].equals("--help"))) {
                 mode = args[i];
                 if (!modes.contains(mode)) {
                     System.out.println("Opcion no valida\n\n");
@@ -118,7 +120,7 @@ public class DataLoader {
                 }
             } else if (args[i].equals("-d")) {
                 debug = true;
-            } else if (args[i].equals("-h") || args[i].equals("-help")) {
+            } else if (args[i].equals("-h") || args[i].equals("--help")) {
                 printHelp();
                 System.exit(1);
             } else if (args[i].equals("-idpre")) {
@@ -190,6 +192,15 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
+            } else if (args[i].equals("-marker_meth")) {
+                try {
+                    marker_meth = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion marker_meth - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
             } else if (args[i].equals("-nodes")) {
                 try {
                     nodes = args[i + 1];
@@ -242,9 +253,22 @@ public class DataLoader {
                 eventMuestreo.setNextIDMuestreo(idMuestreo);
                 eventMuestreo.setNextIDMuestra(idMuestra);
                 log += eventMuestreo.parseFileMMFI_Muestreo(input, output, true, delimiter, campania);
-            }else if(mode.equals("pfam")){
+            } else if (mode.equals("pfam")) {
                 PfamProcesor pProcessor = new PfamProcesor(transacciones);
-                 log += pProcessor.parsePfamAClans(input, true, output);
+                log += pProcessor.parsePfamAClans(input, true, output);
+            } else if (mode.equals("markers")) {
+                if (marker_meth.length() > 0) {
+                    MarkerLoader loader = new MarkerLoader(transacciones);
+                    if (marker_meth.equals("sogom")) {
+                        log += loader.parseSOGOMMarkerFile(input);
+                    }else{
+                        System.out.println("Para correr el programa gen se espera el parámetro -marker_meth: <sogom|met1|mmf1|coat>");
+                    }
+                } else {
+                    System.out.println("Para correr el programa gen se espera el parámetro marker_meth (sogom|met1|mmf1|coat)");
+                    printHelp();
+                    System.exit(1);
+                }
             }
             long end = System.currentTimeMillis() - start;
             System.out.println(end / 1000 + " s.");
@@ -276,6 +300,7 @@ public class DataLoader {
                 + " y los campos deben de tener por lo menos las letras en mayusculas para poder ser reconocidos de manera correcta.\n\t\t"
                 + "Las opciones con las que trabaja son i, campania y sep");
         System.out.println("\tncbitax.\tCrea la base de datos NCBI desde cero\n\t\t Necesita los parametors names y nodes, los cuales son archivos obtenidos de ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/");
+        System.out.println("\tmarkers. \tSe encarga de cargar secuencias de marcadores por muestra. tiene que entregarse el parametro marker_meth");
         System.out.println("\n--------------------------------------------------");
         System.out.println("\n             --------Options--------");
         System.out.println("-d\t debug = true");
@@ -289,7 +314,8 @@ public class DataLoader {
         System.out.println("-sep\t separador para formatear archivos. Def: tab(\\t)");
         System.out.println("-names\t Nombre del archivo con la información de nombres taxonomicos names.dmp de NCBI");
         System.out.println("-nodes\t Nombre del archivo con la información de nodos taxonomicos nodes.dmp de NCBI");
-        //-in input file
+        System.out.println("-marker_meth\t Metodo para cargar archivos existentes de algún tipo de corrida de amplicones / marcadores \n\tMetodos:\tsogom|met1|mmf1|coat");
 
+        //-in input file
     }
 }
