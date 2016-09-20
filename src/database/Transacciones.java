@@ -262,7 +262,7 @@ public class Transacciones {
     public boolean insertaMarcador(String mark_id, String idMuestra, String idTipoMarcador, String idTipoSecuenciacion, String idSecuenciador, String idPcr, String raw_data_path, String pro_data_path, String data_pre_process, String data_qc) {
         String query = "INSERT INTO marcador "
                 + "VALUES(" + mark_id + "," + idMuestra + "," + idTipoMarcador + "," + idTipoSecuenciacion + "," + idSecuenciador + "," + idPcr
-                + ",'" + raw_data_path + "','" + pro_data_path + "','" + data_qc + "')";
+                + ",0,'" + raw_data_path + "','" + pro_data_path + "','"+data_pre_process+"','" + data_qc + "')";
         return conexion.queryUpdate(query);
     }
 

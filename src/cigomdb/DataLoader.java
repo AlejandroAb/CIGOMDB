@@ -54,6 +54,7 @@ public class DataLoader {
         modes.add("muestreo");
         modes.add("pfam");
         modes.add("markers");
+        modes.add("cog");
         String mode = "";
         for (int i = 0; i < args.length; i++) {
             if (i == 0 && (!args[i].equals("-h") && !args[i].equals("--help"))) {
@@ -256,7 +257,11 @@ public class DataLoader {
             } else if (mode.equals("pfam")) {
                 PfamProcesor pProcessor = new PfamProcesor(transacciones);
                 log += pProcessor.parsePfamAClans(input, true, output);
-            } else if (mode.equals("markers")) {
+            }else if (mode.equals("cog")) {
+                COGProcessor cProcessor = new COGProcessor(transacciones);
+                log += cProcessor.parseCOGNames(input, true, output);
+            }
+            else if (mode.equals("markers")) {
                 if (marker_meth.length() > 0) {
                     MarkerLoader loader = new MarkerLoader(transacciones);
                     if (marker_meth.equals("sogom")) {
