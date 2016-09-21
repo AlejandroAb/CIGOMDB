@@ -12,9 +12,9 @@ package bobjects;
  */
 public class COGObj {
     private String idCOG;//COG4862	KTN	
-    private String cog_description;//KTN
-    private String cog_fun;//Negative regulator of genetic competence, sporulation and motility
-
+    private String cog_description;//Negative regulator of genetic competence, sporulation and motility
+    private String cog_fun;//KTN
+    private String cog_n_fun[];
     public COGObj(String idCOG) {
         this.idCOG = idCOG;
     }
@@ -42,7 +42,18 @@ public class COGObj {
 
     public void setCog_fun(String cog_fun) {
         this.cog_fun = cog_fun;
+        this.cog_n_fun = new String[cog_fun.length()];
+        int i=0;
+        for(char fun : cog_fun.toCharArray()){
+            cog_n_fun[i] = ""+fun;
+            i++;
+        }
     }
+
+    public String[] getCog_n_fun() {
+        return cog_n_fun;
+    }
+    
     
     
 }

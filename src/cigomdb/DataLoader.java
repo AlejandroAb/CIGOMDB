@@ -259,7 +259,7 @@ public class DataLoader {
                 log += pProcessor.parsePfamAClans(input, true, output);
             }else if (mode.equals("cog")) {
                 COGProcessor cProcessor = new COGProcessor(transacciones);
-                log += cProcessor.parseCOGNames(input, true, output);
+                log += cProcessor.parseCOGNames(input, true, output, delimiter);
             }
             else if (mode.equals("markers")) {
                 if (marker_meth.length() > 0) {
@@ -305,6 +305,8 @@ public class DataLoader {
                 + " y los campos deben de tener por lo menos las letras en mayusculas para poder ser reconocidos de manera correcta.\n\t\t"
                 + "Las opciones con las que trabaja son i, campania y sep");
         System.out.println("\tncbitax.\tCrea la base de datos NCBI desde cero\n\t\t Necesita los parametors names y nodes, los cuales son archivos obtenidos de ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/");
+        System.out.println("\tcog\t Carga archivos de COG como:\n\t\t ftp://ftp.ncbi.nih.gov/pub/COG/COG2014/data/cognames2003-2014.tab o ftp://ftp.ncbi.nih.gov/pub/wolf/COGs/COG0303/cog.csv\n\t\t Params: input (-i) output (-o) y delimiter (-sep)");
+        System.out.println("\tpfam\t Carga archivod de PFAM como ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam30.0/Pfam-A.clans.tsv.gz\n\t\tParams: inout y output ");
         System.out.println("\tmarkers. \tSe encarga de cargar secuencias de marcadores por muestra. tiene que entregarse el parametro marker_meth");
         System.out.println("\n--------------------------------------------------");
         System.out.println("\n             --------Options--------");
@@ -318,7 +320,7 @@ public class DataLoader {
         System.out.println("-campania\t camapania por si se utiliza el derrotero");
         System.out.println("-sep\t separador para formatear archivos. Def: tab(\\t)");
         System.out.println("-names\t Nombre del archivo con la información de nombres taxonomicos names.dmp de NCBI");
-        System.out.println("-nodes\t Nombre del archivo con la información de nodos taxonomicos nodes.dmp de NCBI");
+        System.out.println("-nodes\t Nombre del archivo con la información de nodos taxonomicos nodes.dmp de NCBI");        
         System.out.println("-marker_meth\t Metodo para cargar archivos existentes de algún tipo de corrida de amplicones / marcadores \n\tMetodos:\tsogom|met1|mmf1|coat");
 
         //-in input file
