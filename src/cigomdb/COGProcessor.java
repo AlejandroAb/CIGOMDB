@@ -6,8 +6,9 @@
 package cigomdb;
 
 import bobjects.COGObj;
-import bobjects.Pfam;
+import bobjects.NOGObj;
 import dao.CogDAO;
+import dao.NogDAO;
 import database.Transacciones;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -86,47 +87,35 @@ public class COGProcessor {
         }
         return log;
     }
+
     /**
-     * Este metodo se hizo para clasificar las funciones de grupos COG. Lee el archivo 
-     * C:\Users\Alejandro\Documents\Projects\pemex\4 db\COG\cog_function_ok.txt
-     * Se espera que el archivo venga con formato:
-     * COG super Func  \t ID o letra de Funcion  \t    Descripción de la función
-     * INFORMATION STORAGE AND PROCESSING	J	Translation, ribosomal structure and biogenesis
+     * Este metodo se hizo para procesar el archivo NOG.description de EggNOG,
+     * el acul trae todas las familias NOG y algunas descripciones, ya que no
+     * todos los elementos están clasificados
+     *
      * @param inputFile
      * @param toFile
      * @param outFile
-     * @return 
+     * @return
      */
-    public String parseCOGFuncion(String inputFile, boolean toFile, String outFile) {
-         String log = "";
+    public String parseNOGNames(String inputFile, boolean toFile, String outFile) {
+        String log = "";
         StringUtils sUtils = new StringUtils();
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), "ISO-8859-1"));
             String linea;
-            CogDAO cogDAO = new CogDAO(transacciones);
+            NogDAO nogDAO = new NogDAO(transacciones);
             while ((linea = reader.readLine()) != null) {
-                COGObj cog = null;
+                NOGObj nog = null;
                 if (!linea.startsWith("#")) {
                     StringTokenizer st = new StringTokenizer(linea, "\t");
                     int tokens = st.countTokens();
-                    boolean addCOG = false;
-                    if (tokens >= 3) { //viene bien (cuendo es con "," as delim -> esta procesando un csv donde la descripcion puede traer comas así que pueden llegar a ser mas tokens)
-                        cog = new COGObj(st.nextToken());
-                        cog.setCog_fun(st.nextToken());
-                        String desc = "";
-                        while (st.hasMoreTokens()) {
-                            desc += st.nextToken() + ",";
-                        }
-                        desc += desc.substring(0, desc.length() - 1);
-                        cog.setCog_description(sUtils.scapeSQL(desc));
-                        addCOG = true;
-                    } else if (tokens >= 1) {
-                        log += "Error linea con " + tokens + " tokens en cog = " + st.nextToken();
-                    } else {
-                        log += "Error linea con sin tokens en linea = " + linea;
-                    }
+                    boolean addCOG = false;                 
+                        nog = new NOGObj(st.nextToken());
+                        nog.setNog_description(st.nextToken());                        
+                        addCOG = true;                 
                     if (addCOG) {
-                        cogDAO.insertaCog(cog, toFile, outFile, true);
+                        nogDAO.insertaNog(nog, toFile, outFile, true);
                     }
                 }
             }
