@@ -42,6 +42,9 @@ public class DataLoader {
         String aaIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.faa";
         String names = "C:\\Users\\Alejandro\\Documents\\Projects\\taxonomydb\\taxdmp\\names.dmp";
         String nodes = "C:\\Users\\Alejandro\\Documents\\Projects\\taxonomydb\\taxdmp\\nodes.dmp";
+        String uri = "";
+        String url = "";
+        boolean toFile = false;
         int campania = -1;
         String marker_meth = "";//para escoger el metodo de processamiento en modo markers 
         String delimiter = "\t";
@@ -56,6 +59,7 @@ public class DataLoader {
         modes.add("markers");
         modes.add("cog");
         modes.add("nog");
+        modes.add("obo");
         String mode = "";
         for (int i = 0; i < args.length; i++) {
             if (i == 0 && (!args[i].equals("-h") && !args[i].equals("--help"))) {
@@ -78,6 +82,7 @@ public class DataLoader {
             } else if (args[i].equals("-o")) {
                 try {
                     output = args[i + 1];
+                    toFile = true;
                     i++;
                 } catch (ArrayIndexOutOfBoundsException aiobe) {
                     System.out.println("Opcion o - Se esperaba un argumento\n\n");
@@ -142,6 +147,26 @@ public class DataLoader {
                     i++;
                 } catch (ArrayIndexOutOfBoundsException aiobe) {
                     System.out.println("Opcion gff - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            } else if (args[i].equals("-uri")) {
+
+                try {
+                    uri = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion uri - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            } else if (args[i].equals("-url")) {
+
+                try {
+                    url = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion url - Se esperaba un argumento\n\n");
                     printHelp();
                     System.exit(1);
                 }
@@ -261,7 +286,18 @@ public class DataLoader {
             } else if (mode.equals("cog")) {
                 COGProcessor cProcessor = new COGProcessor(transacciones);
                 log += cProcessor.parseCOGNames(input, true, output, delimiter);
-            }else if (mode.equals("nog")) {
+            } else if (mode.equals("nog")) {
+                COGProcessor cProcessor = new COGProcessor(transacciones);
+                log += cProcessor.parseNOGNames(input, true, output);
+            } else if (mode.equals("obo")) {
+                if (uri.length() > 0) {
+                    OBOProcessor obo = new OBOProcessor(transacciones);
+                    log += obo.processOBOFile(input, uri, url, toFile, output);
+                } else {
+                    System.out.println("Para correr el programa obo se espera el parámetro URI (go|envo|obi...) o culquier OBO ");
+                    printHelp();
+                    System.exit(1);
+                }
                 COGProcessor cProcessor = new COGProcessor(transacciones);
                 log += cProcessor.parseNOGNames(input, true, output);
             } else if (mode.equals("markers")) {
@@ -310,7 +346,8 @@ public class DataLoader {
         System.out.println("\tncbitax.\tCrea la base de datos NCBI desde cero\n\t\t Necesita los parametors names y nodes, los cuales son archivos obtenidos de ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/");
         System.out.println("\tcog\t Carga archivos de COG como:\n\t\t ftp://ftp.ncbi.nih.gov/pub/COG/COG2014/data/cognames2003-2014.tab o ftp://ftp.ncbi.nih.gov/pub/wolf/COGs/COG0303/cog.csv\n\t\t Params: input (-i) output (-o) y delimiter (-sep)");
         System.out.println("\tnog\t Carga archivos de NOG como:\n\t\t http://eggnog.embl.de/version_3.0/downloads.html -> NOG.descriptions.txt Params: input (-i) output (-o)");
-        System.out.println("\tpfam\t Carga archivod de PFAM como ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam30.0/Pfam-A.clans.tsv.gz\n\t\tParams: inout y output ");
+        System.out.println("\tpfam\t Carga archivos de PFAM como ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam30.0/Pfam-A.clans.tsv.gz\n\t\tParams: inout y output ");
+        System.out.println("\tobo\t Carga archivos en formato OBO como ftp://ftp.geneontology.org/pub/go/www/GO.format.obo-1_4.shtml \n\t\t params: -i -o -uri(mandatory) -url");
         System.out.println("\tmarkers. \tSe encarga de cargar secuencias de marcadores por muestra. tiene que entregarse el parametro marker_meth");
         System.out.println("\n--------------------------------------------------");
         System.out.println("\n             --------Options--------");

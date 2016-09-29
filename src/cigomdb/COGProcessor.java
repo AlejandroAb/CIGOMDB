@@ -108,12 +108,16 @@ public class COGProcessor {
             while ((linea = reader.readLine()) != null) {
                 NOGObj nog = null;
                 if (!linea.startsWith("#")) {
-                    StringTokenizer st = new StringTokenizer(linea, "\t");
-                    int tokens = st.countTokens();
-                    boolean addCOG = false;                 
-                        nog = new NOGObj(st.nextToken());
-                        nog.setNog_description(st.nextToken());                        
-                        addCOG = true;                 
+                    StringTokenizer st = new StringTokenizer(linea, "\t");                    
+                    boolean addCOG = false;
+                    nog = new NOGObj(st.nextToken());
+                    if (st.hasMoreTokens()) {
+                        nog.setNog_description(sUtils.scapeSQL(st.nextToken()));
+                    } else {
+                        nog.setNog_description("");
+                    }
+
+                    addCOG = true;
                     if (addCOG) {
                         nogDAO.insertaNog(nog, toFile, outFile, true);
                     }

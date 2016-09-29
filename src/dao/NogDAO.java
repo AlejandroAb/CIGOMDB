@@ -36,7 +36,7 @@ public class NogDAO {
      */
     public String insertaNog(NOGObj nog, boolean toFile, String outFile, boolean append) {
         String log = "";
-        String query = "INSERT INTO Nog (id_nog, nog_description) VALUES "
+        String query = "INSERT INTO nog (id_nog, nog_description) VALUES "
                 + "('" + nog.getId_NOG() + "','" + nog.getNog_description() + "')";
         FileWriter writer = null;
         if (!toFile) {
