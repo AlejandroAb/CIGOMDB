@@ -15,7 +15,7 @@ public class StringUtils {
     public StringUtils() {
     }
     public String scapeSQL(String text){
-        String scapedText = text.replace("'", "\\'");
+        String scapedText = text.replace("\\", "\\\\").replace("'", "\\'");
         return scapedText;
         
     }

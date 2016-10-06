@@ -44,6 +44,10 @@ public class DataLoader {
         String nodes = "C:\\Users\\Alejandro\\Documents\\Projects\\taxonomydb\\taxdmp\\nodes.dmp";
         String uri = "";
         String url = "";
+        boolean insertaAmplicones = true;//--no-insert-amplicon
+        boolean processOutAmplicones = false; //-poa --process_out_amplicon
+        boolean processMetaxaAmplicones = false; //-mamp --metaxa_amp
+        String raw_ext = "fastq"; //-rawe
         boolean toFile = false;
         int campania = -1;
         String marker_meth = "";//para escoger el metodo de processamiento en modo markers 
@@ -130,6 +134,23 @@ public class DataLoader {
             } else if (args[i].equals("-h") || args[i].equals("--help")) {
                 printHelp();
                 System.exit(1);
+            } else if (args[i].equals("-poa") || args[i].equals("--process_out_amplicon")) {
+                processOutAmplicones = true;
+            } else if (args[i].equals("-mamp") || args[i].equals("--metaxa_amp")) {
+                processOutAmplicones = true;
+            } else if (args[i].equals("--no-insert-amplicon")) {
+                insertaAmplicones = false;
+
+            } else if (args[i].equals("-rawe")) {
+
+                try {
+                    raw_ext = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion rawe - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
             } else if (args[i].equals("-idpre")) {
 
                 try {
@@ -298,18 +319,16 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-                COGProcessor cProcessor = new COGProcessor(transacciones);
-                log += cProcessor.parseNOGNames(input, true, output);
             } else if (mode.equals("markers")) {
                 if (marker_meth.length() > 0) {
                     MarkerLoader loader = new MarkerLoader(transacciones);
-                    if (marker_meth.equals("sogom")) {
-                        log += loader.parseSOGOMMarkerFile(input);
+                    if (marker_meth.equals("mv1")) {
+                        log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
                     } else {
-                        System.out.println("Para correr el programa gen se espera el parámetro -marker_meth: <sogom|met1|mmf1|coat>");
+                        System.out.println("Para correr el programa gen se espera el parámetro -marker_meth: <mv1>");
                     }
                 } else {
-                    System.out.println("Para correr el programa gen se espera el parámetro marker_meth (sogom|met1|mmf1|coat)");
+                    System.out.println("Para correr el programa gen se espera el parámetro marker_meth (mv1)");
                     printHelp();
                     System.exit(1);
                 }

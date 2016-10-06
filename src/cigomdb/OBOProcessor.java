@@ -71,7 +71,7 @@ public class OBOProcessor {
                             } else if (linea.startsWith("namespace:")) {
                                 go.setNamespace(linea.substring(10).trim());
                             } else if (linea.startsWith("def:")) {
-                                go.setDefinition(sUtils.scapeSQL((linea.substring(linea.indexOf("\"") + 1, linea.lastIndexOf("\"") - 1).trim())));
+                                go.setDefinition(sUtils.scapeSQL((linea.substring(linea.indexOf("\"") + 1, linea.lastIndexOf("\"")).trim())));
                             } else if (linea.startsWith("is_a:")) {
                                 //casi todos los is_a estan definidos asi 
                                 //is_a: GO:0044428 ! nuclear part

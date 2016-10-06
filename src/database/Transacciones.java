@@ -160,6 +160,29 @@ public class Transacciones {
     }
 
     /**
+     * Obtiene cual es el max id de archivo para poder asignar nuevos.
+     *
+     * @return
+     */
+    public int getMaxIDArchivo() {
+        String query = "SELECT MAX(idarchivo) FROM archivo";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            id = 0;
+        } else {
+            try {
+                id = Integer.parseInt((String) dbResult.get(0).get(0));
+            } catch (NumberFormatException nfe) {
+                id = 0;
+            }
+        }
+        return ++id;
+
+    }
+
+    /**
      * Recibe un objeto de tipo estacion y en base a su nombe ve si este existe
      * si no existe, la estacion es creada en la BD
      *
@@ -245,6 +268,71 @@ public class Transacciones {
 
     }
 
+    /**
+     * Busca el id de una secuencia dado su raw id original
+     * @param raw_seq_id
+     * @return 
+     */
+    public String getSecMarcadorByRawID(String raw_seq_id) {
+        String quey = "SELECT idseq_marcador FROM seq_marcador WHERE raw_seq_id ='" + raw_seq_id + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+    /**
+     * Trea el nccbi tax id de un nombre de nodo
+     * @param node_name
+     * @return 
+     */
+ public String getNCBITaxID(String node_name) {
+        String quey = "SELECT tax_id FROM ncbi_node WHERE name ='" + node_name + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+    /**
+     * Crea la relación marcador_archivo
+     *
+     * @param idMarcador
+     * @param idArchivo
+     * @return
+     */
+    public boolean insertaArchivoMarcador(String idMarcador, int idArchivo) {
+        String query = "INSERT INTO marcador_archivo VALUES(" + idMarcador + "," + idArchivo + ")";
+        return conexion.queryUpdate(query);
+    }
+
+    
+    /**
+     * Este método inserta en la entidad seq_marcador_classif. Es la relación
+     * que hay entre la asignacion taxonómica a una secuencia en particular,
+     * mediante un análisis (y sus parámetros) en específico
+     *
+     * @param taxID
+     * @param idseq_marcador
+     * @param idAnalisis para este hay variables pre establecidos 1 para metaxa
+     * @param identity
+     * @param eval
+     * @param score
+     * @param comments
+     * @return
+     */
+    public boolean insertMarcadorClassification(String taxID, String idseq_marcador, int idAnalisis, String identity, String eval, String score, String length, String comments) {
+        String query = "INSERT INTO seq_marcador_classif VALUES(" + taxID + ",'" + idseq_marcador + "', "
+                + idAnalisis + "," + identity + "," + eval + "," + score + "," + length +",'" + comments + "')";
+        return conexion.queryUpdate(query);
+    }
+
     public int insertaDerrotero(int idCampana, int idEstacion, String nombre, String fPlaneada, String fEjecutada, int numEstP, int numEstE, String comentarios) {
         String query = "INSERT INTO derrotero "
                 + "VALUES(0," + idCampana + "," + idEstacion + ",'" + nombre + "'," + fPlaneada + "," + fEjecutada
@@ -259,15 +347,16 @@ public class Transacciones {
         return conexion.queryUpdateWithKey(query);
     }
 
-    public boolean insertaMarcador(String mark_id, String idMuestra, String idTipoMarcador, String idTipoSecuenciacion, String idSecuenciador, String idPcr, String raw_data_path, String pro_data_path, String data_pre_process, String data_qc) {
+    public boolean insertaMarcador(String mark_id, String idMuestra, String idTipoMarcador, String idTipoSecuenciacion, String idSecuenciador, String idPcr, String marc_name, String marc_desc, String lib_sel, String lib_lay, String raw_data_path, String pro_data_path, String data_pre_process, String data_qc) {
         String query = "INSERT INTO marcador "
                 + "VALUES(" + mark_id + "," + idMuestra + "," + idTipoMarcador + "," + idTipoSecuenciacion + "," + idSecuenciador + "," + idPcr
-                + ",0,'" + raw_data_path + "','" + pro_data_path + "','"+data_pre_process+"','" + data_qc + "')";
+                + ", '" + marc_name + "','" + marc_desc + "',0,'" + lib_sel + "','" + lib_lay + "','"
+                + raw_data_path + "','" + pro_data_path + "','" + data_pre_process + "','" + data_qc + "')";
         return conexion.queryUpdate(query);
     }
 
     public boolean updateSeqNumMarcador(String idMarcador, int seq_num) {
-        String query = "UPDATE marcador set seq_num_total = " + seq_num +" WHERE idmarcador = " + idMarcador;
+        String query = "UPDATE marcador set seq_num_total = " + seq_num + " WHERE idmarcador = " + idMarcador;
         return conexion.queryUpdate(query);
     }
 
