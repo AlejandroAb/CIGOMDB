@@ -274,10 +274,9 @@ public class Transacciones {
      * @return 
      */
     public String getSecMarcadorByRawID(String raw_seq_id) {
-        String quey = "SELECT idseq_marcador FROM seq_marcador WHERE raw_seq_id ='" + raw_seq_id + "'";
+        String query = "SELECT idseq_marcador FROM seq_marcador WHERE raw_seq_id ='" + raw_seq_id + "'";
         conexion.executeStatement(query);
-        ArrayList<ArrayList> dbResult = conexion.getTabla();
-        int id = -1;
+        ArrayList<ArrayList> dbResult = conexion.getTabla();        
         if (dbResult == null || dbResult.isEmpty()) {
             return "";
         } else {
@@ -290,7 +289,7 @@ public class Transacciones {
      * @return 
      */
  public String getNCBITaxID(String node_name) {
-        String quey = "SELECT tax_id FROM ncbi_node WHERE name ='" + node_name + "'";
+        String query = "SELECT tax_id FROM ncbi_node WHERE name ='" + node_name + "'";
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         int id = -1;

@@ -22,8 +22,8 @@ public class ArchivoDAO {
         this.transacciones = transacciones;
     }
 
-    public String insertaArchivo(ArchivoObj archivo, boolean toFile, String outFile, boolean append) {
-        String log = "";
+    public boolean insertaArchivo(ArchivoObj archivo, boolean toFile, String outFile, boolean append) {
+
         String query = "INSERT INTO archivo (idarchivo, idtipo_archivo, nombre, extension, path, checksum, descripcion, poor_q_secs, num_secs, seq_length, gc_percent) VALUES "
                 + "(" + archivo.getIdArchivo() + "," + archivo.getTipoArchivo() + ", '" + archivo.getNombre() + "','" + archivo.getExtension()
                 + "','" + archivo.getPath() + "','" + archivo.getChecksum() + "','" + archivo.getDescription() + "'," + archivo.getPoor_q_secs()
@@ -31,17 +31,19 @@ public class ArchivoDAO {
         FileWriter writer = null;
         if (!toFile) {
             if (!transacciones.insertaQuery(query)) {
-                log += "Error insertando archivo: " + archivo.getIdArchivo() + " - " + query + "\n";
+                System.err.println("Error insertando archivo: " + archivo.getIdArchivo() + " - " + query + "\n");
+                return false;
             }
         } else {
             try {
                 writer = new FileWriter(outFile, append);
-                writer.write(query + ";\n");               
+                writer.write(query + ";\n");
                 writer.close();
             } catch (IOException ex) {
-                log = "Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n";
+                System.err.println("Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n");
+                return false;
             }
         }
-        return log;
+        return true;
     }
 }

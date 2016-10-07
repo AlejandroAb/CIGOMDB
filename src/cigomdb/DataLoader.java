@@ -137,7 +137,7 @@ public class DataLoader {
             } else if (args[i].equals("-poa") || args[i].equals("--process_out_amplicon")) {
                 processOutAmplicones = true;
             } else if (args[i].equals("-mamp") || args[i].equals("--metaxa_amp")) {
-                processOutAmplicones = true;
+                processMetaxaAmplicones = true;
             } else if (args[i].equals("--no-insert-amplicon")) {
                 insertaAmplicones = false;
 
@@ -324,6 +324,8 @@ public class DataLoader {
                     MarkerLoader loader = new MarkerLoader(transacciones);
                     if (marker_meth.equals("mv1")) {
                         log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
+                    } else if (marker_meth.equals("mv2"))  {
+                        log += loader.parseMarkerFileFormatIPacbio(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
                     } else {
                         System.out.println("Para correr el programa gen se espera el parámetro -marker_meth: <mv1>");
                     }

@@ -7,6 +7,7 @@ package dao;
 
 import database.Transacciones;
 import java.util.StringTokenizer;
+import utils.StringUtils;
 
 /**
  *
@@ -39,6 +40,7 @@ public class MetaxaDAO {
      * (80 by default). Scores above 80 can generally be considered good.
      *
      * @param mtxLine linea con todas las columnas
+     * @param idAnalisis_clasificacion el id del tipo de analisis que se realizó
      * @return log del proceso
      */
     public String processMetaxaLine(String mtxLine, int idAnalisis_clasificacion) {        
@@ -46,17 +48,32 @@ public class MetaxaDAO {
         String raw_id = st.nextToken();
         String classify = st.nextToken();
         String identity = st.nextToken();
+        try{
+          Float.parseFloat(identity);
+        }catch(NumberFormatException nfe){
+            identity = "null";
+        }       
         String length = st.nextToken();
+         try{
+          Float.parseFloat(length);
+        }catch(NumberFormatException nfe){
+            length = "null";
+        }
         String score = st.nextToken();
+         try{
+          Float.parseFloat(score);
+        }catch(NumberFormatException nfe){
+            score = "null";
+        }
         String seq_id = transacciones.getSecMarcadorByRawID(raw_id);
         if (seq_id == null || seq_id.length() == 0) {
-            return "ERROR. No se encontró secuencia con raw_id = " + raw_id + "\n";
+             System.err.println("ERROR. No se encontró secuencia con raw_id = " + raw_id + "\n");
              
         }
         String taxid[] = searchNCBINode(classify);
         if (!transacciones.insertMarcadorClassification(taxid[0], seq_id, idAnalisis_clasificacion, identity, "-1", score,length, taxid[1])) {
-            return "Error insertando seq_marcador_classif: " + "INSERT INTO seq_marcador_classif VALUES(" + taxid[0] + ",'" + seq_id + "', "
-                + idAnalisis_clasificacion + "," + identity + ",-1," + score + ",'" + taxid[1] + "')";
+            System.err.println("Error insertando seq_marcador_classif: " + "INSERT INTO seq_marcador_classif VALUES(" + taxid[0] + ",'" + seq_id + "', "
+                + idAnalisis_clasificacion + "," + identity + ",-1," + score + ",'" + taxid[1] + "')");
         }
         return "";
     }
@@ -79,8 +96,9 @@ public class MetaxaDAO {
         String[] taxo = classification.split(";");
         String tax = "";
         String log = "";
-        for (int i = taxo.length - 1; i <= 0; i++) {
-            tax = transacciones.getNCBITaxID(taxo[i].trim());
+        StringUtils su = new StringUtils();
+        for (int i = taxo.length - 1; i >= 0; i++) {
+            tax = transacciones.getNCBITaxID(su.scapeSQL(taxo[i].trim()));
             if (tax != null && tax.length() > 0) {
                 break;
             } else {
@@ -92,7 +110,7 @@ public class MetaxaDAO {
                 }
             }
         }
-        String node[] = {tax, log};
+        String node[] = {tax, su.scapeSQL(log)};
         return node;
     }
 }
