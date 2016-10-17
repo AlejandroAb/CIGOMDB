@@ -57,6 +57,7 @@ public class DataLoader {
         String marker_meth = "";//para escoger el metodo de processamiento en modo markers 
         String delimiter = "\t";
         boolean debug = false;
+        boolean startAtZero = true;
         ArrayList<String> modes = new ArrayList<String>();
         modes.add("swiss");
         modes.add("genes");
@@ -145,6 +146,9 @@ public class DataLoader {
                 processMetaxaAmplicones = true;
             } else if (args[i].equals("--no-insert-amplicon")) {
                 insertaAmplicones = false;
+
+            } else if (args[i].equals("--start-at-one") || args[i].equals("-sao")) {
+                startAtZero = false;
 
             } else if (args[i].equals("-rawe")) {
 
@@ -329,11 +333,16 @@ public class DataLoader {
                 }
             } else if (mode.equals("ensamble")) {
                 if (gffIn.length() > 0 && (aaIn.length() + ncIn.length()) > 0) {
+                    if (idMetagenoma + idGenoma == -1) {
+                        System.out.println("Para correr el programa ensamble se espera minimo un id de genoma o id de metagenoma");
+                        printHelp();
+                        System.exit(1);
+                    }
                     GeneFuncLoader loader = new GeneFuncLoader(transacciones);
                     //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
-                    loader.parseEnsamble(idPrefix, idMetagenoma, idGenoma, gffIn, contigIn, ncIn, aaIn, mapPrefix, true);
+                    loader.parseEnsamble(idPrefix, idMetagenoma, idGenoma, gffIn, contigIn, ncIn, aaIn, mapPrefix, startAtZero);
                 } else {
-                    System.out.println("Para correr el programa gen se espera minimo un archivo gff y un archivo fasta");
+                    System.out.println("Para correr el programa ensamble se espera minimo un archivo gff y un archivo fasta");
                     printHelp();
                     System.exit(1);
                 }

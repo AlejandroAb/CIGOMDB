@@ -22,7 +22,7 @@ public class GenDAO {
 
     public String almacenaGen(GenObj gen) {
         String log = "";
-        String query = "INSERT INTO Gen (gen_id,object_id,gen_map_id,gen_type,"
+        String query = "INSERT INTO gen (gen_id,object_id,gen_map_id,gen_type,"
                 + "gen_strand,gen_function,contig_id,contig_gen_id,contig_from,contig_to) "
                 + "VALUES ("
                 + "'" + gen.getGenID() + "','', '" + gen.getGene_map_id()
@@ -33,7 +33,7 @@ public class GenDAO {
             log += "Error insertando gen: " + gen.getGenID() + " - " + query + "\n";
         }
         for (GenSeqObj seq : gen.getSequences()) {
-            String querySeq = "INSERT INTO Gen_Seq (gen_id, seq_type, seq_from, seq_to, seq_size, sequence) VALUES ("
+            String querySeq = "INSERT INTO gen_seq (gen_id, seq_type, seq_from, seq_to, seq_size, sequence) VALUES ("
                     + "'" + gen.getGenID() + "', '" + seq.getSeqType()
                     + "', '" + seq.getSeq_from() + "', '" + seq.getSeq_to() + "', " + seq.getSeq_size()
                     + ", '" + seq.getSequence() + "')";
@@ -47,7 +47,7 @@ public class GenDAO {
 
     public boolean almacenaValidaGen(GenObj gen) {
         boolean log = true;
-        String query = "INSERT INTO Gen (gen_id,idmetagenoma, idgenoma, gen_src, gen_map_id,gen_name, gen_type,"
+        String query = "INSERT INTO gen (gen_id,idmetagenoma, idgenoma, gen_src, gen_map_id,gen_name, gen_type,"
                 + "gen_strand,gen_function,gen_length, gen_num, gen_score,contig_id,contig_gen_id,contig_from,contig_to) "
                 + "VALUES ("
                 + "'" + gen.getGenID() + "'," + gen.getIdMetagenoma() + "," + gen.getIdGenoma() + ",'" + gen.getGen_src()
@@ -84,7 +84,7 @@ public class GenDAO {
                 }
             }
             if (insertSeq) {
-                String querySeq = "INSERT INTO Gen_Seq (gen_id, seq_type, seq_from, seq_to, seq_size, sequence) VALUES ("
+                String querySeq = "INSERT INTO gen_seq (gen_id, seq_type, seq_from, seq_to, seq_size, sequence) VALUES ("
                         + "'" + gen.getGenID() + "', '" + seq.getSeqType()
                         + "', '" + seq.getSeq_from() + "', '" + seq.getSeq_to() + "', " + seq.getSeq_size()
                         + ", '" + seq.getSequence() + "')";
@@ -99,7 +99,7 @@ public class GenDAO {
         //para realizar de manera adecuada el substr al momento de extraer la sec, pero para fines de anotación, la sec debe de tener el +1 
         //INGRESA 3P
         if (gen.getInter3p().getSize() != 0) {
-            String querySeq = "INSERT INTO Gen_Seq (gen_id, seq_type, seq_from, seq_to, seq_size, sequence) VALUES ("
+            String querySeq = "INSERT INTO gen_seq (gen_id, seq_type, seq_from, seq_to, seq_size, sequence) VALUES ("
                     + "'" + gen.getGenID() + "', '3P', '" + (gen.getInter3p().getFrom()+1) + "', '" + gen.getInter3p().getTo() + "', " + gen.getInter3p().getSize()
                     + ", '" + gen.getInter3p().getSecuencia() + "')";
             if (!transacciones.insertaQuery(querySeq)) {
@@ -109,7 +109,7 @@ public class GenDAO {
         }
         //INGRESA 5P
         if (gen.getInter5p().getSize() != 0) {
-            String querySeq5P = "INSERT INTO Gen_Seq (gen_id, seq_type, seq_from, seq_to, seq_size, sequence) VALUES ("
+            String querySeq5P = "INSERT INTO gen_seq (gen_id, seq_type, seq_from, seq_to, seq_size, sequence) VALUES ("
                     + "'" + gen.getGenID() + "', '5P', '" + (gen.getInter5p().getFrom()+1) + "', '" + gen.getInter5p().getTo() + "', " + gen.getInter5p().getSize()
                     + ", '" + gen.getInter5p().getSecuencia() + "')";
             if (!transacciones.insertaQuery(querySeq5P)) {
