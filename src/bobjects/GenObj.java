@@ -14,17 +14,137 @@ import java.util.ArrayList;
 public class GenObj {
 
     String genID; //ID único del gen asignado por nosotros
-    String object_id; //ID del objeto en la base de datos mongo (archivo de contigs/scaffolds)
+    int idMetagenoma;//puede pertenecer a un metagenoma o a un genoma peor no ambos
+    int idGenoma;
+    String gen_src;//si viene de metagenoma o genoma     
+    @Deprecated
+    String object_id; //ID del objeto en la base de datos mongo (archivo de contigs/scaffolds)    
     String gene_map_id; //ID para mapear otros resultados por ejemplo FGS cnvierte los IDs a gen_id_1, gen_id_n
+    String gen_name=""; //nombre del gen
     String genType; //cds rna, trna, etc
-    String gen_strand; //+ -
-    String gen_function;//funcion o definicion del gen
+    String gen_strand; //+ - ? .
+    String gen_function="";//funcion o definicion del gen
+    int gen_length;//número de nucleótidos del gen
+    int gen_num; //número del gen dentro de se contexto (genoma o metagenoma)
+    double gen_score; //score (seter con string por que en gff puede venir con . )  
     String contig_id; //ID del contig al cual pertenece el gen
     String contig_gen_id; //ID del gen dentro del archivo de contigs
     int contig_from; //posicion de del gen dentro del contig
     int contig_to;//pos del gen dentro del ccontig
     ArrayList<GenSeqObj> sequences;//secuencias asociadas a ddicho gen
     ArrayList<DBProperty> props;//campos no modelados que pueden guardarse en MOngo
+    ArrayList<ArchivoObj> archivos;
+    String gen_phase;
+    Intergenic inter3p;
+    Intergenic inter5p;
+    GenObj vecino;
+    public int getIdMetagenoma() {
+        return idMetagenoma;
+    }
+
+    public GenObj getVecino() {
+        return vecino;
+    }
+
+    public void setVecino(GenObj vecino) {
+        this.vecino = vecino;
+    }
+
+    public Intergenic getInter3p() {
+        return inter3p;
+    }
+
+    public void setInter3p(Intergenic inter3p) {
+        this.inter3p = inter3p;
+    }
+
+    public Intergenic getInter5p() {
+        return inter5p;
+    }
+
+    public void setInter5p(Intergenic inter5p) {
+        this.inter5p = inter5p;
+    }
+    
+    public void setIdMetagenoma(int idMetagenoma) {
+        this.idMetagenoma = idMetagenoma;
+    }
+
+    public String getGen_phase() {
+        return gen_phase;
+    }
+
+    public void setGen_phase(String gen_phase) {
+        this.gen_phase = gen_phase;
+    }
+
+    public int getIdGenoma() {
+        return idGenoma;
+    }
+
+    public void setIdGenoma(int idGenoma) {
+        this.idGenoma = idGenoma;
+    }
+
+    public String getGen_src() {
+        return gen_src;
+    }
+
+    public void setGen_src(String gen_src) {
+        this.gen_src = gen_src;
+    }
+
+    public String getGen_name() {
+        return gen_name;
+    }
+
+    public void setGen_name(String gen_name) {
+        this.gen_name = gen_name;
+    }
+
+    public int getGen_length() {
+        return gen_length;
+    }
+
+    public void setGen_length(int gen_length) {
+        this.gen_length = gen_length;
+    }
+
+    public int getGen_num() {
+        return gen_num;
+    }
+
+    public void setGen_num(int gen_num) {
+        this.gen_num = gen_num;
+    }
+
+    public double getGen_score() {
+        return gen_score;
+    }
+
+    public void setGen_score(String gen_score) {
+        try {
+            this.gen_score = Double.parseDouble(gen_score);
+        } catch (NumberFormatException nfe) {
+            this.gen_score = -1;
+        }
+    }
+
+    public ArrayList<DBProperty> getProps() {
+        return props;
+    }
+
+    public void setProps(ArrayList<DBProperty> props) {
+        this.props = props;
+    }
+
+    public ArrayList<ArchivoObj> getArchivos() {
+        return archivos;
+    }
+
+    public void setArchivos(ArrayList<ArchivoObj> archivos) {
+        this.archivos = archivos;
+    }
 
     public String getGenID() {
         return genID;
@@ -33,15 +153,23 @@ public class GenObj {
     public void addSequence(GenSeqObj seq) {
         sequences.add(seq);
     }
-    public void addProperty(String key, String value){
-        props.add(new DBProperty(key,value));
+
+    public void addProperty(String key, String value) {
+        props.add(new DBProperty(key, value));
     }
-    public void addProperty(String key, String value, boolean isNumeric){
-        props.add(new DBProperty(key,value));
+
+    public void addProperty(String key, String value, boolean isNumeric) {
+        props.add(new DBProperty(key, value));
     }
-    public void insertProperty(DBProperty dbProp){
+
+    public void insertProperty(DBProperty dbProp) {
         props.add(dbProp);
     }
+
+    public void addArchivo(ArchivoObj archivo) {
+        this.archivos.add(archivo);
+    }
+    
     public String getGene_map_id() {
         return gene_map_id;
     }
@@ -130,6 +258,7 @@ public class GenObj {
         this.genID = genID;
         sequences = new ArrayList<GenSeqObj>();
         props = new ArrayList<DBProperty>();
+        this.archivos = new ArrayList<ArchivoObj>();
     }
 
 }

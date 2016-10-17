@@ -97,7 +97,7 @@ public class MetaxaDAO {
         String tax = "";
         String log = "";
         StringUtils su = new StringUtils();
-        for (int i = taxo.length - 1; i >= 0; i++) {
+        for (int i = taxo.length - 1; i >= 0; i--) {
             tax = transacciones.getNCBITaxID(su.scapeSQL(taxo[i].trim()));
             if (tax != null && tax.length() > 0) {
                 break;

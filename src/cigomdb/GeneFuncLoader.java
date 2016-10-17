@@ -6,6 +6,7 @@ package cigomdb;
 
 import bobjects.GenObj;
 import bobjects.GenSeqObj;
+import bobjects.Intergenic;
 import dao.GenDAO;
 import database.Transacciones;
 import java.io.BufferedReader;
@@ -17,6 +18,10 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import utils.FastaReader;
+import utils.GFFLine;
+import utils.GFFReader;
+import utils.Sequence;
 
 /**
  * CIGOM. MAYO 2016
@@ -144,5 +149,246 @@ public class GeneFuncLoader {
         }
         return log;
 
+    }
+
+    //String idPre, String gffFile, String nucFile, String aaFile, String mapPrefix
+    public void parseEnsamble(String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix, boolean mapStartsIn0) {
+        try {
+            GFFReader gffReader = new GFFReader(new InputStreamReader(new FileInputStream(gffFile)));
+            FastaReader contigReader = new FastaReader(new InputStreamReader(new FileInputStream(contigFile)));
+            FastaReader nucReader = new FastaReader(new InputStreamReader(new FileInputStream(nucFile)));
+            FastaReader protReader = new FastaReader(new InputStreamReader(new FileInputStream(protFile)));
+            GenDAO genDAO = new GenDAO(transacciones);
+            GFFLine gffLine;
+            int gen_num = 0;
+            GenObj tmpGene = null;
+            Sequence tmpContig = null;
+            Sequence nucSeq;
+            Sequence protSeq;
+            Sequence contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
+            //Primero procesa el archivo GFF - todo se mueve en base a este archivo
+            while ((gffLine = gffReader.readGffLine()) != null) {
+                gen_num++;
+                GenObj gen = new GenObj(idPrefix + "" + gen_num);
+                gen.setContig_id(gffLine.getId());
+                gen.setGenType(gffLine.getSeq_type());
+                gen.setContig_from(gffLine.getFrom());
+                gen.setContig_to(gffLine.getTo());
+                gen.setGen_score(gffLine.getScore());
+                gen.setGen_strand(gffLine.getStrand());
+                gen.setGen_phase(gffLine.getPhase());
+                gen.setIdGenoma(idGenoma);
+                gen.setIdMetagenoma(idMetageno);
+                gen.setGen_num(gen_num);
+                if (idGenoma != -1) {
+                    gen.setGen_src("GEN");
+                } else {
+                    gen.setGen_src("MET");
+                }
+                if (mapStartsIn0) {
+                    gen.setGene_map_id(mapPrefix + "" + (gen_num - 1));
+                } else {
+                    gen.setGene_map_id(mapPrefix + "" + gen_num);
+                }
+
+                for (String key : gffLine.getAtributos().keySet()) {
+                    if (key.toUpperCase().equals("ID")) {
+                        gen.setContig_gen_id(gffLine.getAtrributeValue(key));
+                    } else if (key.toLowerCase().equals("product")) {
+                        gen.setGen_function(gffLine.getAtrributeValue(key));
+                    } else if (key.toLowerCase().equals("gene_id")) {
+                        gen.setContig_gen_id("gene_id_" + gffLine.getAtrributeValue(key));
+                    } else {
+                        gen.addProperty(key, gffLine.getAtrributeValue(key));
+                    }
+                }
+                //aca termina de crear un gen en base a los datos del gff, ahora faltan las secuencias y las intergénicas 
+                //se espera que el primer registro del gff corresponda con la primer secuencia tanto del archivo de nucs como el de prots
+                nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
+                protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
+                if (tmpGene == null) { //esto pasa ùnicamente para el primer gen                     
+                    Intergenic cincop = new Intergenic(Intergenic.I5P);
+                    cincop.setFrom(0);
+                    cincop.setTo(gen.getContig_from() - 1);
+                    cincop.setSize(gen.getContig_from() - 1);
+                    GenSeqObj seqObj = new GenSeqObj();
+                    if (contig.getSeqId().equals(gen.getContig_id())) {
+                        if (cincop.getTo() - cincop.getFrom() < 0) {
+                            cincop.setSecuencia(contig.getSequence().substring(cincop.getTo(), cincop.getFrom()));
+                        } else {
+                            cincop.setSecuencia(contig.getSequence().substring(cincop.getFrom(), cincop.getTo()));
+                        }
+                        seqObj.setSequence(contig.getSequence().substring(gen.getContig_from() - 1, gen.getContig_to()));
+                    } /*else if (tmpContig != null && tmpContig.getSeqId().equals(gen.getContig_id())) {
+                     tresp.setSecuencia(tmpContig.getSequence().substring(tresp.getFrom(), tresp.getTo()));
+                     seqObj.setSequence(tmpContig.getSequence().substring(gen.getContig_from() - 1, gen.getContig_to()));
+                     } */ else {
+                        tmpContig = contig;
+                        contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
+                    }
+                    gen.setInter5p(cincop);
+                    seqObj.setSeqType("NC");
+                    seqObj.setSeq_from(gen.getContig_from());
+                    seqObj.setSeq_to(gen.getContig_to());
+                    gen.addSequence(seqObj);
+                } else {//del segundo gen en adelante siempre existe tmpGene
+                    //valida si el gen actual esta en el mismo contig que el gen anterior
+                    if (gen.getContig_id().equals(tmpGene.getContig_id())) {
+                        //crea la 5p del current misma que se asigna como 3p el anterior
+                        Intergenic cincop = new Intergenic(Intergenic.I5P);
+                        cincop.setFrom(tmpGene.getContig_to());
+                        cincop.setTo(gen.getContig_from() - 1);
+                        cincop.setSize(cincop.getTo() - cincop.getFrom());
+                        GenSeqObj seqObj = new GenSeqObj();
+                        //  String contig = "";//something getcontig_seq
+                        if (contig.getSeqId().equals(gen.getContig_id())) {
+                            if (cincop.getTo() - cincop.getFrom() < 0) {
+                                cincop.setSecuencia(contig.getSequence().substring(cincop.getTo(), cincop.getFrom()));
+                            } else {
+                                cincop.setSecuencia(contig.getSequence().substring(cincop.getFrom(), cincop.getTo()));
+                            }
+                            seqObj.setSequence(contig.getSequence().substring(gen.getContig_from() - 1, gen.getContig_to()));
+                        }//este else if en teoria no tendrìa que pasar... 
+                        else if (tmpContig != null && tmpContig.getSeqId().equals(gen.getContig_id())) {
+                            if (cincop.getTo() - cincop.getFrom() < 0) {
+                                cincop.setSecuencia(tmpContig.getSequence().substring(cincop.getTo(), cincop.getFrom()));
+                            } else {
+                                cincop.setSecuencia(tmpContig.getSequence().substring(cincop.getFrom(), cincop.getTo()));
+                            }
+                            seqObj.setSequence(tmpContig.getSequence().substring(gen.getContig_from() - 1, gen.getContig_to()));
+                        } else {
+                            //esto no se...si se hace esto hay que trae nuevamente el primer if o todo dentro de un while
+                            tmpContig = contig;
+                            contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
+                        }
+                        //se asigna 5p del anterior
+                        tmpGene.setInter3p((Intergenic)cincop.clone());
+                        //ANOTA TMP
+                        genDAO.almacenaValidaGen(tmpGene);
+                        //completamos los datos restantes del current (queda pendiente 5p)
+                        gen.setInter5p(cincop);
+                        seqObj.setSeqType("NC");
+                        seqObj.setSeq_from(gen.getContig_from());
+                        seqObj.setSeq_to(gen.getContig_to());
+                        gen.addSequence(seqObj);
+                    } else { //ES NUEVO CONTIG
+                        //como el nuevo gen, pertenece a un nuevo contig, el anterior gen tmpGene
+                        //tiene su intergènica 3' de donde se quedò hasta el final del contig 
+                        Intergenic tresp = new Intergenic(Intergenic.I3P);
+                        tresp.setFrom(tmpGene.getContig_to());
+                        if (contig.getSeqId().equals(tmpGene.getContig_id())) {
+                            tresp.setTo(contig.getSequence().length());
+                            if (tresp.getTo() - tresp.getFrom() < 0) {
+                                tresp.setSecuencia(contig.getSequence().substring(tresp.getTo(), tresp.getFrom()));
+                            } else {
+                                tresp.setSecuencia(contig.getSequence().substring(tresp.getFrom(), tresp.getTo()));
+                            }
+                        } //como aca estamos hablando del anterior gen lo mas probable es que sea en el contig y no tmpContig
+                        else if (tmpContig != null && tmpContig.getSeqId().equals(tmpGene.getContig_id())) {
+                            tresp.setTo(tmpContig.getSequence().length());
+                            if (tresp.getTo() - tresp.getFrom() < 0) {
+                                tresp.setSecuencia(tmpContig.getSequence().substring(tresp.getTo(), tresp.getFrom()));
+                            } else {
+                                tresp.setSecuencia(tmpContig.getSequence().substring(tresp.getFrom(), tresp.getTo()));
+                            }
+                        } else {
+                            //no se si tiene mucho sentido esto...
+                            tmpContig = contig;
+                            contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
+                        }
+                        tresp.setSize(tresp.getTo() - tresp.getFrom());
+                        tmpGene.setInter3p(tresp);
+                        //ANOTA TMP GENE
+                        genDAO.almacenaValidaGen(tmpGene);
+                        //ACA EMPIEZA EL NUEVO CONTIG
+                        Intergenic cincop = new Intergenic(Intergenic.I5P);
+                        cincop.setFrom(0);
+                        cincop.setTo(gen.getContig_from() - 1);
+                        cincop.setSize(gen.getContig_from() - 1);
+                        GenSeqObj seqObj = new GenSeqObj();
+                        if (contig.getSeqId().equals(gen.getContig_id())) {
+                            if (cincop.getTo() - cincop.getFrom() < 0) {
+                                cincop.setSecuencia(contig.getSequence().substring(cincop.getTo(), cincop.getFrom()));
+                            } else {
+                                cincop.setSecuencia(contig.getSequence().substring(cincop.getFrom(), cincop.getTo()));
+                            }
+                            seqObj.setSequence(contig.getSequence().substring(gen.getContig_from() - 1, gen.getContig_to()));
+                        }//este else if en teoria no tendrìa que pasar... 
+                        else if (tmpContig != null && tmpContig.getSeqId().equals(gen.getContig_id())) {
+                            if (cincop.getTo() - cincop.getFrom() < 0) {
+                                cincop.setSecuencia(tmpContig.getSequence().substring(cincop.getTo(), cincop.getFrom()));
+                            } else {
+                                cincop.setSecuencia(tmpContig.getSequence().substring(cincop.getFrom(), cincop.getTo()));
+                            }
+                            seqObj.setSequence(tmpContig.getSequence().substring(gen.getContig_from() - 1, gen.getContig_to()));
+                        } else {
+                            //Aca es mucho mas probable que pase esto, y es ca donde se va a realizar el cambio de contigs, por eso leemos nuevamente
+                            tmpContig = contig;
+                            contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
+                            if (contig != null && contig.getSeqId().equals(gen.getContig_id())) {
+                                if (cincop.getTo() - cincop.getFrom() < 0) {
+                                    cincop.setSecuencia(contig.getSequence().substring(cincop.getTo(), cincop.getFrom()));
+                                } else {
+                                    cincop.setSecuencia(contig.getSequence().substring(cincop.getFrom(), cincop.getTo()));
+                                }
+                                seqObj.setSequence(contig.getSequence().substring(gen.getContig_from() - 1, gen.getContig_to()));
+                            } else {
+                                System.err.println("No se puede encontrar contig para: " + gen.getContig_id());
+                            }
+                        }
+                        gen.setInter5p(cincop);
+                        seqObj.setSeqType("NC");
+                        seqObj.setSeq_from(gen.getContig_from());
+                        seqObj.setSeq_to(gen.getContig_to());
+                        gen.addSequence(seqObj);
+                    }
+                }
+                if (gen.getContig_gen_id().equals(nucSeq.getSeqId())) {
+                    GenSeqObj seqObj = new GenSeqObj();
+                    seqObj.setSequence(nucSeq.getSequence());
+                    seqObj.setSeqType("NC_2");
+                    seqObj.setSeq_from(gen.getContig_from());
+                    seqObj.setSeq_to(gen.getContig_to());
+                    gen.addSequence(seqObj);
+                }
+                if (gen.getContig_gen_id().equals(protSeq.getSeqId())) {
+                    GenSeqObj seqObj = new GenSeqObj();
+                    seqObj.setSequence(protSeq.getSequence()); //also fix de length
+                    seqObj.setSeqType("AA");
+                    seqObj.setSeq_from(gen.getContig_from());
+                    seqObj.setSeq_to(gen.getContig_to());
+                    gen.addSequence(seqObj);
+                }
+                tmpGene = gen;
+            }
+            //ANOTA EL ULTIMO GEN QUE NUNCA LLEGO A ANOTARSE
+            Intergenic tresp = new Intergenic(Intergenic.I3P);
+            tresp.setFrom(tmpGene.getContig_to());
+            if (contig != null && contig.getSeqId().equals(tmpGene.getContig_id())) {
+                tresp.setTo(contig.getSequence().length());
+                tresp.setSecuencia(contig.getSequence().substring(tresp.getFrom(), tresp.getTo()));
+
+            } //como aca estamos hablando del anterior gen lo mas probable es que sea en el contig y no tmpContig
+            else if (tmpContig != null && tmpContig.getSeqId().equals(tmpGene.getContig_id())) {
+                tresp.setTo(tmpContig.getSequence().length());
+                tresp.setSecuencia(tmpContig.getSequence().substring(tresp.getFrom(), tresp.getTo()));
+            }
+            tresp.setSize(tresp.getTo() - tresp.getFrom());
+            tmpGene.setInter3p(tresp);
+            //ANOTA TMP GENE
+            genDAO.almacenaValidaGen(tmpGene);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(GeneFuncLoader.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.println("No se encontró archivo GFF: " + gffFile);
+            System.exit(1);
+        } catch (IOException ex) {
+            Logger.getLogger(GeneFuncLoader.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.println("No se encontró archivo GFF: " + gffFile);
+            System.exit(1);
+        }  catch (CloneNotSupportedException ex) {
+            Logger.getLogger(GeneFuncLoader.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.println("Error al clonar objeto");
+            System.exit(1);
+        }
     }
 }

@@ -37,6 +37,8 @@ public class DataLoader {
         String output = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\4 db\\Pfam\\Pfam-A.clans.tsv\\Pfam-A.clans.sql";
         String mapPrefix = "gen_id_";
         String idPrefix = "M1SE3";
+        String contigIn = "";
+
         String gffIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.gff";
         String ncIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.ffn";
         String aaIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.faa";
@@ -50,6 +52,8 @@ public class DataLoader {
         String raw_ext = "fastq"; //-rawe
         boolean toFile = false;
         int campania = -1;
+        int idGenoma = -1;
+        int idMetagenoma = -1;
         String marker_meth = "";//para escoger el metodo de processamiento en modo markers 
         String delimiter = "\t";
         boolean debug = false;
@@ -64,6 +68,7 @@ public class DataLoader {
         modes.add("cog");
         modes.add("nog");
         modes.add("obo");
+        modes.add("ensamble");
         String mode = "";
         for (int i = 0; i < args.length; i++) {
             if (i == 0 && (!args[i].equals("-h") && !args[i].equals("--help"))) {
@@ -200,6 +205,15 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
+            } else if (args[i].equals("-contig")) {
+                try {
+                    contigIn = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion contig - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
             } else if (args[i].equals("-aa")) {
                 try {
                     aaIn = args[i + 1];
@@ -228,6 +242,32 @@ public class DataLoader {
                     System.exit(1);
                 } catch (NumberFormatException nfe) {
                     System.out.println("Opcion campania - Se esperaba un argumento numerico\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            } else if (args[i].equals("-idgenoma")) {
+                try {
+                    idGenoma = Integer.parseInt(args[i + 1]);
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion idgenoma - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                } catch (NumberFormatException nfe) {
+                    System.out.println("Opcion idgenoma - Se esperaba un argumento numerico\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            } else if (args[i].equals("-idmetagenoma")) {
+                try {
+                    idMetagenoma = Integer.parseInt(args[i + 1]);
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion idmetagenoma - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                } catch (NumberFormatException nfe) {
+                    System.out.println("Opcion idmetagenoma - Se esperaba un argumento numerico\n\n");
                     printHelp();
                     System.exit(1);
                 }
@@ -287,6 +327,16 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
+            } else if (mode.equals("ensamble")) {
+                if (gffIn.length() > 0 && (aaIn.length() + ncIn.length()) > 0) {
+                    GeneFuncLoader loader = new GeneFuncLoader(transacciones);
+                    //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
+                    loader.parseEnsamble(idPrefix, idMetagenoma, idGenoma, gffIn, contigIn, ncIn, aaIn, mapPrefix, true);
+                } else {
+                    System.out.println("Para correr el programa gen se espera minimo un archivo gff y un archivo fasta");
+                    printHelp();
+                    System.exit(1);
+                }
             } else if (mode.equals("derrotero")) {
                 DerroteroLoader derrotero = new DerroteroLoader(transacciones);
                 derrotero.parseMatrizDerrotero(campania, input, delimiter);
@@ -324,7 +374,7 @@ public class DataLoader {
                     MarkerLoader loader = new MarkerLoader(transacciones);
                     if (marker_meth.equals("mv1")) {
                         log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
-                    } else if (marker_meth.equals("mv2"))  {
+                    } else if (marker_meth.equals("mv2")) {
                         log += loader.parseMarkerFileFormatIPacbio(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
                     } else {
                         System.out.println("Para correr el programa gen se espera el parámetro -marker_meth: <mv1>");

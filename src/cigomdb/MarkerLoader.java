@@ -118,7 +118,11 @@ public class MarkerLoader {
                                 sec_num++;
                                 counterTotal++;
                                 String idSec = marc_name + "_" + counterTotal;
-                                String raw_seq_id = lineFastQ.substring(1, lineFastQ.indexOf(" "));
+                                int indx = lineFastQ.indexOf(" ");
+                                if(indx <=0){
+                                    indx = lineFastQ.length()-1;
+                                }
+                                String raw_seq_id = lineFastQ.substring(1, indx);                                
                                 String sec = extendedReader.readLine();
                                 avg += sec.length();
                                 if (!transacciones.insertaSeqMarcador(idSec, "" + idMarcador, raw_seq_id, sec)) {
@@ -146,7 +150,11 @@ public class MarkerLoader {
                                 sec_num++;
                                 counterTotal++;
                                 String idSec = marc_name + "_" + counterTotal;
-                                String raw_seq_id = lineFastQ.substring(1, lineFastQ.indexOf(" "));
+                                int indx = lineFastQ.indexOf(" ");
+                                if(indx <=0){
+                                    indx = lineFastQ.length()-1;
+                                }
+                                String raw_seq_id = lineFastQ.substring(1, indx);                                
                                 String sec = nc1Reader.readLine();
                                 avg += sec.length();
                                 if (!transacciones.insertaSeqMarcador(idSec, "" + idMarcador, raw_seq_id, sec)) {
@@ -174,7 +182,11 @@ public class MarkerLoader {
                                 sec_num++;
                                 counterTotal++;
                                 String idSec = marc_name + "_" + counterTotal;
-                                String raw_seq_id = lineFastQ.substring(1, lineFastQ.indexOf(" "));
+                                int indx = lineFastQ.indexOf(" ");
+                                if(indx <=0){
+                                    indx = lineFastQ.length()-1;
+                                }
+                                String raw_seq_id = lineFastQ.substring(1, indx);                                
                                 String sec = nc2Reader.readLine();
                                 avg += sec.length();
                                 if (!transacciones.insertaSeqMarcador(idSec, "" + idMarcador, raw_seq_id, sec)) {
