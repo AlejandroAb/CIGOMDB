@@ -52,7 +52,7 @@ public class GenDAO {
                 + "VALUES ("
                 + "'" + gen.getGenID() + "'," + gen.getIdMetagenoma() + "," + gen.getIdGenoma() + ",'" + gen.getGen_src()
                 + "','" + gen.getGene_map_id() + "','" + gen.getGen_name() + "', '" + gen.getGenType() + "','" + gen.getGen_strand()
-                + "', '" + gen.getGen_function() + "', " + gen.getGen_length() + ","+ gen.getGen_num()+","+gen.getGen_score()+ ",'" + gen.getContig_id()
+                + "', '" + gen.getGen_function() + "', " + gen.getGen_length() + "," + gen.getGen_num() + "," + gen.getGen_score() + ",'" + gen.getContig_id()
                 + "', '" + gen.getContig_gen_id() + "', '" + gen.getContig_from() + "', '" + gen.getContig_to() + "')";
         if (!transacciones.insertaQuery(query)) {
             System.err.println("Error insertando gen: " + gen.getGenID() + " - " + query);
@@ -79,8 +79,14 @@ public class GenDAO {
                 seq.setSeqType("NC");
                 if (nc != null && !seq.getSequence().equals(nc)) {
                     log = false;
-                    System.err.println("Seq err -> NC != NC2");
-                    System.err.println("phase" + gen.getGen_phase() + "\n" + nc + "\n" + seq.getSequence());
+                    if (Math.abs(seq.getSeq_size() - nc.length()) > 3) {
+                        System.err.println("Seq err -> NC != NC2: " + gen.getGenID());
+                        System.err.println("phase: " + gen.getGen_phase() + " from: " + gen.getContig_from() + " to: " + gen.getContig_to() + "\n" + nc + "\n" + seq.getSequence());
+                    }
+                    if (((gen.getContig_to() - gen.getContig_from()) + 1) == nc.length()) {
+                        seq.setSequence(nc);
+                        //   System.err.println("Insertando secuencia completa");
+                    }
                 }
             }
             if (insertSeq) {
@@ -100,7 +106,7 @@ public class GenDAO {
         //INGRESA 3P
         if (gen.getInter3p().getSize() != 0) {
             String querySeq = "INSERT INTO gen_seq (gen_id, seq_type, seq_from, seq_to, seq_size, sequence) VALUES ("
-                    + "'" + gen.getGenID() + "', '3P', '" + (gen.getInter3p().getFrom()+1) + "', '" + gen.getInter3p().getTo() + "', " + gen.getInter3p().getSize()
+                    + "'" + gen.getGenID() + "', '3P', '" + (gen.getInter3p().getFrom() + 1) + "', '" + gen.getInter3p().getTo() + "', " + gen.getInter3p().getSize()
                     + ", '" + gen.getInter3p().getSecuencia() + "')";
             if (!transacciones.insertaQuery(querySeq)) {
                 System.err.println("Error insertando secuencia 3P: " + gen.getGenID() + " - " + querySeq + "\n");
@@ -110,7 +116,7 @@ public class GenDAO {
         //INGRESA 5P
         if (gen.getInter5p().getSize() != 0) {
             String querySeq5P = "INSERT INTO gen_seq (gen_id, seq_type, seq_from, seq_to, seq_size, sequence) VALUES ("
-                    + "'" + gen.getGenID() + "', '5P', '" + (gen.getInter5p().getFrom()+1) + "', '" + gen.getInter5p().getTo() + "', " + gen.getInter5p().getSize()
+                    + "'" + gen.getGenID() + "', '5P', '" + (gen.getInter5p().getFrom() + 1) + "', '" + gen.getInter5p().getTo() + "', " + gen.getInter5p().getSize()
                     + ", '" + gen.getInter5p().getSecuencia() + "')";
             if (!transacciones.insertaQuery(querySeq5P)) {
                 System.err.println("Error insertando secuencia 5P: " + gen.getGenID() + " - " + querySeq5P + "\n");

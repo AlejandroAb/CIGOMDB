@@ -3,14 +3,19 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package bobjects;
+
+import cigomdb.GeneFuncLoader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import utils.Sequence;
 
 /**
  *
  * @author Alejandro
  */
 public class GenSeqObj {
+
     private String seqType;
     private int seq_from;
     private int seq_to;
@@ -60,6 +65,22 @@ public class GenSeqObj {
         this.sequence = sequence;
         this.seq_size = sequence.length();
     }
-    
-    
+
+    public void setSecuenciaValidada(Sequence sequence, int from, int to) {
+        //  this.sequence = sequence;
+
+        try {
+            this.sequence = sequence.getSequence().substring(from, to);
+            this.seq_size = this.sequence.length();
+        } catch (StringIndexOutOfBoundsException sioobe) {
+            //Logger.getLogger(GeneFuncLoader.class.getName()).log(Level.SEVERE, null, sioobe);
+            System.err.println("StringIndexOutOfBoundsException - contig " + sequence.getSeqId() + " from: " + from + " to: " + to);
+            if (from < sequence.getSequence().length()) {
+                this.sequence = sequence.getSequence().substring(from, sequence.getSequence().length());
+            }else{
+                this.sequence = "";
+            }
+        }
+    }
+
 }

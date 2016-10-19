@@ -5,6 +5,11 @@
  */
 package bobjects;
 
+import cigomdb.GeneFuncLoader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import utils.Sequence;
+
 /**
  *
  * @author Alejandro
@@ -68,4 +73,17 @@ public class Intergenic implements Cloneable {
         this.secuencia = secuencia;
     }
 
+    public void setSecuenciaValidada(Sequence secuencia, int from, int to) {
+        try {
+            this.secuencia = secuencia.getSequence().substring(from, to);
+        } catch (StringIndexOutOfBoundsException sioobe) {
+            //Logger.getLogger(GeneFuncLoader.class.getName()).log(Level.SEVERE, null, sioobe);
+            System.err.println("StringIndexOutOfBoundsException - contig " + secuencia.getSeqId() + " from: " + from + " to: " + to);
+            if (from < secuencia.getSequence().length()) {
+                this.secuencia = secuencia.getSequence().substring(from, secuencia.getSequence().length());
+            }else{
+                this.secuencia = "";
+            }
+        }
+    }
 }

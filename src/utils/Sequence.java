@@ -56,7 +56,7 @@ public class Sequence {
 
     public void setHeader(String header) {
         this.header = header;
-        StringTokenizer st = new StringTokenizer(" |\t");
+        StringTokenizer st = new StringTokenizer(header, " |\t");
         //es únicamente el primer elemento
         if(st.countTokens()>1){
             seqId = st.nextToken();
