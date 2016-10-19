@@ -341,7 +341,7 @@ public class DataLoader {
                     GeneFuncLoader loader = new GeneFuncLoader(transacciones);
                     //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
                     loader.setDebug(debug);
-                    loader.parseEnsamble(idPrefix, idMetagenoma, idGenoma, gffIn, contigIn, ncIn, aaIn, mapPrefix, startAtZero);
+                    loader.parseEnsamble(idPrefix, idMetagenoma, idGenoma, gffIn, contigIn, ncIn, aaIn, mapPrefix, startAtZero, 63756, true);
                 } else {
                     System.out.println("Para correr el programa ensamble se espera minimo un archivo gff y un archivo fasta");
                     printHelp();

@@ -29,22 +29,24 @@ public class StringUtils {
      */
     public String reversoComplementarioNuc(String cadena) {
         String invertida = "";
-        for (int i = cadena.length() - 1; i >= 0; i--) {
-            char base = cadena.charAt(i);
-            if (base == 'A') {
-                base = 'T';
-            } else if (base == 'T') {
-                base = 'A';
-            } else if (base == 'C') {
-                base = 'G';
-            } else if (base == 'G') {
-                base = 'C';
-            } else if (base == 'N') {
-                base = 'N';
-            } else {
-                System.err.println("Caracter No Esperado. SUtils.reversoComplementarioNuc: " + base);
+        if (cadena != null) {
+            for (int i = cadena.length() - 1; i >= 0; i--) {
+                char base = cadena.charAt(i);
+                if (base == 'A') {
+                    base = 'T';
+                } else if (base == 'T') {
+                    base = 'A';
+                } else if (base == 'C') {
+                    base = 'G';
+                } else if (base == 'G') {
+                    base = 'C';
+                } else if (base == 'N') {
+                    base = 'N';
+                } else {
+                    System.err.println("Caracter No Esperado. SUtils.reversoComplementarioNuc: " + base);
+                }
+                invertida += base;
             }
-            invertida += base;
         }
         return invertida;
     }

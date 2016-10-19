@@ -8,6 +8,7 @@ package utils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.HashMap;
 
 /**
  *
@@ -15,10 +16,24 @@ import java.io.Reader;
  */
 public class FastaReader extends BufferedReader {
 
+    private HashMap<String, Sequence> seqMap;
     public FastaReader(Reader in) {
         super(in);
     }
-
+    public void loadHash(int seqType) throws IOException{
+        seqMap = new HashMap<>();
+        Sequence seq;
+        while((seq = readSequence(seqType))!= null){
+            seqMap.put(seq.getSeqId(), seq);
+        }
+    }
+    public Sequence getKey(String key){
+        Sequence seq = seqMap.get(key);
+        if(seq != null){
+            seqMap.remove(key);
+        }
+        return seq;
+    }
     /**
      * Se encarga de leer una secuencia en un archivo fasta, toma en cuenta que
      * pueden venir muchas lienas de secuencia, no esta 100% probado pero usa

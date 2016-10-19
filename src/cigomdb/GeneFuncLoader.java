@@ -29,22 +29,22 @@ import utils.Sequence;
  * @author Alejandro Abdala
  */
 public class GeneFuncLoader {
-
+    
     private Transacciones transacciones = null;
     private boolean debug = false;
-
+    
     public GeneFuncLoader(Transacciones transacciones) {
         this.transacciones = transacciones;
     }
-
+    
     public boolean isDebug() {
         return debug;
     }
-
+    
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
-
+    
     public String loadFragileScanFiles(String idPre, String gffFile, String nucFile, String aaFile, String mapPrefix) {
         String log = "";
         GenDAO genDAO = new GenDAO(transacciones);
@@ -105,7 +105,7 @@ public class GeneFuncLoader {
                                 gen.setGen_function(val);
                             } else {
                                 gen.addProperty(key, val);
-
+                                
                             }
                         }
                     }
@@ -146,7 +146,7 @@ public class GeneFuncLoader {
                     log += genDAO.almacenaGen(gen);
                 }
             }
-
+            
         } catch (FileNotFoundException ex) {
             Logger.getLogger(GeneFuncLoader.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ioe) {
@@ -156,11 +156,29 @@ public class GeneFuncLoader {
             log += "Error token linea: " + line;
         }
         return log;
-
+        
     }
 
     //String idPre, String gffFile, String nucFile, String aaFile, String mapPrefix
-    public void parseEnsamble(String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix, boolean mapStartsIn0) {
+    /**
+     *
+     * @param idPrefix el prefijo que es usado para el id dl gen
+     * @param idMetageno el metagenoma al que se relaciona
+     * @param idGenoma el genoma al que esta relaccionado, puede ser a un genoma
+     * o a un metagenoma pero no ambos
+     * @param gffFile el archivo de coordenadas
+     * @param contigFile el archivo de secuencias
+     * @param nucFile el archivo de nucleotidos coorrespondiente a las
+     * coordenadas y el contigfile
+     * @param protFile la traducción del archivo de nucleotidos a proteinas
+     * @param mapPrefix el prefijo ccon el cual luego se hara el mapping para la
+     * anotacion funcional (ejemplo gen_id_)
+     * @param mapStartsIn0 Hubo un caso donde el gen_id en el contig empezaa en
+     * uno y en la anotacion funcional en cero esta bandera permite ese desfaz
+     * @param startAtLine si se proceso un archivo grande, y este fallo y se
+     * requiere re procesar desde algún punto se puede usar este parámetro
+     */
+    public void parseEnsamble(String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix, boolean mapStartsIn0, int startAtLine, boolean withHash) {
         try {
             GFFReader gffReader = new GFFReader(new InputStreamReader(new FileInputStream(gffFile)));
             FastaReader contigReader = new FastaReader(new InputStreamReader(new FileInputStream(contigFile)));
@@ -172,9 +190,20 @@ public class GeneFuncLoader {
             int gen_num = 0;
             GenObj tmpGene = null;
             Sequence tmpContig = null;
-            Sequence nucSeq;
-            Sequence protSeq;
+            Sequence nucSeq = null;
+            Sequence protSeq = null;
             Sequence contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
+            if (withHash) {
+                nucReader.loadHash(Sequence.NUCLEOTIDOS);
+                protReader.loadHash(Sequence.PROTEINAS);
+            }
+            while (gen_num < startAtLine) {
+                gffLine = gffReader.readGffLine();
+                gen_num++;
+                if (gffLine == null) {
+                    System.err.println("Fin de archivo no se proceso ningún gen. Registros en archivo: " + gen_num + " bandera startAt: " + 77);
+                }
+            }
             //Primero procesa el archivo GFF - todo se mueve en base a este archivo
             while ((gffLine = gffReader.readGffLine()) != null) {
                 gen_num++;
@@ -199,7 +228,7 @@ public class GeneFuncLoader {
                 } else {
                     gen.setGene_map_id(mapPrefix + "" + gen_num);
                 }
-
+                
                 for (String key : gffLine.getAtributos().keySet()) {
                     if (key.toUpperCase().equals("ID")) {
                         gen.setContig_gen_id(gffLine.getAtrributeValue(key));
@@ -213,28 +242,38 @@ public class GeneFuncLoader {
                 }
                 //aca termina de crear un gen en base a los datos del gff, ahora faltan las secuencias y las intergénicas 
                 //se espera que el primer registro del gff corresponda con la primer secuencia tanto del archivo de nucs como el de prots
-                nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
-                protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
+                if (!withHash) {
+                    nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
+                    protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
+                }
                 if (tmpGene == null) { //esto pasa ùnicamente para el primer gen                     
                     Intergenic cincop = new Intergenic(Intergenic.I5P);
                     cincop.setFrom(0);
                     cincop.setTo(gen.getContig_from() - 1);
                     // cincop.setSize(gen.getContig_from() - 1);
                     GenSeqObj seqObj = new GenSeqObj();
-                    if (contig.getSeqId().equals(gen.getContig_id())) {
+                    //esto hace posible que podamos usar la bandera startAtLine
+                    while (contig != null && contig.getSeqId().equals(gen.getContig_id())) {
+                        tmpContig = contig;
+                        contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
+                        
+                    }
+                    if (contig != null) {
                         if (cincop.getTo() - cincop.getFrom() < 0) {
                             cincop.setSecuenciaValidada(contig, cincop.getTo(), cincop.getFrom());
                         } else {
                             cincop.setSecuenciaValidada(contig, cincop.getFrom(), cincop.getTo());
                         }
                         seqObj.setSecuenciaValidada(contig, gen.getContig_from() - 1, gen.getContig_to());
-                    } /*else if (tmpContig != null && tmpContig.getSeqId().equals(gen.getContig_id())) {
+                    } else {
+                        System.err.println("No se encontró contig: " + gen.getContig_id());
+                        System.exit(1);
+                    }
+                    /*else if (tmpContig != null && tmpContig.getSeqId().equals(gen.getContig_id())) {
                      tresp.setSecuencia(tmpContig.getSequence().substring(tresp.getFrom(), tresp.getTo()));
                      seqObj.setSequence(tmpContig.getSequence().substring(gen.getContig_from() - 1, gen.getContig_to()));
-                     } */ else {
-                        tmpContig = contig;
-                        contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
-                    }
+                     } */
+                    
                     gen.setInter5p(cincop);
                     seqObj.setSeqType("NC");
                     seqObj.setSeq_from(gen.getContig_from());
@@ -293,7 +332,7 @@ public class GeneFuncLoader {
                              tresp.setSecuenciaValidada(contig,tresp.getFrom(), tresp.getTo());
                              }*/
                             if (tresp.getTo() - tresp.getFrom() > 0) {
-                               tresp.setSecuenciaValidada(contig,tresp.getFrom(), tresp.getTo());
+                                tresp.setSecuenciaValidada(contig, tresp.getFrom(), tresp.getTo());
                             } else {
                                 tresp.setSecuencia("");
                             }
@@ -357,26 +396,9 @@ public class GeneFuncLoader {
                         gen.addSequence(seqObj);
                     }
                 }
-                while (nucSeq != null && !gen.getContig_gen_id().equals(nucSeq.getSeqId())) {
-                    nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
-                    // protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
-                }
-                if (nucSeq != null && gen.getContig_gen_id().equals(nucSeq.getSeqId())) {
-                    GenSeqObj seqObj = new GenSeqObj();
-                    seqObj.setSequence(nucSeq.getSequence());
-                    seqObj.setSeqType("NC_2");
-                    seqObj.setSeq_from(gen.getContig_from());
-                    seqObj.setSeq_to(gen.getContig_to());
-                    gen.addSequence(seqObj);
-                } else { // es null
-                    //no lo encontró así que reinicia el reader
-                    nucReader = new FastaReader(new InputStreamReader(new FileInputStream(nucFile)));
-                    nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
-                    while (nucSeq != null && !gen.getContig_gen_id().equals(nucSeq.getSeqId())) {
-                        nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
-                        // protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
-                    }
-                    if (nucSeq != null && gen.getContig_gen_id().equals(nucSeq.getSeqId())) {
+                if (withHash) {
+                    nucSeq = nucReader.getKey(gen.getContig_gen_id());
+                    if (nucSeq != null) {
                         GenSeqObj seqObj = new GenSeqObj();
                         seqObj.setSequence(nucSeq.getSequence());
                         seqObj.setSeqType("NC_2");
@@ -384,23 +406,54 @@ public class GeneFuncLoader {
                         seqObj.setSeq_to(gen.getContig_to());
                         gen.addSequence(seqObj);
                     } else {
-                        System.err.println("No se encontro NC para: " + gen.getContig_gen_id() + " - " + gen.getGenID());
+                        System.err.println("No se encontró contig: " + gen.getContig_gen_id());
+                    }
+                } else {
+                    while (nucSeq != null && !gen.getContig_gen_id().equals(nucSeq.getSeqId())) {
+                        nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
+                        // protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
+                    }
+                    
+                    if (nucSeq != null && gen.getContig_gen_id().equals(nucSeq.getSeqId())) {
+                        GenSeqObj seqObj = new GenSeqObj();
+                        seqObj.setSequence(nucSeq.getSequence());
+                        seqObj.setSeqType("NC_2");
+                        seqObj.setSeq_from(gen.getContig_from());
+                        seqObj.setSeq_to(gen.getContig_to());
+                        gen.addSequence(seqObj);
+                    } else { // es null
+                        //no lo encontró así que reinicia el reader
+                        nucReader = new FastaReader(new InputStreamReader(new FileInputStream(nucFile)));
+                        nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
+                        while (nucSeq != null && !gen.getContig_gen_id().equals(nucSeq.getSeqId())) {
+                            nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
+                            // protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
+                        }
+                        if (nucSeq != null && gen.getContig_gen_id().equals(nucSeq.getSeqId())) {
+                            GenSeqObj seqObj = new GenSeqObj();
+                            seqObj.setSequence(nucSeq.getSequence());
+                            seqObj.setSeqType("NC_2");
+                            seqObj.setSeq_from(gen.getContig_from());
+                            seqObj.setSeq_to(gen.getContig_to());
+                            gen.addSequence(seqObj);
+                        } else {
+                            System.err.println("No se encontro NC para: " + gen.getContig_gen_id() + " - " + gen.getGenID());
+                        }
                     }
                 }
-                while (protSeq != null && !gen.getContig_gen_id().equals(protSeq.getSeqId())) {
-                    //nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
-                    protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
-                }
-                if (protSeq != null && gen.getContig_gen_id().equals(protSeq.getSeqId())) {
-                    GenSeqObj seqObj = new GenSeqObj();
-                    seqObj.setSequence(protSeq.getSequence()); //also fix de length
-                    seqObj.setSeqType("AA");
-                    seqObj.setSeq_from(gen.getContig_from());
-                    seqObj.setSeq_to(gen.getContig_to());
-                    gen.addSequence(seqObj);
-                } else {//ES NULL
-                    protReader = new FastaReader(new InputStreamReader(new FileInputStream(nucFile)));
-                    protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
+                if (withHash) {
+                    protSeq = protReader.getKey(gen.getContig_gen_id());
+                    if (protSeq != null) {
+                        GenSeqObj seqObj = new GenSeqObj();
+                        seqObj.setSequence(protSeq.getSequence()); //also fix de length
+                        seqObj.setSeqType("AA");
+                        seqObj.setSeq_from(gen.getContig_from());
+                        seqObj.setSeq_to(gen.getContig_to());
+                        gen.addSequence(seqObj);
+                    } else {
+                        System.err.print("No se encontró secuencia de proteinas para contig: " + gen.getContig_gen_id());
+                    }
+                } else {
                     while (protSeq != null && !gen.getContig_gen_id().equals(protSeq.getSeqId())) {
                         //nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
                         protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
@@ -412,8 +465,23 @@ public class GeneFuncLoader {
                         seqObj.setSeq_from(gen.getContig_from());
                         seqObj.setSeq_to(gen.getContig_to());
                         gen.addSequence(seqObj);
-                    } else {
-                        System.err.println("No se encontro AA para: " + gen.getContig_gen_id() + " - " + gen.getGenID());
+                    } else {//ES NULL
+                        protReader = new FastaReader(new InputStreamReader(new FileInputStream(nucFile)));
+                        protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
+                        while (protSeq != null && !gen.getContig_gen_id().equals(protSeq.getSeqId())) {
+                            //nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
+                            protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
+                        }
+                        if (protSeq != null && gen.getContig_gen_id().equals(protSeq.getSeqId())) {
+                            GenSeqObj seqObj = new GenSeqObj();
+                            seqObj.setSequence(protSeq.getSequence()); //also fix de length
+                            seqObj.setSeqType("AA");
+                            seqObj.setSeq_from(gen.getContig_from());
+                            seqObj.setSeq_to(gen.getContig_to());
+                            gen.addSequence(seqObj);
+                        } else {
+                            System.err.println("No se encontro AA para: " + gen.getContig_gen_id() + " - " + gen.getGenID());
+                        }
                     }
                 }
                 tmpGene = gen;
@@ -427,8 +495,8 @@ public class GeneFuncLoader {
                     tresp.setSecuencia(contig.getSequence().substring(tresp.getFrom(), tresp.getTo()));
                 } else {
                     tresp.setSecuencia("");
-                }              
-
+                }
+                
             } //como aca estamos hablando del anterior gen lo mas probable es que sea en el contig y no tmpContig
             else if (tmpContig != null && tmpContig.getSeqId().equals(tmpGene.getContig_id())) {
                 tresp.setTo(tmpContig.getSequence().length());
