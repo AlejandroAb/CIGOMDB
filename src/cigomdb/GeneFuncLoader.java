@@ -37,6 +37,14 @@ public class GeneFuncLoader {
         this.transacciones = transacciones;
     }
 
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
     public String loadFragileScanFiles(String idPre, String gffFile, String nucFile, String aaFile, String mapPrefix) {
         String log = "";
         GenDAO genDAO = new GenDAO(transacciones);
@@ -159,6 +167,7 @@ public class GeneFuncLoader {
             FastaReader nucReader = new FastaReader(new InputStreamReader(new FileInputStream(nucFile)));
             FastaReader protReader = new FastaReader(new InputStreamReader(new FileInputStream(protFile)));
             GenDAO genDAO = new GenDAO(transacciones);
+            genDAO.setDebug(debug);
             GFFLine gffLine;
             int gen_num = 0;
             GenObj tmpGene = null;
@@ -210,15 +219,15 @@ public class GeneFuncLoader {
                     Intergenic cincop = new Intergenic(Intergenic.I5P);
                     cincop.setFrom(0);
                     cincop.setTo(gen.getContig_from() - 1);
-                    cincop.setSize(gen.getContig_from() - 1);
+                    // cincop.setSize(gen.getContig_from() - 1);
                     GenSeqObj seqObj = new GenSeqObj();
                     if (contig.getSeqId().equals(gen.getContig_id())) {
                         if (cincop.getTo() - cincop.getFrom() < 0) {
-                            cincop.setSecuenciaValidada(contig,cincop.getTo(), cincop.getFrom());
+                            cincop.setSecuenciaValidada(contig, cincop.getTo(), cincop.getFrom());
                         } else {
-                            cincop.setSecuenciaValidada(contig,cincop.getFrom(), cincop.getTo());
+                            cincop.setSecuenciaValidada(contig, cincop.getFrom(), cincop.getTo());
                         }
-                        seqObj.setSecuenciaValidada(contig,gen.getContig_from() - 1, gen.getContig_to());
+                        seqObj.setSecuenciaValidada(contig, gen.getContig_from() - 1, gen.getContig_to());
                     } /*else if (tmpContig != null && tmpContig.getSeqId().equals(gen.getContig_id())) {
                      tresp.setSecuencia(tmpContig.getSequence().substring(tresp.getFrom(), tresp.getTo()));
                      seqObj.setSequence(tmpContig.getSequence().substring(gen.getContig_from() - 1, gen.getContig_to()));
@@ -238,24 +247,24 @@ public class GeneFuncLoader {
                         Intergenic cincop = new Intergenic(Intergenic.I5P);
                         cincop.setFrom(tmpGene.getContig_to());
                         cincop.setTo(gen.getContig_from() - 1);
-                        cincop.setSize(cincop.getTo() - cincop.getFrom());
+                        //    cincop.setSize(cincop.getTo() - cincop.getFrom());
                         GenSeqObj seqObj = new GenSeqObj();
                         //  String contig = "";//something getcontig_seq
                         if (contig.getSeqId().equals(gen.getContig_id())) {
                             if (cincop.getTo() - cincop.getFrom() < 0) {
-                                cincop.setSecuenciaValidada(contig,cincop.getTo(), cincop.getFrom());
+                                cincop.setSecuenciaValidada(contig, cincop.getTo(), cincop.getFrom());
                             } else {
-                                cincop.setSecuenciaValidada(contig,cincop.getFrom(), cincop.getTo());
+                                cincop.setSecuenciaValidada(contig, cincop.getFrom(), cincop.getTo());
                             }
-                            seqObj.setSecuenciaValidada(contig,gen.getContig_from() - 1, gen.getContig_to());
+                            seqObj.setSecuenciaValidada(contig, gen.getContig_from() - 1, gen.getContig_to());
                         }//este else if en teoria no tendrìa que pasar... 
                         else if (tmpContig != null && tmpContig.getSeqId().equals(gen.getContig_id())) {
                             if (cincop.getTo() - cincop.getFrom() < 0) {
-                                cincop.setSecuenciaValidada(tmpContig,cincop.getTo(), cincop.getFrom());
+                                cincop.setSecuenciaValidada(tmpContig, cincop.getTo(), cincop.getFrom());
                             } else {
-                                cincop.setSecuenciaValidada(tmpContig,cincop.getFrom(), cincop.getTo());
+                                cincop.setSecuenciaValidada(tmpContig, cincop.getFrom(), cincop.getTo());
                             }
-                            seqObj.setSecuenciaValidada(tmpContig,gen.getContig_from() - 1, gen.getContig_to());
+                            seqObj.setSecuenciaValidada(tmpContig, gen.getContig_from() - 1, gen.getContig_to());
                         } else {
                             //esto no se...si se hace esto hay que trae nuevamente el primer if o todo dentro de un while
                             tmpContig = contig;
@@ -278,25 +287,30 @@ public class GeneFuncLoader {
                         tresp.setFrom(tmpGene.getContig_to());
                         if (contig.getSeqId().equals(tmpGene.getContig_id())) {
                             tresp.setTo(contig.getSequence().length());
-                            if (tresp.getTo() - tresp.getFrom() < 0) {
-                                tresp.setSecuenciaValidada(contig,tresp.getTo(), tresp.getFrom());
+                            /*    if (tresp.getTo() - tresp.getFrom() < 0) {
+                             tresp.setSecuenciaValidada(contig,tresp.getTo(), tresp.getFrom());
+                             } else {
+                             tresp.setSecuenciaValidada(contig,tresp.getFrom(), tresp.getTo());
+                             }*/
+                            if (tresp.getTo() - tresp.getFrom() > 0) {
+                               tresp.setSecuenciaValidada(contig,tresp.getFrom(), tresp.getTo());
                             } else {
-                                tresp.setSecuenciaValidada(contig,tresp.getFrom(), tresp.getTo());
+                                tresp.setSecuencia("");
                             }
                         } //como aca estamos hablando del anterior gen lo mas probable es que sea en el contig y no tmpContig
                         else if (tmpContig != null && tmpContig.getSeqId().equals(tmpGene.getContig_id())) {
                             tresp.setTo(tmpContig.getSequence().length());
                             if (tresp.getTo() - tresp.getFrom() < 0) {
-                                tresp.setSecuenciaValidada(tmpContig,tresp.getTo(), tresp.getFrom());
+                                tresp.setSecuenciaValidada(tmpContig, tresp.getTo(), tresp.getFrom());
                             } else {
-                                tresp.setSecuenciaValidada(tmpContig,tresp.getFrom(), tresp.getTo());
+                                tresp.setSecuenciaValidada(tmpContig, tresp.getFrom(), tresp.getTo());
                             }
                         } else {
                             //no se si tiene mucho sentido esto...
                             tmpContig = contig;
                             contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
                         }
-                        tresp.setSize(tresp.getTo() - tresp.getFrom());
+                        //  tresp.setSize(tresp.getTo() - tresp.getFrom());
                         tmpGene.setInter3p(tresp);
                         //ANOTA TMP GENE
                         genDAO.almacenaValidaGen(tmpGene);
@@ -304,34 +318,34 @@ public class GeneFuncLoader {
                         Intergenic cincop = new Intergenic(Intergenic.I5P);
                         cincop.setFrom(0);
                         cincop.setTo(gen.getContig_from() - 1);
-                        cincop.setSize(gen.getContig_from() - 1);
+                        // cincop.setSize(gen.getContig_from() - 1);
                         GenSeqObj seqObj = new GenSeqObj();
                         if (contig.getSeqId().equals(gen.getContig_id())) {
                             if (cincop.getTo() - cincop.getFrom() < 0) {
-                                cincop.setSecuenciaValidada(contig,cincop.getTo(), cincop.getFrom());
+                                cincop.setSecuenciaValidada(contig, cincop.getTo(), cincop.getFrom());
                             } else {
-                                cincop.setSecuenciaValidada(contig,cincop.getFrom(), cincop.getTo());
+                                cincop.setSecuenciaValidada(contig, cincop.getFrom(), cincop.getTo());
                             }
-                            seqObj.setSecuenciaValidada(contig,gen.getContig_from() - 1, gen.getContig_to());
+                            seqObj.setSecuenciaValidada(contig, gen.getContig_from() - 1, gen.getContig_to());
                         }//este else if en teoria no tendrìa que pasar... 
                         else if (tmpContig != null && tmpContig.getSeqId().equals(gen.getContig_id())) {
                             if (cincop.getTo() - cincop.getFrom() < 0) {
-                                cincop.setSecuenciaValidada(tmpContig,cincop.getTo(), cincop.getFrom());
+                                cincop.setSecuenciaValidada(tmpContig, cincop.getTo(), cincop.getFrom());
                             } else {
-                                cincop.setSecuenciaValidada(tmpContig,cincop.getFrom(), cincop.getTo());
+                                cincop.setSecuenciaValidada(tmpContig, cincop.getFrom(), cincop.getTo());
                             }
-                            seqObj.setSecuenciaValidada(tmpContig,gen.getContig_from() - 1, gen.getContig_to());
+                            seqObj.setSecuenciaValidada(tmpContig, gen.getContig_from() - 1, gen.getContig_to());
                         } else {
                             //Aca es mucho mas probable que pase esto, y es ca donde se va a realizar el cambio de contigs, por eso leemos nuevamente
                             tmpContig = contig;
                             contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
                             if (contig != null && contig.getSeqId().equals(gen.getContig_id())) {
                                 if (cincop.getTo() - cincop.getFrom() < 0) {
-                                    cincop.setSecuenciaValidada(contig,cincop.getTo(), cincop.getFrom());
+                                    cincop.setSecuenciaValidada(contig, cincop.getTo(), cincop.getFrom());
                                 } else {
-                                    cincop.setSecuenciaValidada(contig,cincop.getFrom(), cincop.getTo());
+                                    cincop.setSecuenciaValidada(contig, cincop.getFrom(), cincop.getTo());
                                 }
-                                seqObj.setSecuenciaValidada(contig,gen.getContig_from() - 1, gen.getContig_to());
+                                seqObj.setSecuenciaValidada(contig, gen.getContig_from() - 1, gen.getContig_to());
                             } else {
                                 System.err.println("No se puede encontrar contig para: " + gen.getContig_id());
                             }
@@ -362,7 +376,7 @@ public class GeneFuncLoader {
                         nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
                         // protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
                     }
-                    if (nucSeq !=null && gen.getContig_gen_id().equals(nucSeq.getSeqId())) {
+                    if (nucSeq != null && gen.getContig_gen_id().equals(nucSeq.getSeqId())) {
                         GenSeqObj seqObj = new GenSeqObj();
                         seqObj.setSequence(nucSeq.getSequence());
                         seqObj.setSeqType("NC_2");
@@ -409,14 +423,18 @@ public class GeneFuncLoader {
             tresp.setFrom(tmpGene.getContig_to());
             if (contig != null && contig.getSeqId().equals(tmpGene.getContig_id())) {
                 tresp.setTo(contig.getSequence().length());
-                tresp.setSecuencia(contig.getSequence().substring(tresp.getFrom(), tresp.getTo()));
+                if (tresp.getTo() - tresp.getFrom() > 0) {
+                    tresp.setSecuencia(contig.getSequence().substring(tresp.getFrom(), tresp.getTo()));
+                } else {
+                    tresp.setSecuencia("");
+                }              
 
             } //como aca estamos hablando del anterior gen lo mas probable es que sea en el contig y no tmpContig
             else if (tmpContig != null && tmpContig.getSeqId().equals(tmpGene.getContig_id())) {
                 tresp.setTo(tmpContig.getSequence().length());
                 tresp.setSecuencia(tmpContig.getSequence().substring(tresp.getFrom(), tresp.getTo()));
             }
-            tresp.setSize(tresp.getTo() - tresp.getFrom());
+            //  tresp.setSize(tresp.getTo() - tresp.getFrom());
             tmpGene.setInter3p(tresp);
             //ANOTA TMP GENE
             genDAO.almacenaValidaGen(tmpGene);
@@ -432,6 +450,6 @@ public class GeneFuncLoader {
             Logger.getLogger(GeneFuncLoader.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("Error al clonar objeto");
             System.exit(1);
-        } 
+        }
     }
 }

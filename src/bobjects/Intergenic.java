@@ -45,7 +45,7 @@ public class Intergenic implements Cloneable {
         return size;
     }
 
-    public void setSize(int size) {
+    public void setSizes(int size) {
         this.size = size;
     }
 
@@ -71,6 +71,8 @@ public class Intergenic implements Cloneable {
 
     public void setSecuencia(String secuencia) {
         this.secuencia = secuencia;
+        this.size = secuencia.length();
+                
     }
 
     public void setSecuenciaValidada(Sequence secuencia, int from, int to) {
@@ -85,5 +87,6 @@ public class Intergenic implements Cloneable {
                 this.secuencia = "";
             }
         }
+        this.size = this.secuencia.length();
     }
 }

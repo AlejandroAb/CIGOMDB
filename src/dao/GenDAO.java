@@ -80,8 +80,10 @@ public class GenDAO {
                 if (nc != null && !seq.getSequence().equals(nc)) {
                     log = false;
                     if (Math.abs(seq.getSeq_size() - nc.length()) > 3) {
-                        System.err.println("Seq err -> NC != NC2: " + gen.getGenID());
-                        System.err.println("phase: " + gen.getGen_phase() + " from: " + gen.getContig_from() + " to: " + gen.getContig_to() + "\n" + nc + "\n" + seq.getSequence());
+                        if (debug) {
+                            System.err.println("Seq err -> NC != NC2: " + gen.getGenID() + " dif: " + Math.abs(seq.getSeq_size() - nc.length()));
+                        }
+                        //  System.err.println("phase: " + gen.getGen_phase() + " from: " + gen.getContig_from() + " to: " + gen.getContig_to() + "\n" + nc + "\n" + seq.getSequence());
                     }
                     if (((gen.getContig_to() - gen.getContig_from()) + 1) == nc.length()) {
                         seq.setSequence(nc);
