@@ -27,9 +27,9 @@ public class FastaReader extends BufferedReader {
             seqMap.put(seq.getSeqId(), seq);
         }
     }
-    public Sequence getKey(String key){
+    public Sequence getKey(String key, boolean remove){
         Sequence seq = seqMap.get(key);
-        if(seq != null){
+        if(seq != null && remove){
             seqMap.remove(key);
         }
         return seq;

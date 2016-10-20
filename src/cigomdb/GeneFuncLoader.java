@@ -29,22 +29,22 @@ import utils.Sequence;
  * @author Alejandro Abdala
  */
 public class GeneFuncLoader {
-    
+
     private Transacciones transacciones = null;
     private boolean debug = false;
-    
+
     public GeneFuncLoader(Transacciones transacciones) {
         this.transacciones = transacciones;
     }
-    
+
     public boolean isDebug() {
         return debug;
     }
-    
+
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
-    
+
     public String loadFragileScanFiles(String idPre, String gffFile, String nucFile, String aaFile, String mapPrefix) {
         String log = "";
         GenDAO genDAO = new GenDAO(transacciones);
@@ -105,7 +105,7 @@ public class GeneFuncLoader {
                                 gen.setGen_function(val);
                             } else {
                                 gen.addProperty(key, val);
-                                
+
                             }
                         }
                     }
@@ -146,7 +146,7 @@ public class GeneFuncLoader {
                     log += genDAO.almacenaGen(gen);
                 }
             }
-            
+
         } catch (FileNotFoundException ex) {
             Logger.getLogger(GeneFuncLoader.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ioe) {
@@ -156,7 +156,7 @@ public class GeneFuncLoader {
             log += "Error token linea: " + line;
         }
         return log;
-        
+
     }
 
     //String idPre, String gffFile, String nucFile, String aaFile, String mapPrefix
@@ -177,6 +177,9 @@ public class GeneFuncLoader {
      * uno y en la anotacion funcional en cero esta bandera permite ese desfaz
      * @param startAtLine si se proceso un archivo grande, y este fallo y se
      * requiere re procesar desde algún punto se puede usar este parámetro
+     * @param withHash lee los archivos de contigs, nucs y prots y los carga en
+     * memoria en un hash, ha demostrado ser la mejor manera de procesar los
+     * archivos, por esto por default est variable es true
      */
     public void parseEnsamble(String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix, boolean mapStartsIn0, int startAtLine, boolean withHash) {
         try {
@@ -192,10 +195,13 @@ public class GeneFuncLoader {
             Sequence tmpContig = null;
             Sequence nucSeq = null;
             Sequence protSeq = null;
-            Sequence contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
+            Sequence contig = null;
             if (withHash) {
                 nucReader.loadHash(Sequence.NUCLEOTIDOS);
                 protReader.loadHash(Sequence.PROTEINAS);
+                contigReader.loadHash(Sequence.NUCLEOTIDOS);
+            } else {
+                contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
             }
             while (gen_num < startAtLine) {
                 gffLine = gffReader.readGffLine();
@@ -228,7 +234,7 @@ public class GeneFuncLoader {
                 } else {
                     gen.setGene_map_id(mapPrefix + "" + gen_num);
                 }
-                
+
                 for (String key : gffLine.getAtributos().keySet()) {
                     if (key.toUpperCase().equals("ID")) {
                         gen.setContig_gen_id(gffLine.getAtrributeValue(key));
@@ -252,11 +258,14 @@ public class GeneFuncLoader {
                     cincop.setTo(gen.getContig_from() - 1);
                     // cincop.setSize(gen.getContig_from() - 1);
                     GenSeqObj seqObj = new GenSeqObj();
-                    //esto hace posible que podamos usar la bandera startAtLine
-                    while (contig != null && contig.getSeqId().equals(gen.getContig_id())) {
+                    //esto hace posible que podamos usar la bandera startAtLine //IF WITH HASH
+                    while (!withHash && contig != null && contig.getSeqId().equals(gen.getContig_id())) {
                         tmpContig = contig;
                         contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
-                        
+
+                    }
+                    if (withHash) {
+                        contig = contigReader.getKey(gen.getContig_id(), false);
                     }
                     if (contig != null) {
                         if (cincop.getTo() - cincop.getFrom() < 0) {
@@ -273,7 +282,7 @@ public class GeneFuncLoader {
                      tresp.setSecuencia(tmpContig.getSequence().substring(tresp.getFrom(), tresp.getTo()));
                      seqObj.setSequence(tmpContig.getSequence().substring(gen.getContig_from() - 1, gen.getContig_to()));
                      } */
-                    
+
                     gen.setInter5p(cincop);
                     seqObj.setSeqType("NC");
                     seqObj.setSeq_from(gen.getContig_from());
@@ -282,7 +291,7 @@ public class GeneFuncLoader {
                 } else {//del segundo gen en adelante siempre existe tmpGene
                     //valida si el gen actual esta en el mismo contig que el gen anterior
                     if (gen.getContig_id().equals(tmpGene.getContig_id())) {
-                        //crea la 5p del current misma que se asigna como 3p el anterior
+                        //crea la 5p del current misma que se asigna como 3p Del anterior
                         Intergenic cincop = new Intergenic(Intergenic.I5P);
                         cincop.setFrom(tmpGene.getContig_to());
                         cincop.setTo(gen.getContig_from() - 1);
@@ -308,8 +317,9 @@ public class GeneFuncLoader {
                             //esto no se...si se hace esto hay que trae nuevamente el primer if o todo dentro de un while
                             tmpContig = contig;
                             contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
+                            System.err.println("LECTURA RARA DE CONTIG");
                         }
-                        //se asigna 5p del anterior
+                        //se asigna 3p del anterior que es cinco ' del actual
                         tmpGene.setInter3p((Intergenic) cincop.clone());
                         //ANOTA TMP
                         genDAO.almacenaValidaGen(tmpGene);
@@ -377,7 +387,11 @@ public class GeneFuncLoader {
                         } else {
                             //Aca es mucho mas probable que pase esto, y es ca donde se va a realizar el cambio de contigs, por eso leemos nuevamente
                             tmpContig = contig;
-                            contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
+                            if (withHash) {
+                                contig = contigReader.getKey(gen.getContig_id(), false);
+                            } else {
+                                contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
+                            }
                             if (contig != null && contig.getSeqId().equals(gen.getContig_id())) {
                                 if (cincop.getTo() - cincop.getFrom() < 0) {
                                     cincop.setSecuenciaValidada(contig, cincop.getTo(), cincop.getFrom());
@@ -397,7 +411,7 @@ public class GeneFuncLoader {
                     }
                 }
                 if (withHash) {
-                    nucSeq = nucReader.getKey(gen.getContig_gen_id());
+                    nucSeq = nucReader.getKey(gen.getContig_gen_id(), true);
                     if (nucSeq != null) {
                         GenSeqObj seqObj = new GenSeqObj();
                         seqObj.setSequence(nucSeq.getSequence());
@@ -413,7 +427,7 @@ public class GeneFuncLoader {
                         nucSeq = nucReader.readSequenceML(Sequence.NUCLEOTIDOS);
                         // protSeq = protReader.readSequenceML(Sequence.PROTEINAS);
                     }
-                    
+
                     if (nucSeq != null && gen.getContig_gen_id().equals(nucSeq.getSeqId())) {
                         GenSeqObj seqObj = new GenSeqObj();
                         seqObj.setSequence(nucSeq.getSequence());
@@ -442,7 +456,7 @@ public class GeneFuncLoader {
                     }
                 }
                 if (withHash) {
-                    protSeq = protReader.getKey(gen.getContig_gen_id());
+                    protSeq = protReader.getKey(gen.getContig_gen_id(), true);
                     if (protSeq != null) {
                         GenSeqObj seqObj = new GenSeqObj();
                         seqObj.setSequence(protSeq.getSequence()); //also fix de length
@@ -496,7 +510,7 @@ public class GeneFuncLoader {
                 } else {
                     tresp.setSecuencia("");
                 }
-                
+
             } //como aca estamos hablando del anterior gen lo mas probable es que sea en el contig y no tmpContig
             else if (tmpContig != null && tmpContig.getSeqId().equals(tmpGene.getContig_id())) {
                 tresp.setTo(tmpContig.getSequence().length());

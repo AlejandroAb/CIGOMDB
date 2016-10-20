@@ -58,6 +58,8 @@ public class DataLoader {
         String delimiter = "\t";
         boolean debug = false;
         boolean startAtZero = true;
+        boolean withHash = true;
+        int startAtLine = 0;
         ArrayList<String> modes = new ArrayList<String>();
         modes.add("swiss");
         modes.add("genes");
@@ -149,6 +151,9 @@ public class DataLoader {
 
             } else if (args[i].equals("--start-at-one") || args[i].equals("-sao")) {
                 startAtZero = false;
+
+            }else if (args[i].equals("--no-hash")) {
+                withHash = false;
 
             } else if (args[i].equals("-rawe")) {
 
@@ -249,6 +254,19 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
+            }else if (args[i].equals("-line")) {
+                try {
+                    startAtLine = Integer.parseInt(args[i + 1]);
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion line - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                } catch (NumberFormatException nfe) {
+                    System.out.println("Opcion line - Se esperaba un argumento numerico\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
             } else if (args[i].equals("-idgenoma")) {
                 try {
                     idGenoma = Integer.parseInt(args[i + 1]);
@@ -341,7 +359,7 @@ public class DataLoader {
                     GeneFuncLoader loader = new GeneFuncLoader(transacciones);
                     //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
                     loader.setDebug(debug);
-                    loader.parseEnsamble(idPrefix, idMetagenoma, idGenoma, gffIn, contigIn, ncIn, aaIn, mapPrefix, startAtZero, 63756, true);
+                    loader.parseEnsamble(idPrefix, idMetagenoma, idGenoma, gffIn, contigIn, ncIn, aaIn, mapPrefix, startAtZero, startAtLine, withHash);
                 } else {
                     System.out.println("Para correr el programa ensamble se espera minimo un archivo gff y un archivo fasta");
                     printHelp();
@@ -430,6 +448,10 @@ public class DataLoader {
         System.out.println("\tpfam\t Carga archivos de PFAM como ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam30.0/Pfam-A.clans.tsv.gz\n\t\tParams: inout y output ");
         System.out.println("\tobo\t Carga archivos en formato OBO como ftp://ftp.geneontology.org/pub/go/www/GO.format.obo-1_4.shtml \n\t\t params: -i -o -uri(mandatory) -url");
         System.out.println("\tmarkers. \tSe encarga de cargar secuencias de marcadores por muestra. tiene que entregarse el parametro marker_meth");
+        System.out.println("\tensamble. \tSe encarga de cargar secuencias de de ensambles de genes. Utiliza los siguientes parámetros:"
+                + "\n\t\t\t-contig\tArchivo de contigs\n\t\t\t-gff\tArchivo con las coordenadas\n\t\t\t-nc\tArchivo de nucleotidos\n\t\t\t-aa\tArchivo de proteinas"
+                + "\n\t\t\t-idpre\tPrefijo para el id de los genes\n\t\t\t-mapre\tPrefijo para mapeo a la anotación funcional\n\t\t\t---start-at-one | -sao\tTrue por defecto. False empieza la numeracion del mapeo en cero y no en uno\n\t\t\t-idgenoma\tID del genoma al cual pertenecen los genes predichos\n\t\t\t-idmetagenoma\tID del metagenomma al cual pertenecen los genes predichos."
+                + "\n\t\t\t-line\tLinea a patir de la cual empieza a procesar el gff\n\t\t\t--no-has\tPor default los aechivos de contigs, nuc y prots se cargan en memoria en lugar de iterarlos para las búsquedas. Usar esta bandera para no usar hash");
         System.out.println("\n--------------------------------------------------");
         System.out.println("\n             --------Options--------");
         System.out.println("-d\t debug = true");
