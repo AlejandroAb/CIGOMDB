@@ -391,7 +391,7 @@ public class DataLoader {
                 }
                 GeneAnnotationLoader loader = new GeneAnnotationLoader(transacciones);
                 //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
-                loader.parseTrinotateFile(input, group, id);
+                loader.splitTrinotateFile(input, group, id);
 
             } else if (mode.equals("derrotero")) {
                 DerroteroLoader derrotero = new DerroteroLoader(transacciones);
