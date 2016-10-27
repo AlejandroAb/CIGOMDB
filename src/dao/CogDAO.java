@@ -6,6 +6,7 @@
 package dao;
 
 import bobjects.COGObj;
+import bobjects.EGGObj;
 import bobjects.Pfam;
 import database.Transacciones;
 import java.io.FileWriter;
@@ -67,6 +68,24 @@ public class CogDAO {
             }
         }
         return log;
+    }
+    /**
+     * Este método se encarga de anotar un eggnog en la BD
+     * @param egg 
+     */
+    public void insertaEggNog(EGGObj egg) {
+        String query = "INSERT INTO eggnog (ideggnog, description, proteins, species) VALUES "
+                + "('" + egg.getIdEGG() + "','" + egg.getDescription() + "'," + egg.getProts() + "," + egg.getSpecies() + ")";
+        if (!transacciones.insertaQuery(query)) {
+            System.err.println("Error insertando Egg: " + egg.getIdEGG() + " - " + query + "\n");
+        } else {
+            for (String func : egg.getCog_n_fun()) {
+                String q = "INSERT INTO eggnog_has_cog_function VALUES('" + egg.getIdEGG() + "', '" + func + "')";
+                if (!transacciones.insertaQuery(q)) {
+                    System.err.println("Error insertando EGGNOG_COG_FUNCTIONS: " + egg.getIdEGG() + " - " + q + "\n");
+                }
+            }
+        }
     }
 
 }

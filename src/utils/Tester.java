@@ -5,6 +5,9 @@
  */
 package utils;
 
+import cigomdb.GeneAnnotationLoader;
+import database.Transacciones;
+
 /**
  *
  * @author Alejandro
@@ -12,6 +15,13 @@ package utils;
 public class Tester {
 
     public static void main(String args[]) {
+         Transacciones transacciones = new Transacciones("cigomdb", "root", "localhost", "amorphis");
+        String testBlastLine = "Y898_MYCBO^Y898_MYCBO^Q:147-362,H:166-381^26.73%ID^E:4e-16^RecName: Full=Uncharacterized protein Mb0898c;^Bacteria; Actinobacteria; Actinobacteridae; Actinomycetales; Corynebacterineae; Mycobacteriaceae; Mycobacterium; Mycobacterium tuberculosis complex";
+        String testPfamLine = "PF04060.8^FeS^Putative Fe-S cluster^16-49^E:8.1e-16`PF14697.1^Fer4_21^4Fe-4S dicluster domain^81-134^E:8.5e-14`PF00037.22^Fer4^4Fe-4S binding domain^82-103^E:5.6e-06`PF13237.1^Fer4_10^4Fe-4S dicluster domain^82-129^E:1.4e-06`PF12798.2^Fer4_3^4Fe-4S binding domain^88-102^E:0.013";
+        GeneAnnotationLoader ga = new GeneAnnotationLoader(transacciones);
+      //  ga.procesaLineaBlastTrinotate(testBlastLine, "", "");
+        
+        ga.procesaLineaPfamTrinotate(testPfamLine, testPfamLine);
         String alphabet_nuc = "[ACTG]*";
         String alphabet_prot = "[ACDEFGHIKLMNPQRSTVWYBZX]*";
         String seq = "AAAAAAAAAACCCCCCCCCCGGGGGGGGGGTTTTTTTTTT";

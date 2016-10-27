@@ -241,7 +241,9 @@ public class GeneFuncLoader {
                     } else if (key.toLowerCase().equals("product")) {
                         gen.setGen_function(gffLine.getAtrributeValue(key));
                     } else if (key.toLowerCase().equals("gene_id")) {
-                        gen.setContig_gen_id("gene_id_" + gffLine.getAtrributeValue(key));
+                         //gen.setContig_gen_id("gene_id_" + gffLine.getAtrributeValue(key));
+                        //MANEJAR ESTO COMO PARAMETRO EN LOS GENOMAS SE NECESITABA  gene_id y para meta GM se necesita solo gene
+                        gen.setContig_gen_id("gene_" + gffLine.getAtrributeValue(key));
                     } else {
                         gen.addProperty(key, gffLine.getAtrributeValue(key));
                     }
@@ -420,7 +422,7 @@ public class GeneFuncLoader {
                         seqObj.setSeq_to(gen.getContig_to());
                         gen.addSequence(seqObj);
                     } else {
-                        System.err.println("No se encontró contig: " + gen.getContig_gen_id());
+                        System.err.println("No se encontró secuencia de nucleótidos para contig: " + gen.getContig_gen_id());
                     }
                 } else {
                     while (nucSeq != null && !gen.getContig_gen_id().equals(nucSeq.getSeqId())) {
@@ -465,7 +467,7 @@ public class GeneFuncLoader {
                         seqObj.setSeq_to(gen.getContig_to());
                         gen.addSequence(seqObj);
                     } else {
-                        System.err.print("No se encontró secuencia de proteinas para contig: " + gen.getContig_gen_id());
+                        System.err.println("No se encontró secuencia de proteinas para contig: " + gen.getContig_gen_id());
                     }
                 } else {
                     while (protSeq != null && !gen.getContig_gen_id().equals(protSeq.getSeqId())) {

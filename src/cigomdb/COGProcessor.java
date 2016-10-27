@@ -6,6 +6,7 @@
 package cigomdb;
 
 import bobjects.COGObj;
+import bobjects.EGGObj;
 import bobjects.NOGObj;
 import dao.CogDAO;
 import dao.NogDAO;
@@ -15,6 +16,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -108,7 +110,7 @@ public class COGProcessor {
             while ((linea = reader.readLine()) != null) {
                 NOGObj nog = null;
                 if (!linea.startsWith("#")) {
-                    StringTokenizer st = new StringTokenizer(linea, "\t");                    
+                    StringTokenizer st = new StringTokenizer(linea, "\t");
                     boolean addCOG = false;
                     nog = new NOGObj(st.nextToken());
                     if (st.hasMoreTokens()) {
@@ -129,5 +131,59 @@ public class COGProcessor {
             Logger.getLogger(PfamProcesor.class.getName()).log(Level.SEVERE, null, ioe);
         }
         return log;
+    }
+
+    /**
+     * Se encarga de procesar los archivos con anotaciones funcionales de EGGNOG
+     * como ser:
+     * http://eggnogdb.embl.de/download/eggnog_4.5/data/NOG/NOG.annotations.tsv.gz
+     *
+     * @param inputFile el archivo de eggnog
+     * @param validateCOG por default false, si true -> valida si la
+     * descripccion de cogs es la misma que la del NCBI
+     */
+    public void eggNogAnnotationParser(String inputFile, boolean validateCOG) {
+        StringUtils su = new StringUtils();
+        try {
+            CogDAO cdao = new CogDAO(transacciones);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), "ISO-8859-1"));
+            String line;
+            int num = 0;
+            int dif = 0;
+            int cog = 0;
+            while ((line = reader.readLine()) != null) {
+                num++;
+                StringTokenizer st = new StringTokenizer(line, "\t");
+                st.nextToken(); //NOG
+                String ideggnog = st.nextToken().trim();
+                String prots = st.nextToken().trim();
+                String species = st.nextToken().trim();
+                String functions = st.nextToken();
+                String description = su.scapeSQL(st.nextToken());
+                EGGObj egg = new EGGObj(ideggnog);
+                egg.setDescription(description);
+                egg.setFun(functions);
+                egg.setProts(prots);
+                egg.setSpecies(species);
+                cdao.insertaEggNog(egg);
+                if (validateCOG) {
+                    if (egg.getIdEGG().startsWith("COG")) {
+                        cog++;
+                        if (egg.getDescription().equals(transacciones.getCOGDescription(egg.getIdEGG()))) {
+                            dif++;
+                        }
+                    }
+                }
+            }
+            if (validateCOG) {
+                System.out.println("Se procesaron: " + num + " registros\nCOGS: " + cog + " \tDif: " + dif + " iguales: " + (cog - dif));
+            }
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(COGProcessor.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(COGProcessor.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(COGProcessor.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

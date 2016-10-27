@@ -6,6 +6,7 @@
 package bobjects;
 
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 /**
  *
@@ -20,10 +21,10 @@ public class GenObj {
     @Deprecated
     String object_id; //ID del objeto en la base de datos mongo (archivo de contigs/scaffolds)    
     String gene_map_id; //ID para mapear otros resultados por ejemplo FGS cnvierte los IDs a gen_id_1, gen_id_n
-    String gen_name=""; //nombre del gen
+    String gen_name = ""; //nombre del gen
     String genType; //cds rna, trna, etc
     String gen_strand; //+ - ? .
-    String gen_function="";//funcion o definicion del gen
+    String gen_function = "";//funcion o definicion del gen
     int gen_length;//número de nucleótidos del gen
     int gen_num; //número del gen dentro de se contexto (genoma o metagenoma)
     double gen_score; //score (seter con string por que en gff puede venir con . )  
@@ -38,6 +39,7 @@ public class GenObj {
     Intergenic inter3p;
     Intergenic inter5p;
     GenObj vecino;
+
     public int getIdMetagenoma() {
         return idMetagenoma;
     }
@@ -65,7 +67,7 @@ public class GenObj {
     public void setInter5p(Intergenic inter5p) {
         this.inter5p = inter5p;
     }
-    
+
     public void setIdMetagenoma(int idMetagenoma) {
         this.idMetagenoma = idMetagenoma;
     }
@@ -169,7 +171,7 @@ public class GenObj {
     public void addArchivo(ArchivoObj archivo) {
         this.archivos.add(archivo);
     }
-    
+
     public String getGene_map_id() {
         return gene_map_id;
     }
@@ -227,7 +229,14 @@ public class GenObj {
     }
 
     public void setContig_id(String contig_id) {
-        this.contig_id = contig_id;
+        StringTokenizer st = new StringTokenizer(contig_id, " |\t");
+        //es únicamente el primer elemento
+        if (st.countTokens() > 1) {
+            this.contig_id = st.nextToken();
+        } else {
+            this.contig_id = contig_id;
+        }
+
     }
 
     public String getContig_gen_id() {

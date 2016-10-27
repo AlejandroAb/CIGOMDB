@@ -270,25 +270,28 @@ public class Transacciones {
 
     /**
      * Busca el id de una secuencia dado su raw id original
+     *
      * @param raw_seq_id
-     * @return 
+     * @return
      */
     public String getSecMarcadorByRawID(String raw_seq_id) {
         String query = "SELECT idseq_marcador FROM seq_marcador WHERE raw_seq_id ='" + raw_seq_id + "'";
         conexion.executeStatement(query);
-        ArrayList<ArrayList> dbResult = conexion.getTabla();        
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
         if (dbResult == null || dbResult.isEmpty()) {
             return "";
         } else {
             return dbResult.get(0).get(0).toString();
         }
     }
+
     /**
      * Trea el nccbi tax id de un nombre de nodo
+     *
      * @param node_name
-     * @return 
+     * @return
      */
- public String getNCBITaxID(String node_name) {
+    public String getNCBITaxID(String node_name) {
         String query = "SELECT tax_id FROM ncbi_node WHERE name ='" + node_name + "'";
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
@@ -299,6 +302,129 @@ public class Transacciones {
             return dbResult.get(0).get(0).toString();
         }
     }
+
+    /**
+     * Este método es usado para traer la descripción de un cog dado su ID,
+     * sirve para validar diferencias entre eggnog y cog
+     *
+     * @param cog
+     * @return
+     */
+    public String getCOGDescription(String cog) {
+        String query = "SELECT cog_description FROM cog WHERE id_cog ='" + cog + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+
+    /**
+     * Este método se encarga de traer el ID real (de la BD - gen_id) de la
+     * entidad gen, de acuerdo al gene_map_id del gen en cuestión. Como hay
+     * muchos genes que pueden tener el mismo map_id, es necesario dar el id del
+     * genoma o metagenoma al cual pertenece el gen, es por esto que en los
+     * parámetross se incluye "group" el cual tiene que ser genoma o metagenoma
+     *
+     * @param group genoma o metagenoma
+     * @param groupID el id del genoma o metagenoma
+     * @param geneMapID el map id a buscar
+     * @return
+     */
+    public String getGeneIDByMapID(String group, String groupID, String geneMapID) {
+        String query = "SELECT gen_id FROM gen WHERE id" + group + " = " + groupID + " AND  gen_map_id = '" + geneMapID + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            System.err.println("No se puede enconrar gen_id para: " + geneMapID);
+            System.err.println("Q: " + query);
+            return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+
+    /**
+     * Este método valida que tengamos la información de uniprot en nuestra
+     * base, de lo contrario se busca anotar la protena en nuestra entidad de
+     * referencia: "Swiss-prot"
+     *
+     * @param uniID
+     * @return
+     */
+    public boolean validaUniprotID(String uniID) {
+        String query = "SELECT uniprot_id FROM swiss_prot WHERE uniprot_id = '" + uniID + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();        
+        if (dbResult == null || dbResult.isEmpty()) {
+            if (debug) {
+                System.err.println("No se encontró proteína: " + uniID);
+                System.err.println("Q: " + query);
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public boolean validaGO(String idGO) {
+        String query = "SELECT id_GO FROM gontology WHERE id_GO = '" + idGO + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            System.err.println("No se encontró GO: " + idGO);
+            System.err.println("Q: " + query);
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public boolean validaNOG(String idEggNog) {
+        String query = "SELECT ideggnog FROM eggnog WHERE ideggnog = '" + idEggNog + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult == null || dbResult.isEmpty()) {
+            query = "SELECT id_nog FROM nog WHERE id_nog = '" + idEggNog + "'";
+            conexion.executeStatement(query);
+            dbResult = conexion.getTabla();
+        }
+        if (dbResult == null || dbResult.isEmpty()) {
+            System.err.println("No se encontró NOG - ENOG: " + idEggNog);
+            System.err.println("Q: " + query);
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Este método valida que tengamos la información de pfam en nuestra base,
+     * de lo contrario se busca anotar la familia pfam en nuestra entidad de
+     * referencia: "pfam"
+     *
+     * @param pf_code
+     * @return
+     */
+    public boolean validaPfamAccID(String pf_code) {
+        String query = "SELECT pfam_acc FROM pfam WHERE pfam_acc = '" + pf_code + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            System.err.println("No se encontró pfam: " + pf_code);
+            System.err.println("Q: " + query);
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     /**
      * Crea la relación marcador_archivo
      *
@@ -311,7 +437,6 @@ public class Transacciones {
         return conexion.queryUpdate(query);
     }
 
-    
     /**
      * Este método inserta en la entidad seq_marcador_classif. Es la relación
      * que hay entre la asignacion taxonómica a una secuencia en particular,
@@ -328,7 +453,7 @@ public class Transacciones {
      */
     public boolean insertMarcadorClassification(String taxID, String idseq_marcador, int idAnalisis, String identity, String eval, String score, String length, String comments) {
         String query = "INSERT INTO seq_marcador_classif VALUES(" + taxID + ",'" + idseq_marcador + "', "
-                + idAnalisis + "," + identity + "," + eval + "," + score + "," + length +",'" + comments + "')";
+                + idAnalisis + "," + identity + "," + eval + "," + score + "," + length + ",'" + comments + "')";
         return conexion.queryUpdate(query);
     }
 

@@ -59,6 +59,7 @@ public class DataLoader {
         boolean debug = false;
         boolean startAtZero = true;
         boolean withHash = true;
+        boolean validateCog = false;
         int startAtLine = 0;
         ArrayList<String> modes = new ArrayList<String>();
         modes.add("swiss");
@@ -72,7 +73,13 @@ public class DataLoader {
         modes.add("nog");
         modes.add("obo");
         modes.add("ensamble");
+        modes.add("egg");
+        modes.add("trinotate");
         String mode = "";
+        if (args.length < 1) {
+            printHelp();
+            System.exit(0);
+        }
         for (int i = 0; i < args.length; i++) {
             if (i == 0 && (!args[i].equals("-h") && !args[i].equals("--help"))) {
                 mode = args[i];
@@ -152,8 +159,11 @@ public class DataLoader {
             } else if (args[i].equals("--start-at-one") || args[i].equals("-sao")) {
                 startAtZero = false;
 
-            }else if (args[i].equals("--no-hash")) {
+            } else if (args[i].equals("--no-hash")) {
                 withHash = false;
+
+            } else if (args[i].equals("-vc")) {//validate cog
+                validateCog = true;
 
             } else if (args[i].equals("-rawe")) {
 
@@ -254,7 +264,7 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            }else if (args[i].equals("-line")) {
+            } else if (args[i].equals("-line")) {
                 try {
                     startAtLine = Integer.parseInt(args[i + 1]);
                     i++;
@@ -365,6 +375,24 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
+            } else if (mode.equals("trinotate")) {
+                String group = "";
+                String id = "";
+                if (idMetagenoma != -1) {
+                    group = "metagenoma";
+                    id = "" + idMetagenoma;
+                } else if (idGenoma != -1) {
+                    group = "genoma";
+                    id = "" + idGenoma;
+                } else {
+                    System.out.println("Para correr el programa trinotate se espera minimo un id de genoma o id de metagenoma");
+                    printHelp();
+                    System.exit(1);
+                }
+                GeneAnnotationLoader loader = new GeneAnnotationLoader(transacciones);
+                //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
+                loader.parseTrinotateFile(input, group, id);
+
             } else if (mode.equals("derrotero")) {
                 DerroteroLoader derrotero = new DerroteroLoader(transacciones);
                 derrotero.parseMatrizDerrotero(campania, input, delimiter);
@@ -388,6 +416,9 @@ public class DataLoader {
             } else if (mode.equals("nog")) {
                 COGProcessor cProcessor = new COGProcessor(transacciones);
                 log += cProcessor.parseNOGNames(input, true, output);
+            } else if (mode.equals("egg")) {
+                COGProcessor cProcessor = new COGProcessor(transacciones);
+                cProcessor.eggNogAnnotationParser(input, validateCog);
             } else if (mode.equals("obo")) {
                 if (uri.length() > 0) {
                     OBOProcessor obo = new OBOProcessor(transacciones);
@@ -440,18 +471,20 @@ public class DataLoader {
                 + "\n\t\tSe espera que el archivo tenga en el header por lo menos los siguientes campos:\n\t\t"
                 + "ESTacion,LATitud, LONgitud,fecha PLANneada,	fecha EJECutada,COMentarios,TIPO de muestra.\n\t\t"
                 + "Para que el archivo pueda ser procesado de manera correcta la primera linea tiene que ser el header del archivo"
-                + " y los campos deben de tener por lo menos las letras en mayusculas para poder ser reconocidos de manera correcta.\n\t\t"
+                + "\n\t\ty los campos deben de tener por lo menos las letras en mayusculas para poder ser reconocidos de manera correcta.\n\t\t"
                 + "Las opciones con las que trabaja son i, campania y sep");
         System.out.println("\tncbitax.\tCrea la base de datos NCBI desde cero\n\t\t Necesita los parametors names y nodes, los cuales son archivos obtenidos de ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/");
         System.out.println("\tcog\t Carga archivos de COG como:\n\t\t ftp://ftp.ncbi.nih.gov/pub/COG/COG2014/data/cognames2003-2014.tab o ftp://ftp.ncbi.nih.gov/pub/wolf/COGs/COG0303/cog.csv\n\t\t Params: input (-i) output (-o) y delimiter (-sep)");
         System.out.println("\tnog\t Carga archivos de NOG como:\n\t\t http://eggnog.embl.de/version_3.0/downloads.html -> NOG.descriptions.txt Params: input (-i) output (-o)");
         System.out.println("\tpfam\t Carga archivos de PFAM como ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam30.0/Pfam-A.clans.tsv.gz\n\t\tParams: inout y output ");
         System.out.println("\tobo\t Carga archivos en formato OBO como ftp://ftp.geneontology.org/pub/go/www/GO.format.obo-1_4.shtml \n\t\t params: -i -o -uri(mandatory) -url");
-        System.out.println("\tmarkers. \tSe encarga de cargar secuencias de marcadores por muestra. tiene que entregarse el parametro marker_meth");
-        System.out.println("\tensamble. \tSe encarga de cargar secuencias de de ensambles de genes. Utiliza los siguientes parámetros:"
+        System.out.println("\tmarkers \tSe encarga de cargar secuencias de marcadores por muestra. tiene que entregarse el parametro marker_meth");
+        System.out.println("\tensamble \tSe encarga de cargar secuencias de de ensambles de genes. Utiliza los siguientes parámetros:"
                 + "\n\t\t\t-contig\tArchivo de contigs\n\t\t\t-gff\tArchivo con las coordenadas\n\t\t\t-nc\tArchivo de nucleotidos\n\t\t\t-aa\tArchivo de proteinas"
                 + "\n\t\t\t-idpre\tPrefijo para el id de los genes\n\t\t\t-mapre\tPrefijo para mapeo a la anotación funcional\n\t\t\t---start-at-one | -sao\tTrue por defecto. False empieza la numeracion del mapeo en cero y no en uno\n\t\t\t-idgenoma\tID del genoma al cual pertenecen los genes predichos\n\t\t\t-idmetagenoma\tID del metagenomma al cual pertenecen los genes predichos."
-                + "\n\t\t\t-line\tLinea a patir de la cual empieza a procesar el gff\n\t\t\t--no-has\tPor default los aechivos de contigs, nuc y prots se cargan en memoria en lugar de iterarlos para las búsquedas. Usar esta bandera para no usar hash");
+                + "\n\t\t\t-line\tLinea a patir de la cual empieza a procesar el gff\n\t\t\t--no-hash\tPor default los aechivos de contigs, nuc y prots se cargan en memoria en lugar de iterarlos para las búsquedas. Usar esta bandera para no usar hash");
+        System.out.println("\trinotate  \tPrograma que se encarga de parsear archivos de anotacion de Trinotate. Es importante que el gen_map_id de la BD cuadre con el gen_id del archivo de entrada. Este programa utiliza:"
+                + "\n\t\t\trinotate <-i -idmetagnoma|-idgenoma>\n\t\t\t-input\tArchivo de trinotate\n\t\t\t-idmetagenoma\tID del metagenoma para el cual se hace la anotación\n\t\t\t-idgenoma\tID del genoma para el cual se hace la anotación");
         System.out.println("\n--------------------------------------------------");
         System.out.println("\n             --------Options--------");
         System.out.println("-d\t debug = true");
