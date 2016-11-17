@@ -181,7 +181,7 @@ public class GeneFuncLoader {
      * memoria en un hash, ha demostrado ser la mejor manera de procesar los
      * archivos, por esto por default est variable es true
      */
-    public void parseEnsamble(String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix, boolean mapStartsIn0, int startAtLine, boolean withHash) {
+    public void parseEnsamble(String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix, boolean mapStartsIn0, int startAtLine, boolean withHash, boolean toFile, String outFile) {
         try {
             GFFReader gffReader = new GFFReader(new InputStreamReader(new FileInputStream(gffFile)));
             FastaReader contigReader = new FastaReader(new InputStreamReader(new FileInputStream(contigFile)));
@@ -241,7 +241,7 @@ public class GeneFuncLoader {
                     } else if (key.toLowerCase().equals("product")) {
                         gen.setGen_function(gffLine.getAtrributeValue(key));
                     } else if (key.toLowerCase().equals("gene_id")) {
-                         //gen.setContig_gen_id("gene_id_" + gffLine.getAtrributeValue(key));
+                        //gen.setContig_gen_id("gene_id_" + gffLine.getAtrributeValue(key));
                         //MANEJAR ESTO COMO PARAMETRO EN LOS GENOMAS SE NECESITABA  gene_id y para meta GM se necesita solo gene
                         gen.setContig_gen_id("gene_" + gffLine.getAtrributeValue(key));
                     } else {
@@ -264,7 +264,6 @@ public class GeneFuncLoader {
                     while (!withHash && contig != null && contig.getSeqId().equals(gen.getContig_id())) {
                         tmpContig = contig;
                         contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
-
                     }
                     if (withHash) {
                         contig = contigReader.getKey(gen.getContig_id(), false);
@@ -324,7 +323,7 @@ public class GeneFuncLoader {
                         //se asigna 3p del anterior que es cinco ' del actual
                         tmpGene.setInter3p((Intergenic) cincop.clone());
                         //ANOTA TMP
-                        genDAO.almacenaValidaGen(tmpGene);
+                        genDAO.almacenaValidaGen(tmpGene, toFile, outFile);
                         //completamos los datos restantes del current (queda pendiente 5p)
                         gen.setInter5p(cincop);
                         seqObj.setSeqType("NC");
@@ -364,7 +363,7 @@ public class GeneFuncLoader {
                         //  tresp.setSize(tresp.getTo() - tresp.getFrom());
                         tmpGene.setInter3p(tresp);
                         //ANOTA TMP GENE
-                        genDAO.almacenaValidaGen(tmpGene);
+                        genDAO.almacenaValidaGen(tmpGene, toFile, outFile);
                         //ACA EMPIEZA EL NUEVO CONTIG
                         Intergenic cincop = new Intergenic(Intergenic.I5P);
                         cincop.setFrom(0);
@@ -521,7 +520,7 @@ public class GeneFuncLoader {
             //  tresp.setSize(tresp.getTo() - tresp.getFrom());
             tmpGene.setInter3p(tresp);
             //ANOTA TMP GENE
-            genDAO.almacenaValidaGen(tmpGene);
+            genDAO.almacenaValidaGen(tmpGene, toFile, outFile);
         } catch (FileNotFoundException ex) {
             Logger.getLogger(GeneFuncLoader.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("No se encontró archivo GFF: " + gffFile);

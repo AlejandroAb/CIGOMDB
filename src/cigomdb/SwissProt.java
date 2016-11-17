@@ -29,6 +29,19 @@ public class SwissProt {
     public SwissProt() {
     }
 
+    /**
+     * En un principio, este método parseaba el archivo xml con toda la
+     * referencia de uniprot
+     * ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/uniref/uniref100/uniref100.xml.gz
+     * y anotaba todos los genes, pero ahora este método es usado como post
+     * procesamiento y una vez anotadas las predicciones de uniprot en genes, se
+     * corre este método el cual únicamente anota aquellas entradas para las
+     * cuales exista un gen predicho
+     *
+     * @param xmlFile uniref100.xml
+     * @param debug
+     * @return
+     */
     public String loadSwissProtFromXML(String xmlFile, boolean debug) {
         String log = "";
         BufferedReader reader = null;
@@ -44,15 +57,14 @@ public class SwissProt {
                 //<entry id="UniRef100_Q197F3" updated="2012-11-28">
                 if (line.startsWith("<entry")) {
                     if (sObjt != null) {
-                        boolean ok = transacciones.insertSwissProt(sObjt.getUniprotID(), sObjt.getUniprotACC(), sObjt.getTaxID(), sObjt.getUniprotName(), sObjt.getSequence(), sObjt.getSeqLength(), sObjt.getClusterId(), sObjt.getClusterName(), sObjt.getTaxID());
-                        sObjt = null;
-                        if (!ok) {
-                            log = "Error storing " + sObjt.getUniprotID() + " at line" + lnum;
-                            if (debug) {
-                                System.out.println("Error storing " + sObjt.getUniprotID() + " at line" + lnum);
+                        if (transacciones.validaGenUniprotID(sObjt.getUniprotID()) && !transacciones.validaUniprotID(sObjt.getUniprotID())) {//si no tiene laa proteina
+                            boolean ok = transacciones.insertSwissProt(sObjt.getUniprotID(), sObjt.getUniprotACC(), sObjt.getTaxID(), sObjt.getUniprotName(), sObjt.getSequence(), sObjt.getSeqLength(), sObjt.getClusterId(), sObjt.getClusterName(), sObjt.getTaxID());
+                            sObjt = null;
+                            if (!ok) {
+                                System.err.println("Error storing " + sObjt.getUniprotID() + " at line" + lnum);
+                            } else {
+                                elements++;
                             }
-                        } else {
-                            elements++;
                         }
                     }
                     String clusterID = line.substring(line.indexOf("id=") + 4, line.indexOf("updated") - 2);
@@ -114,10 +126,7 @@ public class SwissProt {
                                     sObjt.setSequence(sec);
                                     if (sec.length() != sObjt.getSeqLength()) {
                                         sObjt.setSeqLength(sec.length());
-                                        log += "Sequence length mismatch at: " + sObjt.getUniprotID() + " ~ line " + lnum;
-                                        if (debug) {
-                                            System.out.println("Sequence length mismatch at: " + sObjt.getUniprotID() + " ~ line " + lnum);
-                                        }
+                                        System.err.println("Sequence length mismatch at: " + sObjt.getUniprotID() + " ~ line " + lnum);
                                     }
                                 }
                             }
@@ -127,22 +136,17 @@ public class SwissProt {
                 }
             }
             if (sObjt != null) {
-                boolean ok = transacciones.insertSwissProt(sObjt.getUniprotID(), sObjt.getUniprotACC(), sObjt.getTaxID(), sObjt.getUniprotName(), sObjt.getSequence(), sObjt.getSeqLength(), sObjt.getClusterId(), sObjt.getClusterName(), sObjt.getClusterTax());
-                sObjt = null;
-                if (!ok) {
-                    log = "Error storing " + sObjt.getUniprotID() + " at line" + lnum;
-                    if (debug) {
-                        System.out.println("Error storing " + sObjt.getUniprotID() + " at line" + lnum);
+                if (transacciones.validaGenUniprotID(sObjt.getUniprotID()) && !transacciones.validaUniprotID(sObjt.getUniprotID())) {//si no tiene laa proteina
+                    boolean ok = transacciones.insertSwissProt(sObjt.getUniprotID(), sObjt.getUniprotACC(), sObjt.getTaxID(), sObjt.getUniprotName(), sObjt.getSequence(), sObjt.getSeqLength(), sObjt.getClusterId(), sObjt.getClusterName(), sObjt.getClusterTax());
+                    sObjt = null;
+                    if (!ok) {
+                        System.err.println("Error storing " + sObjt.getUniprotID() + " at line" + lnum);
+                    } else {
+                        elements++;
                     }
-                } else {
-                    elements++;
                 }
             }
-
-            log += "Elementos = " + elements;
-            if (debug) {
-                System.out.println("Elementos = " + elements);
-            }
+            log += "Elementos nuevos anotados = " + elements;
             return log;
         } catch (FileNotFoundException ex) {
             Logger.getLogger(SwissProt.class.getName()).log(Level.SEVERE, null, ex);

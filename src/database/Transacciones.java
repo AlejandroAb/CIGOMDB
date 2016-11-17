@@ -359,7 +359,31 @@ public class Transacciones {
     public boolean validaUniprotID(String uniID) {
         String query = "SELECT uniprot_id FROM swiss_prot WHERE uniprot_id = '" + uniID + "'";
         conexion.executeStatement(query);
-        ArrayList<ArrayList> dbResult = conexion.getTabla();        
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult == null || dbResult.isEmpty()) {
+            if (debug) {
+                System.err.println("No se encontró proteína: " + uniID);
+                System.err.println("Q: " + query);
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Este método valida que exista un gen asignado a un uniprot id (leido de
+     * un archivo xml) y si tenemos dicha asignación y no existe el uni ID con
+     * toda su info en nuestra BD, entonces este registro es anotado.
+     *
+     *
+     * @param uniID
+     * @return
+     */
+    public boolean validaGenUniprotID(String uniID) {
+        String query = "SELECT uniprot_id FROM gen_swiss_prot WHERE uniprot_id = '" + uniID + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
         if (dbResult == null || dbResult.isEmpty()) {
             if (debug) {
                 System.err.println("No se encontró proteína: " + uniID);

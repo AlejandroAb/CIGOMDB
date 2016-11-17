@@ -136,12 +136,12 @@ public class MarkerLoader {
                         ArchivoObj mergeFile = new ArchivoObj(transacciones.getMaxIDArchivo());
                         mergeFile.setTipoArchivo(ArchivoObj.TIPO_PRE);
                         mergeFile.setNombre("flash.extendedFrags.fastq");
-                        mergeFile.setPath(raw_data_path);
+                        mergeFile.setPath(proc_data_path);
                         mergeFile.setDescription("Fastq con lecturas pareadas - merge de FW y RV");
                         mergeFile.setExtension(raw_ext);
                         mergeFile.setNum_secs(sec_num);
                         mergeFile.setSeq_length(avg / sec_num);
-                        log += adao.insertaArchivo(mergeFile, false, "", true);
+                        adao.insertaArchivo(mergeFile, false, "", true);
                         transacciones.insertaArchivoMarcador(idMarcador, mergeFile.getIdArchivo());
                         avg = 0;
                         sec_num = 0;
@@ -168,7 +168,7 @@ public class MarkerLoader {
                         ArchivoObj nc1File = new ArchivoObj(transacciones.getMaxIDArchivo());
                         nc1File.setTipoArchivo(ArchivoObj.TIPO_PRE);
                         nc1File.setNombre("flash.notCombined_1.fastq");
-                        nc1File.setPath(raw_data_path);
+                        nc1File.setPath(proc_data_path);
                         nc1File.setDescription("Fastq con las secuencias FW que no se pudieron empalmar con las de RV");
                         nc1File.setExtension(raw_ext);
                         nc1File.setNum_secs(sec_num);
@@ -199,7 +199,7 @@ public class MarkerLoader {
                         ArchivoObj nc2File = new ArchivoObj(transacciones.getMaxIDArchivo());
                         nc2File.setTipoArchivo(ArchivoObj.TIPO_PRE);
                         nc2File.setNombre("flash.notCombined_2.fastq");
-                        nc2File.setPath(raw_data_path);
+                        nc2File.setPath(proc_data_path);
                         nc2File.setDescription("Fastq con las secuencias RV que no se pudieron empalmar con las de FW");
                         nc2File.setExtension(raw_ext);
                         nc2File.setNum_secs(sec_num);

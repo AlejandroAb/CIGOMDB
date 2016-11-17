@@ -9,6 +9,8 @@ import bobjects.GenObj;
 import bobjects.GenSeqObj;
 import bobjects.Intergenic;
 import database.Transacciones;
+import java.io.FileWriter;
+import java.io.IOException;
 import utils.StringUtils;
 
 /**
@@ -45,8 +47,9 @@ public class GenDAO {
         return log;
     }
 
-    public boolean almacenaValidaGen(GenObj gen) {
+    public boolean almacenaValidaGen(GenObj gen, boolean toFile, String outFile) {
         boolean log = true;
+        FileWriter writer = null;
         String query = "INSERT INTO gen (gen_id,idmetagenoma, idgenoma, gen_src, gen_map_id,gen_name, gen_type,"
                 + "gen_strand,gen_function,gen_length, gen_num, gen_score,contig_id,contig_gen_id,contig_from,contig_to) "
                 + "VALUES ("
@@ -54,9 +57,19 @@ public class GenDAO {
                 + "','" + gen.getGene_map_id() + "','" + gen.getGen_name() + "', '" + gen.getGenType() + "','" + gen.getGen_strand()
                 + "', '" + gen.getGen_function() + "', " + gen.getGen_length() + "," + gen.getGen_num() + "," + gen.getGen_score() + ",'" + gen.getContig_id()
                 + "', '" + gen.getContig_gen_id() + "', '" + gen.getContig_from() + "', '" + gen.getContig_to() + "')";
-        if (!transacciones.insertaQuery(query)) {
-            System.err.println("Error insertando gen: " + gen.getGenID() + " - " + query);
-            return false;
+        if (!toFile) {
+            if (!transacciones.insertaQuery(query)) {
+                System.err.println("Error insertando gen: " + gen.getGenID() + " - " + query);
+                return false;
+            }
+        } else {
+            try {
+                writer = new FileWriter(outFile, true);
+                writer.write(query + ";\n");
+            } catch (IOException ex) {
+                System.err.println("Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n");
+                return false;
+            }
         }
         StringUtils sutils = new StringUtils();
         String nc = null;
@@ -96,9 +109,17 @@ public class GenDAO {
                         + "'" + gen.getGenID() + "', '" + seq.getSeqType()
                         + "', '" + seq.getSeq_from() + "', '" + seq.getSeq_to() + "', " + seq.getSeq_size()
                         + ", '" + seq.getSequence() + "')";
-                if (!transacciones.insertaQuery(querySeq)) {
-                    System.err.println("Error insertando secuencia: " + gen.getGenID() + " - " + querySeq + "\n");
-                    log = false;
+                if (!toFile) {
+                    if (!transacciones.insertaQuery(querySeq)) {
+                        System.err.println("Error insertando secuencia: " + gen.getGenID() + " - " + querySeq + "\n");
+                        log = false;
+                    }
+                } else {
+                    try {
+                        writer.write(querySeq + ";\n");
+                    } catch (IOException ioe) {
+                        System.err.println("Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n");
+                    }
                 }
             }
         }
@@ -110,9 +131,17 @@ public class GenDAO {
             String querySeq = "INSERT INTO gen_seq (gen_id, seq_type, seq_from, seq_to, seq_size, sequence) VALUES ("
                     + "'" + gen.getGenID() + "', '3P', '" + (gen.getInter3p().getFrom() + 1) + "', '" + gen.getInter3p().getTo() + "', " + gen.getInter3p().getSize()
                     + ", '" + gen.getInter3p().getSecuencia() + "')";
-            if (!transacciones.insertaQuery(querySeq)) {
-                System.err.println("Error insertando secuencia 3P: " + gen.getGenID() + " - " + querySeq + "\n");
-                log = false;
+            if (!toFile) {
+                if (!transacciones.insertaQuery(querySeq)) {
+                    System.err.println("Error insertando secuencia 3P: " + gen.getGenID() + " - " + querySeq + "\n");
+                    log = false;
+                }
+            } else {
+                try {
+                    writer.write(querySeq + ";\n");
+                } catch (IOException ioe) {
+                    System.err.println("Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n");
+                }
             }
         }
         //INGRESA 5P
@@ -120,9 +149,18 @@ public class GenDAO {
             String querySeq5P = "INSERT INTO gen_seq (gen_id, seq_type, seq_from, seq_to, seq_size, sequence) VALUES ("
                     + "'" + gen.getGenID() + "', '5P', '" + (gen.getInter5p().getFrom() + 1) + "', '" + gen.getInter5p().getTo() + "', " + gen.getInter5p().getSize()
                     + ", '" + gen.getInter5p().getSecuencia() + "')";
-            if (!transacciones.insertaQuery(querySeq5P)) {
-                System.err.println("Error insertando secuencia 5P: " + gen.getGenID() + " - " + querySeq5P + "\n");
-                log = false;
+            if (!toFile) {
+                if (!transacciones.insertaQuery(querySeq5P)) {
+                    System.err.println("Error insertando secuencia 5P: " + gen.getGenID() + " - " + querySeq5P + "\n");
+                    log = false;
+                }
+            } else {
+                try {
+                    writer.write(querySeq5P + ";\n");
+                    writer.close();
+                } catch (IOException ioe) {
+                    System.err.println("Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n");
+                }
             }
         }
 
