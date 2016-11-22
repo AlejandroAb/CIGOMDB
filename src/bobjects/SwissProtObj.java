@@ -20,8 +20,61 @@ public class SwissProtObj {
     private String clusterId = "";
     private String clusterName = "";
     private String clusterTax = "";
-
+    private String ec = "";
+    private String gen_name = "";
+    private String pathway = "";
+    private String alternative_product = "";
+    private String dependencia_temp = "";
+    private String dependencia_ph = "";
     public SwissProtObj() {
+    }
+
+    public String getEc() {
+        return ec;
+    }
+
+    public void setEc(String ec) {
+        this.ec = ec;
+    }
+
+    public String getGen_name() {
+        return gen_name;
+    }
+
+    public void setGen_name(String gen_name) {
+        this.gen_name = gen_name;
+    }
+
+    public String getPathway() {
+        return pathway;
+    }
+
+    public void setPathway(String pathway) {
+        this.pathway = pathway;
+    }
+
+    public String getAlternative_product() {
+        return alternative_product;
+    }
+
+    public void setAlternative_product(String alternative_product) {
+        this.alternative_product = alternative_product;
+    }
+
+    public String getDependencia_temp() {
+        return dependencia_temp;
+    }
+
+    public void setDependencia_temp(String dependencia_temp) {
+        this.dependencia_temp = dependencia_temp;
+    }
+
+    public String getDependencia_ph() {
+        return dependencia_ph;
+    }
+
+    public void setDependencia_ph(String dependencia_ph) {
+        this.dependencia_ph = dependencia_ph;
     }
 
     public SwissProtObj(String uniprotID) {
@@ -108,17 +161,52 @@ public class SwissProtObj {
      * @param tblName
      * @return
      */
-    public String toSQLString(String tblName) {
-        String sqlString = "INSERT INTO " + tblName + " VALUES ('"
+    public String toSQLString() {
+        String sqlString = "INSERT INTO swiss_prot"
+                + "(uniprot_id,uniprot_acc,ncbi_tax_id,prot_name,gene_name,prot_seq,prot_length,"
+                + "cluster_id,cluster_name,cluster_ncbi_tax,ec,pathway,alternative_p,temp_dep,ph_dep) "
+                + "VALUES ('"
                 + this.uniprotID + "', '"
                 + this.uniprotACC + "', '"
                 + this.taxID + "', '"
                 + this.uniprotName + "', '"
+                + this.gen_name + "', '"
                 + this.sequence + "', "
                 + this.seqLength + ", '"
                 + this.clusterId + "', '"
                 + this.clusterName + "', '"
-                + this.clusterTax + "');\n";
+                + this.clusterTax + "', '"
+                + this.ec + "', '"
+                + this.pathway + "', '"
+                + this.alternative_product + "', '"
+                + this.dependencia_temp + "', '"
+                + this.dependencia_ph+ "')";
+        return sqlString;
+    }
+ /**
+     * Método para representar un objeto swiss prot en sql vaalores esperados
+     * (`uniprot_id`, `uniprot_acc`, `ncbi_tax_id`, `prot_name`, `prot_seq`,
+     * `prot_length`)
+     *
+     * @param tblName
+     * @return
+     */
+    public String toSQLUpdateString() {
+        String sqlString = "UPDATE swiss_prot SET "                
+                + "uniprot_acc = '" +this.uniprotACC + "'"
+                + ",ncbi_tax_id = '" +this.taxID + "'"
+                + ",prot_name = '" +this.uniprotName + "'"
+                + ",gene_name = '" +this.gen_name + "'"
+                + ",prot_seq = '" +this.sequence + "'"
+                + ",prot_length = " +this.seqLength 
+                + ",cluster_id = '" +this.clusterId + "'"
+                + ",cluster_name = '" +this.clusterName + "'"
+                + ",cluster_ncbi_tax = '" +this.clusterTax + "'"
+                + ",ec = '" +this.ec + "'"
+                + ",pathway = '" +this.pathway + "'"
+                + ",alternative_p = '" +this.alternative_product + "'"
+                + ",temp_dep = '" +this.dependencia_temp + "'"
+                + ",ph_dep = '" +this.dependencia_ph+ "'";
         return sqlString;
     }
 

@@ -348,8 +348,9 @@ public class DataLoader {
             long start = System.currentTimeMillis();
             if (mode.equals("swiss")) {
                 SwissProt swiss = new SwissProt(transacciones);
-                log = swiss.loadSwissProtFromXML(input, debug);
-                System.out.println("END: " + log);
+                //log = swiss.loadSwissProtFromXML(input, debug);
+                log = swiss.loadSwissProtFromWEB(debug);
+                System.out.println("END:\n" + log);
             } else if (mode.equals("genes")) {
                 if (gffIn.length() > 0 && (aaIn.length() + ncIn.length()) > 0) {
                     GeneFuncLoader loader = new GeneFuncLoader(transacciones);

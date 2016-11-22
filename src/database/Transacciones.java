@@ -137,6 +137,19 @@ public class Transacciones {
     }
 
     /**
+     * Trae todas las proteinas DISTINTAS predichas por trinotate ya sea en
+     * metagenoma o genoma
+     *
+     * @return
+     */
+    public ArrayList<ArrayList> getAllDistinctPredictedSwissProt() {
+        String query = "SELECT distinct(uniprot_id) FROM gen_swiss_prot";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        return dbResult;
+    }
+
+    /**
      * Obtiene cual es el max id de muestra para poder asignar nuevos.
      *
      * @return
@@ -372,6 +385,31 @@ public class Transacciones {
     }
 
     /**
+     * Cuando se corre el programa que parsea trinotate si no exsite una entrada
+     * de uniprot, se lee el id, el nombre y se anota pero el accesion queda
+     * con -1, es por esto que este query, basado en el id verifica si el
+     * registro tiene esta procedencia y en ese caso se encarga de actualizar el
+     * registro
+     *
+     * @param uniID
+     * @return
+     */
+    public boolean validaUniprotAcc(String uniID) {
+        String query = "SELECT uniprot_id FROM swiss_prot WHERE uniprot_id = '" + uniID + "' AND uniprot_acc != '-1'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult == null || dbResult.isEmpty()) {
+            if (debug) {
+                System.err.println("No se encontró proteína: " + uniID);
+                System.err.println("Q: " + query);
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
      * Este método valida que exista un gen asignado a un uniprot id (leido de
      * un archivo xml) y si tenemos dicha asignación y no existe el uni ID con
      * toda su info en nuestra BD, entonces este registro es anotado.
@@ -552,7 +590,7 @@ public class Transacciones {
         if (conexion.queryUpdate(query)) {
             return true;
         } else {
-            System.out.println(conexion.getLog());
+            System.err.println(conexion.getLog());
             return false;
         }
 
