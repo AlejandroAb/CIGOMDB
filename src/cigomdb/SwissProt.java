@@ -49,7 +49,7 @@ public class SwissProt {
             String prot_id = prot.get(0).trim();
             if (transacciones.validaUniprotID(prot_id)) {
                 //SI EXISTE PERO HAY QUE VER SI TIENE TODOS LOS DATOS ACC- 1 -> viene de anotación
-                if (transacciones.validaUniprotAcc(prot_id)) {
+                if (!transacciones.validaUniprotAcc(prot_id)) {
                     SwissProtObj swissObj = createSwissObjectFromWeb(prot_id);
                     if (swissObj != null) {
                         transacciones.insertaQuery(swissObj.toSQLUpdateString());
@@ -66,17 +66,97 @@ public class SwissProt {
         return "";
     }
 
+    /**
+     * Se encarga de cargar swissprots, pero en lugar de pedir uno por uno al
+     * servidor, pide un número de ids igual a bulksize
+     *
+     * @param debug
+     * @param bulkSize el númeroo de ids antes de pedir a la página en un solo
+     * request
+     */
+    public void loadSwissProtFromWEBBulk(boolean debug, int bulkSize) {
+        //http://www.uniprot.org/uniprot/?query=entry:A0A0F6NZX8_FRG3V || ID_2 || ID_3&columns=id,entry name,protein names,organism-id,lineage-id,ec,comment(PATHWAY),comment(ALTERNATIVE%20PRODUCTS),comment(TEMPERATURE%20DEPENDENCE),comment(PH%20DEPENDENCE),comment(FUNCTION)&format=tab&mail:daleabdala@hotmail.com
+        ArrayList<ArrayList> allProts = transacciones.getAllDistinctPredictedSwissProt();
+        ArrayList<String> swissProts2Insert = new ArrayList<>();
+        ArrayList<String> swissProts2Update = new ArrayList<>();
+        int toUpdate = 0;
+        int toInsert = 0;
+        for (ArrayList<String> prot : allProts) {
+            String prot_id = prot.get(0).trim();
+            if (transacciones.validaUniprotID(prot_id)) {
+                //SI EXISTE PERO HAY QUE VER SI TIENE TODOS LOS DATOS ACC- 1 -> viene de anotación
+                if (!transacciones.validaUniprotAcc(prot_id)) {
+                    swissProts2Update.add(prot_id);
+                    toUpdate++;
+                }
+            } else {
+                swissProts2Insert.add(prot_id);
+                toInsert++;
+            }
+            if (toInsert == bulkSize) {
+                StringBuilder s = new StringBuilder("");
+                for (String pid : swissProts2Insert) {
+                    if (s.length() == 0) {
+                        s.append(pid);
+                    } else {
+                        s.append(" || ").append(pid);
+                    }
+                }
+                swissProts2Insert = new ArrayList<String>();
+                toInsert = 0;
+                createSwissObjectFromWebBulk(s.toString(), true);
+            }
+            if (toUpdate == bulkSize) {
+                StringBuilder s = new StringBuilder("");
+                for (String pid : swissProts2Update) {
+                    if (s.length() == 0) {
+                        s.append(pid);
+                    } else {
+                        s.append(" || ").append(pid);
+                    }
+                }
+                toUpdate = 0;
+                swissProts2Update = new ArrayList<String>();
+                createSwissObjectFromWebBulk(s.toString(), false);
+            }
+        }
+        //flush de los que quedaron
+        if (toUpdate > 0) {
+            StringBuilder s = new StringBuilder("");
+            for (String pid : swissProts2Update) {
+                if (s.length() == 0) {
+                    s.append(pid);
+                } else {
+                    s.append(" || ").append(pid);
+                }
+            }
+            createSwissObjectFromWebBulk(s.toString(), false);
+        }
+        if (toInsert > 0) {
+            StringBuilder s = new StringBuilder("");
+            for (String pid : swissProts2Insert) {
+                if (s.length() == 0) {
+                    s.append(pid);
+                } else {
+                    s.append(" || ").append(pid);
+                }
+            }
+            createSwissObjectFromWebBulk(s.toString(), true);
+        }
+
+    }
+
     public SwissProtObj createSwissObjectFromWeb(String id) {
         SwissProtObj swissObj = new SwissProtObj(id);
         //StringBuilder locationBuilder = new StringBuilder(UNIPROT_SERVER + id + "&columns=id,genes%28PREFERRED%29,protein names,organism-id,ec,comment%28PATHWAY%29,comment%28ALTERNATIVE%20PRODUCTS%29,comment%28TEMPERATURE%20DEPENDENCE%29,comment%28PH%20DEPENDENCE%29&format=tab");
         //http://www.uniprot.org/uniprot/?query=entry:A0A0F6NZX8_FRG3V&columns=id,entry name,protein names,organism-id,lineage-id,ec,comment(PATHWAY),comment(ALTERNATIVE%20PRODUCTS),comment(TEMPERATURE%20DEPENDENCE),comment(PH%20DEPENDENCE),comment(FUNCTION)&format=tab&mail:daleabdala@hotmail.com
-        StringBuilder locationBuilder = new StringBuilder(UNIPROT_SERVER + id + "&columns=id,genes(PREFERRED),protein names,organism-id,ec,comment(PATHWAY),comment(ALTERNATIVE PRODUCTS),comment(TEMPERATURE DEPENDENCE),comment(PH DEPENDENCE)&format=tab");
+        //   StringBuilder locationBuilder = new StringBuilder(UNIPROT_SERVER + id + "&columns=id,genes(PREFERRED),protein names,organism-id,ec,comment(PATHWAY),comment(ALTERNATIVE PRODUCTS),comment(TEMPERATURE DEPENDENCE),comment(PH DEPENDENCE)&format=tab");
         StringUtils sUtils = new StringUtils();
         try {
             //   String encodedURL = java.net.URLEncoder.encode(locationBuilder.toString(), "UTF-8");
-            String encodedURL = locationBuilder.toString();
-           // URI uri = new URI("http", null, "www.uniprot.org/uniprot/", -1, null, "query=entry:"+id+"&columns=id,entry name,protein names,organism-id,lineage-id,ec,comment(PATHWAY),comment(ALTERNATIVE PRODUCTS),comment(TEMPERATURE DEPENDENCE),comment(PH DEPENDENCE),comment(FUNCTION)&format=tab", null);
-            URI uri = new URI("http", null, "www.uniprot.org/uniprot/", -1, null, "query=entry:"+id+"&columns=id,genes(PREFERRED),protein names,organism-id,ec,comment(PATHWAY),comment(ALTERNATIVE PRODUCTS),comment(TEMPERATURE DEPENDENCE),comment(PH DEPENDENCE)&format=tab", null);
+            //     String encodedURL = locationBuilder.toString();
+            // URI uri = new URI("http", null, "www.uniprot.org/uniprot/", -1, null, "query=entry:"+id+"&columns=id,entry name,protein names,organism-id,lineage-id,ec,comment(PATHWAY),comment(ALTERNATIVE PRODUCTS),comment(TEMPERATURE DEPENDENCE),comment(PH DEPENDENCE),comment(FUNCTION)&format=tab", null);
+            URI uri = new URI("http", null, "www.uniprot.org/uniprot/", -1, null, "query=entry:" + id + "&columns=id,genes(PREFERRED),protein names,organism-id,ec,comment(PATHWAY),comment(ALTERNATIVE PRODUCTS),comment(TEMPERATURE DEPENDENCE),comment(PH DEPENDENCE)&format=tab", null);
 
             URL url = uri.toURL();
             //URL url = new URL(encodedURL);
@@ -100,7 +180,9 @@ public class SwissProt {
                 System.err.println("Waiting (" + wait + ")...");
                 conn.disconnect();
                 Thread.sleep(wait * 1000);
-                conn = (HttpURLConnection) new URL(encodedURL).openConnection();
+                //conn = (HttpURLConnection) new URL(encodedURL).openConnection();
+                conn = (HttpURLConnection) uri.toURL().openConnection();
+
                 conn.setDoInput(true);
                 conn.connect();
                 status = conn.getResponseCode();
@@ -152,7 +234,7 @@ public class SwissProt {
 
             } else {
                 System.err.println("Failed, got " + conn.getResponseMessage() + " for "
-                        + locationBuilder.toString());
+                        + url.toString());
                 return null;
             }
             conn.disconnect();
@@ -167,6 +249,108 @@ public class SwissProt {
             Logger.getLogger(SwissProt.class.getName()).log(Level.SEVERE, null, ex);
         }
         return swissObj;
+    }
+
+    public void createSwissObjectFromWebBulk(String ids, boolean toInsert) {
+        //SwissProtObj swissObj = new SwissProtObj(ids);
+        StringUtils sUtils = new StringUtils();
+        try {
+            URI uri = new URI("http", null, "www.uniprot.org/uniprot/", -1, null, "query=entry:" + ids + "&columns=entry name,id,genes(PREFERRED),protein names,organism-id,ec,comment(PATHWAY),comment(ALTERNATIVE PRODUCTS),comment(TEMPERATURE DEPENDENCE),comment(PH DEPENDENCE)&format=tab", null);
+            URL url = uri.toURL();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            HttpURLConnection.setFollowRedirects(true);
+            conn.setDoInput(true);
+            conn.connect();
+            int status = conn.getResponseCode();
+            int intentos = 0;
+            while (true && intentos < 10) {
+                intentos++;
+                int wait = 0;
+                String header = conn.getHeaderField("Retry-After");
+                if (header != null) {
+                    wait = Integer.valueOf(header);
+                }
+                if (wait == 0) {
+                    break;
+                }
+                System.err.println("Waiting (" + wait + ")...");
+                conn.disconnect();
+                Thread.sleep(wait * 1000);
+                //conn = (HttpURLConnection) new URL(encodedURL).openConnection();
+                conn = (HttpURLConnection) uri.toURL().openConnection();
+
+                conn.setDoInput(true);
+                conn.connect();
+                status = conn.getResponseCode();
+            }
+            if (status == HttpURLConnection.HTTP_OK) {
+                // LOG.info("Got a OK reply");
+                InputStream reader = conn.getInputStream();
+                URLConnection.guessContentTypeFromStream(reader);
+                StringBuilder builder = new StringBuilder();
+                int a = 0;
+                while ((a = reader.read()) != -1) {
+                    builder.append((char) a);
+                }
+                //System.out.println(builder.toString());
+
+                String lines[] = builder.toString().split("\n");
+                for (int j = 1; j < lines.length; j++) {
+                    String fields[] = lines[j].split("\t", -1);
+                    int i = 0;
+                    //0entryname 1Entry	2Gene names  (primary )	3Protein names	4Organism ID	
+                    //5EC number  6Pathway  7 Alternative products (isoforms)  8 Temperature dependence	9 pH dependence
+                    SwissProtObj swissObj = new SwissProtObj();
+                    for (String prop : fields) {
+                        if (i == 0 && prop.length() > 1) {
+                            swissObj.setUniprotID(prop);
+                        } else if (i == 1 && prop.length() > 1) {
+                            swissObj.setUniprotACC(prop);
+                        } else if (i == 2 && prop.length() > 1) {
+                            swissObj.setGen_name(sUtils.scapeSQL(prop));
+                        } else if (i == 3 && prop.length() > 1) {
+                            swissObj.setUniprotName(sUtils.scapeSQL(prop));
+                        } else if (i == 4 && prop.length() > 1) {
+                            swissObj.setTaxID(prop);
+                        } else if (i == 5 && prop.length() > 1) {
+                            swissObj.setEc(prop);
+                        } else if (i == 6 && prop.length() > 1) {
+                            swissObj.setPathway(sUtils.scapeSQL(prop));
+                        } else if (i == 7 && prop.length() > 1) {
+                            swissObj.setAlternative_product(sUtils.scapeSQL(prop));
+                        } else if (i == 8 && prop.length() > 1) {
+                            swissObj.setDependencia_temp(sUtils.scapeSQL(prop));
+                        } else if (i == 9 && prop.length() > 1) {
+                            swissObj.setDependencia_ph(prop);
+                        }
+                        i++;
+                    }
+                    if (toInsert) {
+                        if (!transacciones.insertaQuery(swissObj.toSQLString())) {
+                            System.err.println("Error insertando: " + swissObj.toSQLString());
+                        }
+                    } else {
+                        if (!transacciones.insertaQuery(swissObj.toSQLUpdateString())) {
+                            System.err.println("Error insertando: " + swissObj.toSQLString());
+                        }
+                    }
+                }
+
+            } else {
+                System.err.println("Failed, got " + conn.getResponseMessage() + " for "
+                        + url.toString());
+            }
+            conn.disconnect();
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(SwissProt.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(SwissProt.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(SwissProt.class.getName()).log(Level.SEVERE, null, ex);
+
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(SwissProt.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**

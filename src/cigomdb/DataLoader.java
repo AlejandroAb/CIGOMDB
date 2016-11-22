@@ -75,6 +75,8 @@ public class DataLoader {
         modes.add("ensamble");
         modes.add("egg");
         modes.add("trinotate");
+        int swissBulk = 20;
+        boolean swissBatch = false;
         String mode = "";
         if (args.length < 1) {
             printHelp();
@@ -156,7 +158,10 @@ public class DataLoader {
             } else if (args[i].equals("--no-insert-amplicon")) {
                 insertaAmplicones = false;
 
-            } else if (args[i].equals("--start-at-one") || args[i].equals("-sao")) {
+            } else if (args[i].equals("--swiss-batch")) {
+                swissBatch = true;
+
+            }else if (args[i].equals("--start-at-one") || args[i].equals("-sao")) {
                 startAtZero = false;
 
             } else if (args[i].equals("--no-hash")) {
@@ -277,6 +282,19 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
+            } else if (args[i].equals("-bulk")) {
+                try {
+                    swissBulk = Integer.parseInt(args[i + 1]);
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion bulk - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                } catch (NumberFormatException nfe) {
+                    System.out.println("Opcion bulk - Se esperaba un argumento numerico\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
             } else if (args[i].equals("-idgenoma")) {
                 try {
                     idGenoma = Integer.parseInt(args[i + 1]);
@@ -347,10 +365,15 @@ public class DataLoader {
             String log = "";
             long start = System.currentTimeMillis();
             if (mode.equals("swiss")) {
-                SwissProt swiss = new SwissProt(transacciones);
-                //log = swiss.loadSwissProtFromXML(input, debug);
-                log = swiss.loadSwissProtFromWEB(debug);
-                System.out.println("END:\n" + log);
+                 SwissProt swiss = new SwissProt(transacciones);
+                if (swissBatch) {
+                    swiss.loadSwissProtFromWEBBulk(debug, swissBulk);
+                } else {
+                   
+                    //log = swiss.loadSwissProtFromXML(input, debug);
+                    log = swiss.loadSwissProtFromWEB(debug);
+                    System.out.println("END:\n" + log);
+                }
             } else if (mode.equals("genes")) {
                 if (gffIn.length() > 0 && (aaIn.length() + ncIn.length()) > 0) {
                     GeneFuncLoader loader = new GeneFuncLoader(transacciones);
@@ -370,7 +393,7 @@ public class DataLoader {
                     GeneFuncLoader loader = new GeneFuncLoader(transacciones);
                     //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
                     loader.setDebug(debug);
-                    loader.parseEnsamble(idPrefix, idMetagenoma, idGenoma, gffIn, contigIn, ncIn, aaIn, mapPrefix, startAtZero, startAtLine, withHash,toFile, output);
+                    loader.parseEnsamble(idPrefix, idMetagenoma, idGenoma, gffIn, contigIn, ncIn, aaIn, mapPrefix, startAtZero, startAtLine, withHash, toFile, output);
                 } else {
                     System.out.println("Para correr el programa ensamble se espera minimo un archivo gff y un archivo fasta");
                     printHelp();
