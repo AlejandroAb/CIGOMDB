@@ -135,6 +135,24 @@ public class Transacciones {
         return ++id;
 
     }
+    
+     public int getNextIDMarcador() {
+        String query = "SELECT MAX(idMarcador) FROM marcador";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            id = -1;
+        } else {
+            try {
+                id = Integer.parseInt((String) dbResult.get(0).get(0));
+            } catch (NumberFormatException nfe) {
+                id = -1;
+            }
+        }
+        return ++id;
+
+    }
 
     /**
      * Trae todas las proteinas DISTINTAS predichas por trinotate ya sea en
@@ -144,6 +162,57 @@ public class Transacciones {
      */
     public ArrayList<ArrayList> getAllDistinctPredictedSwissProt() {
         String query = "SELECT distinct(uniprot_id) FROM gen_swiss_prot";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        return dbResult;
+    }
+
+    public ArrayList<ArrayList> testUsuarioByFullName(String nombre, String apellido, boolean exact) {
+        String query;
+        if (exact) {
+            query = "SELECT idusuario, nombres, apellidos FROM usuario "
+                    + "WHERE nombres ='" + nombre + "' and apellidos='" + apellido + "'";
+        } else {
+            query = "SELECT idusuario, nombres, apellidos FROM usuario "
+                    + "WHERE nombres like '%" + nombre + "%' and apellidos like '%" + apellido + "%'";
+        }
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        return dbResult;
+    }
+
+    public ArrayList<ArrayList> testUsuarioByName(String nombre, boolean exact) {
+        String query;
+        if (exact) {
+            query = "SELECT idusuario, nombres, apellidos FROM usuario "
+                    + "WHERE nombres ='" + nombre + "'";
+        } else {
+            query = "SELECT idusuario, nombres, apellidos FROM usuario "
+                    + "WHERE nombres like '%" + nombre + "%'";
+        }
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        return dbResult;
+    }
+
+    public ArrayList<ArrayList> testUsuarioByID(String id) {
+        String query = "SELECT idusuario, nombres, apellidos FROM usuario "
+                + "WHERE idusuario =" + id + "";
+
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        return dbResult;
+    }
+
+    public ArrayList<ArrayList> testUsuarioBySurname(String apellido, boolean exact) {
+        String query;
+        if (exact) {
+            query = "SELECT idusuario, nombres, apellidos FROM usuario "
+                    + "WHERE apellidos ='" + apellido + "'";
+        } else {
+            query = "SELECT idusuario, nombres, apellidos FROM usuario "
+                    + "WHERE apellidos like '%" + apellido + "%'";
+        }
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         return dbResult;
@@ -177,7 +246,7 @@ public class Transacciones {
      *
      * @return
      */
-    public int getMaxIDArchivo() {
+    public int getNextIDArchivos() {
         String query = "SELECT MAX(idarchivo) FROM archivo";
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
@@ -251,6 +320,30 @@ public class Transacciones {
     }
 
     /**
+     * Recibe una etiqueta y en base a esta busca su ID coreespondiente
+     *
+     * @param etiqueta
+     * @return
+     */
+    public int getMuestreoByLabel(String etiqueta) {
+        String query = "SELECT idMuestreo from muestreo WHERE etiqueta = '" + etiqueta + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            id = -1;
+        } else {
+            try {
+                id = Integer.parseInt((String) dbResult.get(0).get(0));
+            } catch (NumberFormatException nfe) {
+                id = -1;
+            }
+        }
+        return id;
+
+    }
+
+    /**
      * Esste metodo se encarga de obtener el ID del derrotero es decir la
      * convinación estacion y campaña. Es usado durante la carga de los
      * muestreos, dado que este es el ID que se relaciona con el muestreo. El
@@ -289,6 +382,23 @@ public class Transacciones {
      */
     public String getSecMarcadorByRawID(String raw_seq_id) {
         String query = "SELECT idseq_marcador FROM seq_marcador WHERE raw_seq_id ='" + raw_seq_id + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult == null || dbResult.isEmpty()) {
+            return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+
+    /**
+     * Busca el id de una muestra dada su etiqueta
+     *
+     * @param raw_seq_id
+     * @return
+     */
+    public String getIdMuestraByLabel(String label) {
+        String query = "SELECT idMuestra FROM muestra WHERE etiqueta ='" + label + "'";
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         if (dbResult == null || dbResult.isEmpty()) {
@@ -386,10 +496,9 @@ public class Transacciones {
 
     /**
      * Cuando se corre el programa que parsea trinotate si no exsite una entrada
-     * de uniprot, se lee el id, el nombre y se anota pero el accesion queda
-     * con -1, es por esto que este query, basado en el id verifica si el
-     * registro tiene esta procedencia y en ese caso se encarga de actualizar el
-     * registro
+     * de uniprot, se lee el id, el nombre y se anota pero el accesion queda con
+     * -1, es por esto que este query, basado en el id verifica si el registro
+     * tiene esta procedencia y en ese caso se encarga de actualizar el registro
      *
      * @param uniID
      * @return

@@ -6,6 +6,9 @@
 package dao;
 
 import database.Transacciones;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 import utils.StringUtils;
 
@@ -14,9 +17,9 @@ import utils.StringUtils;
  * @author Alejandro
  */
 public class MetaxaDAO {
-    
+
     public Transacciones transacciones;
-    
+
     public MetaxaDAO(Transacciones transacciones) {
         this.transacciones = transacciones;
     }
@@ -43,39 +46,53 @@ public class MetaxaDAO {
      * @param idAnalisis_clasificacion el id del tipo de analisis que se realizó
      * @return log del proceso
      */
-    public String processMetaxaLine(String mtxLine, int idAnalisis_clasificacion) {        
+    public String processMetaxaLine(String mtxLine, int idAnalisis_clasificacion, FileWriter writer, HashMap<String, String> seqMap) throws IOException {
         StringTokenizer st = new StringTokenizer(mtxLine, "\t");
         String raw_id = st.nextToken();
         String classify = st.nextToken();
         String identity = st.nextToken();
-        try{
-          Float.parseFloat(identity);
-        }catch(NumberFormatException nfe){
+        boolean toFile = writer != null;
+        try {
+            Float.parseFloat(identity);
+        } catch (NumberFormatException nfe) {
             identity = "null";
-        }       
+        }
         String length = st.nextToken();
-         try{
-          Float.parseFloat(length);
-        }catch(NumberFormatException nfe){
+        try {
+            Float.parseFloat(length);
+        } catch (NumberFormatException nfe) {
             length = "null";
         }
         String score = st.nextToken();
-         try{
-          Float.parseFloat(score);
-        }catch(NumberFormatException nfe){
+        try {
+            Float.parseFloat(score);
+        } catch (NumberFormatException nfe) {
             score = "null";
         }
-        String seq_id = transacciones.getSecMarcadorByRawID(raw_id);
+        String seq_id = "";
+        if (toFile) {
+             seq_id = seqMap.get(raw_id);
+        } else {
+            seq_id = transacciones.getSecMarcadorByRawID(raw_id);
+        }
         if (seq_id == null || seq_id.length() == 0) {
-             System.err.println("ERROR. No se encontró secuencia con raw_id = " + raw_id + "\n");
-             
+            System.err.println("ERROR. No se encontró secuencia con raw_id = " + raw_id + "\n");
+
         }
         String taxid[] = searchNCBINode(classify);
-        if (!transacciones.insertMarcadorClassification(taxid[0], seq_id, idAnalisis_clasificacion, identity, "-1", score,length, taxid[1])) {
-            System.err.println("Error insertando seq_marcador_classif: " + "INSERT INTO seq_marcador_classif VALUES(" + taxid[0] + ",'" + seq_id + "', "
-                + idAnalisis_clasificacion + "," + identity + ",-1," + score + ",'" + taxid[1] + "')");
+        if (toFile) {
+            String query = "INSERT INTO seq_marcador_classif VALUES(" + taxid[0] + ",'" + seq_id + "', "
+                    + idAnalisis_clasificacion + "," + identity + "," + "-1" + "," + score + "," + length + ",'" + taxid[1] + "');\n";
+            writer.write(query);
+            return "";
+        } else {
+            if (!transacciones.insertMarcadorClassification(taxid[0], seq_id, idAnalisis_clasificacion, identity, "-1", score, length, taxid[1])) {
+                System.err.println("Error insertando seq_marcador_classif: " + "INSERT INTO seq_marcador_classif VALUES(" + taxid[0] + ",'" + seq_id + "', "
+                        + idAnalisis_clasificacion + "," + identity + ",-1," + score + ",'" + taxid[1] + "')");
+            }
+            return "";
         }
-        return "";
+
     }
 
     /**

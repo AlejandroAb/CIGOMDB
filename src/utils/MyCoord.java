@@ -94,16 +94,18 @@ public class MyCoord {
 // String latLong = st.nextToken();
         String gTmp;
         double coords = 0;
+        boolean reCompute = true; //se pone en false cuando vienen solo grados 
         try {
 
             int tokens = st.countTokens();
-            if (tokens == 1) {//solo tenemmos grados 
+            if (tokens == 1) {//solo tenemmos grados                 
                 double g = Double.parseDouble(st.nextToken().trim());
                 grados = (int) g;
                 g = (g - grados) * 60; //la parte fraccion la volvemos a minutos
                 minutos = (int) g;
                 g = (g - minutos) * 60; //la parte fraccion la volvemos segundos
                 segundos = (float) g;
+                reCompute = false;
             } else if (tokens == 2) { //tenemos grados ° y minutos                
                 grados = Integer.parseInt(st.nextToken().trim());
                 double m = Double.parseDouble(st.nextToken());
@@ -115,7 +117,7 @@ public class MyCoord {
                 minutos = Integer.parseInt(st.nextToken().trim());
                 segundos = Float.parseFloat(st.nextToken().trim());
               //  coords = (grados) + ((double) minutos + (segundos / 60)) / 60;
-              //  coordenadas = "" + coords;
+                //  coordenadas = "" + coords;
             } else {
                 int tok = 0;
                 while (st.hasMoreTokens()) {
@@ -123,10 +125,12 @@ public class MyCoord {
                     System.out.print("Token: " + tok + " " + st.nextToken());
                 }
             }
-           // minutos = Integer.parseInt(st.nextToken());
+            // minutos = Integer.parseInt(st.nextToken());
             // segundos = Float.parseFloat(st.nextToken());
-            coords = (grados) + ((double) minutos + (segundos / 60)) / 60;
-            coordenadas = "" + coords;
+            if (reCompute) {
+                coords = (grados) + ((double) minutos + (segundos / 60)) / 60;
+                coordenadas = "" + coords;
+            }
 
         } catch (NumberFormatException nfe) {
             System.out.println("Error NFE parseCoordsLGMS(): " + coordenadas);

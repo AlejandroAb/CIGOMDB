@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package bobjects;
 
 /**
@@ -11,20 +10,21 @@ package bobjects;
  * @author Alejandro
  */
 public class ArchivoObj {
-   public static int TIPO_RAW = 1;
-   public static int TIPO_PRE = 2;
-   public static int TIPO_MTX = 3;
-   private int idArchivo;
-   private int tipoArchivo;
-   private String nombre;
-   private String extension;
-   private String path;//sin el nombre, termina en / path + nombre = full_path
-   private String checksum = "";
-   private String description=""; 
-   private int poor_q_secs = 0;
-   private int num_secs = 0;
-   private float seq_length = 0; //promedio
-   private float gc_percent = 0;   
+
+    public static int TIPO_RAW = 1;
+    public static int TIPO_PRE = 2;
+    public static int TIPO_MTX = 3;
+    private int idArchivo;
+    private int tipoArchivo;
+    private String nombre;
+    private String extension;
+    private String path;//sin el nombre, termina en / path + nombre = full_path
+    private String checksum = "";
+    private String description = "";
+    private int poor_q_secs = 0;
+    private int num_secs = 0;
+    private float seq_length = 0; //promedio
+    private float gc_percent = 0;
 
     public ArchivoObj(int idArchivo) {
         this.idArchivo = idArchivo;
@@ -117,5 +117,13 @@ public class ArchivoObj {
     public void setGc_percent(float gc_percent) {
         this.gc_percent = gc_percent;
     }
-   
-  }
+
+    public String toSQLString() {
+        String query = "INSERT INTO archivo (idarchivo, idtipo_archivo, nombre, extension, path, checksum, descripcion, poor_q_secs, num_secs, seq_length, gc_percent) VALUES "
+                + "(" + this.getIdArchivo() + "," + this.getTipoArchivo() + ", '" + this.getNombre() + "','" + this.getExtension()
+                + "','" + this.getPath() + "','" + this.getChecksum() + "','" + this.getDescription() + "'," + this.getPoor_q_secs()
+                + "," + this.getNum_secs() + "," + this.getSeq_length() + "," + this.getGc_percent() + ")";
+        return query;
+    }
+
+}

@@ -17,19 +17,57 @@ public class Muestra {
     private int idMuestreo = -1;
     private double profundidad = -1;
     private String etiqueta = "";
-    private String contenedor="";//isolation growth conditions
-    private String process=""; //samp_mat_process
-    private String notas=""; //comentarios
-    private String samp_size="ND";//
+    private String contenedor = "";//isolation growth conditions
+    private String process = ""; //samp_mat_process - //protocolo
+    private String notas = ""; //comentarios
+    private String samp_size = "ND";//
+    private String temp_Contenedor = "";
     private ArrayList<Medicion> mediciones;
     private ArrayList<Usuario> usuarios;
+    private String relToOxygen = "";
+    private String error;
+    private boolean ok = true;
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public boolean isOk() {
+        return ok;
+    }
+
+    public void setOk(boolean ok) {
+        this.ok = ok;
+    }
 
     public Muestra(int idMuestra) {
-        this.idMuestra = idMuestra;
+        this.idMuestra = idMuestra;       
+        usuarios = new ArrayList<Usuario>();        
+        mediciones = new ArrayList<Medicion>();
     }
 
     public String getSamp_size() {
         return samp_size;
+    }
+
+    public String getTemp_Contenedor() {
+        return temp_Contenedor;
+    }
+
+    public void setTemp_Contenedor(String temp_Contenedor) {
+        this.temp_Contenedor = temp_Contenedor;
+    }
+
+    public String getRelToOxygen() {
+        return relToOxygen;
+    }
+
+    public void setRelToOxygen(String relToOxygen) {
+        this.relToOxygen = relToOxygen;
     }
 
     public void setSamp_size(String samp_size) {
@@ -39,6 +77,10 @@ public class Muestra {
     public Muestra(int idMuestra, int idMuestreo) {
         this.idMuestreo = idMuestreo;
         this.idMuestra = idMuestra;
+        
+        usuarios = new ArrayList<Usuario>();
+      
+        mediciones = new ArrayList<Medicion>();
     }
 
     public int getIdMuestra() {
@@ -119,6 +161,13 @@ public class Muestra {
 
     public void setUsuarios(ArrayList<Usuario> usuarios) {
         this.usuarios = usuarios;
+    }
+
+    public String toSQLString() {
+        String sqlStr = "INSERT INTO muestra (idMuestra, idMuestreo, profundidad, etiqueta, contenedor, tamano, protocolo, notas, rel_to_oxygen, contenedor_temp) "
+                + "VALUES ("
+                + this.idMuestra + "," + this.idMuestreo + "," + this.profundidad + ",'" + this.etiqueta + "','" + this.contenedor + "','" + this.samp_size + "','" + this.process + "','" + this.notas + "','" + this.relToOxygen + "','" + this.temp_Contenedor + "')";
+        return sqlStr;
     }
 
 }

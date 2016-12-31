@@ -51,6 +51,7 @@ public class MyDate {
     }
 
     public void setTime(String time) {
+
         this.time = time;
     }
 
@@ -82,14 +83,100 @@ public class MyDate {
         this.fecha = fecha;
     }
 
+    public boolean splitMyDate() {
+        // String regDDMMYY = "^(?:(?:31(\\/|-|\\.)(?:0?[13578]|1[02]))\\1|(?:(?:29|30)(\\/|-|\\.)(?:0?[1,3-9]|1[0-2])\\2))(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$|^(?:29(\\/|-|\\.)0?2\\3(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\\d|2[0-8])(\\/|-|\\.)(?:(?:0?[1-9])|(?:1[0-2]))\\4(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$";
+        // String regMMDDYY = "^(?:(?:31(\\/|-|\\.)(?:0?[13578]|1[02]))\\1|(?:(?:29|30)(\\/|-|\\.)(?:0?[1,3-9]|1[0-2])\\2))(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$|^(?:29(\\/|-|\\.)0?2\\3(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\\d|2[0-8])(\\/|-|\\.)(?:(?:0?[1-9])|(?:1[0-2]))\\4(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$";
+        String reg_YYYYMMDD = "^\\d\\d\\d\\d(\\/|-|\\.)(0?[1-9]|1[0-2])(\\/|-|\\.)(0?[1-9]|[12][0-9]|3[01])(\\s*.*)$";
+        String reg_DDMMYYYY = "^(0?[1-9]|[12][0-9]|3[01])(\\/|-|\\.)(0?[1-9]|1[0-2])(\\/|-|\\.)\\d\\d\\d\\d(\\s*.*)$";
+        String reg_MMDDYYYY = "^(0?[1-9]|1[0-2])(\\/|-|\\.)(0?[1-9]|[12][0-9]|3[01])(\\/|-|\\.)\\d\\d\\d\\d(\\s*.*)$";
+        if (fecha.matches(reg_DDMMYYYY)) {
+            return splitDDMMYY();
+        } else if (fecha.matches(reg_MMDDYYYY)) {
+            return splitMMDDYY();
+        } else if (fecha.matches(reg_YYYYMMDD)) {
+            return splitYYYYMMDD();
+        }
+        return false;
+    }
+
+    public boolean parseTime(String time) {
+        String tokens[] = time.split(":");
+        int i = 0;
+        String horas = "";
+        String minutos = "";
+        String segundos = "";
+        for (String tok : tokens) {
+            try {
+                if (i == 0) {
+                    horas = tok.trim();
+                    if (horas.length() < 2) {
+                        horas = "0" + horas;
+                    }
+                    Integer.parseInt(horas);
+                } else if (i == 1) {
+                    minutos = tok.trim();
+                    if (minutos.length() < 2) {
+                        minutos = "0" + minutos;
+                    }
+                    Integer.parseInt(minutos);
+                } else if (i == 2) {
+                    segundos = tok.trim();
+                    if (segundos.length() < 2) {
+                        segundos = "0" + segundos;
+                    }
+                    Integer.parseInt(segundos);
+                }
+            } catch (NumberFormatException nfe) {
+                return false;
+            }
+            i++;
+        }
+        if (segundos.length() == 0) {
+            segundos = "00";
+        }
+        if (minutos.length() == 0) {
+            minutos = "00";
+        }
+        if (horas.length() == 0) {
+            return false;
+        }
+        this.time = horas+":"+minutos+":"+segundos;
+        return true;
+
+    }
+
     public boolean splitDDMMYY() {
 
         if (fecha.length() >= 6) {
             try {
-                StringTokenizer st = new StringTokenizer(fecha, "/");
+                StringTokenizer st = new StringTokenizer(fecha, "/.- ");
                 dia = Integer.parseInt(st.nextToken());
                 mes = Integer.parseInt(st.nextToken());
                 anio = Integer.parseInt(st.nextToken());
+                return true;
+            } catch (NumberFormatException nfe) {
+                System.out.println("Error NFE splitDDMMYY(): " + fecha);
+                return false;
+
+            } catch (NoSuchElementException nsee) {
+                System.out.println("Error nsee splitDDMMYY(): " + fecha);
+                return false;
+            }
+
+        } else {
+            return false;
+        }
+
+    }
+
+    public boolean splitYYYYMMDD() {
+
+        if (fecha.length() >= 6) {
+            try {
+                StringTokenizer st = new StringTokenizer(fecha, "/.- ");
+                anio = Integer.parseInt(st.nextToken());
+                mes = Integer.parseInt(st.nextToken());
+                dia = Integer.parseInt(st.nextToken());
                 return true;
             } catch (NumberFormatException nfe) {
                 System.out.println("Error NFE splitDDMMYY(): " + fecha);
@@ -110,7 +197,7 @@ public class MyDate {
 
         if (fecha.length() >= 6) {
             try {
-                StringTokenizer st = new StringTokenizer(fecha, "/");
+                StringTokenizer st = new StringTokenizer(fecha, "/.- ");
                 mes = Integer.parseInt(st.nextToken());
                 dia = Integer.parseInt(st.nextToken());
                 anio = Integer.parseInt(st.nextToken());

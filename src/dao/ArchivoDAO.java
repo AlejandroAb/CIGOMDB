@@ -24,10 +24,7 @@ public class ArchivoDAO {
 
     public boolean insertaArchivo(ArchivoObj archivo, boolean toFile, String outFile, boolean append) {
 
-        String query = "INSERT INTO archivo (idarchivo, idtipo_archivo, nombre, extension, path, checksum, descripcion, poor_q_secs, num_secs, seq_length, gc_percent) VALUES "
-                + "(" + archivo.getIdArchivo() + "," + archivo.getTipoArchivo() + ", '" + archivo.getNombre() + "','" + archivo.getExtension()
-                + "','" + archivo.getPath() + "','" + archivo.getChecksum() + "','" + archivo.getDescription() + "'," + archivo.getPoor_q_secs()
-                + "," + archivo.getNum_secs() + "," + archivo.getSeq_length() + "," + archivo.getGc_percent() + ")";
+        String query = archivo.toSQLString();
         FileWriter writer = null;
         if (!toFile) {
             if (!transacciones.insertaQuery(query)) {

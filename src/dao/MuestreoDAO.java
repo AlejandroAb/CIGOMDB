@@ -56,27 +56,27 @@ public class MuestreoDAO {
         String log = "";
         String fechaInicial = "";
         if (muestreo.getFechaInicial() == null) {
-            fechaInicial = "";
+            fechaInicial = "0000-00-00 00:00:00";
         } else {
             fechaInicial = muestreo.getFechaInicial().toSQLString(true);
         }
         String fechaFinal = "";
         if (muestreo.getFechaFinal() == null) {
-            fechaFinal = "";
+            fechaFinal = "0000-00-00 00:00:00";
         } else {
             fechaFinal = muestreo.getFechaFinal().toSQLString(true);
         }
-        String query = "INSERT INTO muestreo  (idMuestreo, idCE, idTipoMuestreo,"
+        String query = "INSERT INTO muestreo(idMuestreo,idCampana, idEstacion, idCE, idTipoMuestreo,"
                 + "idTipoMuestra, etiqueta, fecha_i, fecha_f, latitud_r, longitud_r, "
                 + "protocolo, comentarios, latitud_a, longitud_a, lance, bioma, env_feature,"
-                + "env_material, tamano,profundidad, tipo_profundidad) VALUES "
-                + "(" + muestreo.getIdMuestreo() + "," + muestreo.getIdDerrotero() + "," + muestreo.getIdTipoMuestreo()
+                + "env_material, tamano,profundidad, tipo_profundidad, descripcion) VALUES "
+                + "(" + muestreo.getIdMuestreo() + "," +muestreo.getIdCrucero() + "," +muestreo.getIdEstacion() + "," + muestreo.getIdDerrotero() + "," + muestreo.getIdTipoMuestreo()
                 + "," + muestreo.getIdTipoMuestra() + ",'" + muestreo.getEtiqueta() + "','" + fechaInicial
                 + "','" + fechaFinal + "'," + muestreo.getLatitud_r().getCoords()
                 + "," + muestreo.getLongitud_r().getCoords() + ",'" + muestreo.getProtocolo() + "','" + muestreo.getComentarios()
                 + "'," + muestreo.getLatitud_a().getCoords() + "," + muestreo.getLongitud_a().getCoords() + ",'" + muestreo.getLance()
                 + "','" + muestreo.getBioma() + "', '" + muestreo.getEnv_feature() + "','" + muestreo.getEnv_material()
-                + "','" + muestreo.getTamano() + "'," + muestreo.getProfundidad() + ",'" + muestreo.getTipo_prof() + "')";
+                + "','" + muestreo.getTamano() + "'," + muestreo.getProfundidad() + ",'" + muestreo.getTipo_prof()  + "','" +muestreo.getDescripcion()+ "')";
         FileWriter writer = null;
         if (toFile) {
             try {

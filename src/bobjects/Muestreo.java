@@ -22,14 +22,17 @@ public class Muestreo {
     public static int MATRIZ_AGUA = 1;
     public static int MATRIZ_SEDIMENTO = 2;
     //TIPOS profundidades
-    public static String PROF_MAX_F = "Max. Fluoresc-";
-    public static String PROF_MIN_O = "Min. O2";
-    public static String PROF_MIL_M = "1000 m";
-    public static String PROF_FONDO = "Fondo";
+    public static String PROF_MAX_F = "MAX_F";
+    public static String PROF_MIN_O = "MIN_O2";
+    public static String PROF_MIL_M = "MIL";
+    public static String PROF_FONDO = "FONDO";
+    public static String PROF_SED = "SED";
     private int idMuestreo = 0;
     private int idDerrotero = -1; //id del derrotero o idCE (Crucero Estación)    
     private int idTipoMuestreo = -1;
     private int idTipoMuestra = -1;
+    private int idCrucero = -1;
+    private int idEstacion = -1;
     private String etiqueta = "";
     private MyDate fechaInicial;
     private MyDate fechaFinal;
@@ -50,6 +53,45 @@ public class Muestreo {
     private ArrayList<Usuario> usuarios;
     private ArrayList<Muestra> muestras;
     private ArrayList<Medicion> mediciones;
+    private String descripcion="";
+    private boolean ok = true;
+    private String error = "";
+
+    public boolean isOk() {
+        return ok;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public int getIdCrucero() {
+        return idCrucero;
+    }
+
+    public void setIdCrucero(int idCrucero) {
+        this.idCrucero = idCrucero;
+    }
+
+    public int getIdEstacion() {
+        return idEstacion;
+    }
+
+    public void setIdEstacion(int idEstacion) {
+        this.idEstacion = idEstacion;
+    }
+
+    public void setError(String error) {
+        if (this.error.length() == 0) {
+            this.error += error;
+        } else {
+            this.error += "\n" + error;
+        }
+    }
+
+    public void setOk(boolean ok) {
+        this.ok = ok;
+    }
 
     public Muestreo() {
         instrumentos = new ArrayList<Instrumento>();
@@ -66,6 +108,14 @@ public class Muestreo {
         mediciones = new ArrayList<Medicion>();
     }
 
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
     public void addNewInstrumento(Instrumento instrumento) {
         this.instrumentos.add(instrumento);
     }
@@ -80,6 +130,23 @@ public class Muestreo {
 
     public void addNewMedicion(Medicion medicion) {
         this.mediciones.add(medicion);
+    }
+
+    /**
+     * Este método trae el nombre literal del instrumento que va en una etiqueta
+     * de colecta de acuerdo al tipo de muestreo. Esto sirve para reconstruir la
+     * etiqueta en caso de que el usuario no la proporcione
+     *
+     * @return
+     */
+    public String getInstrumentoByTipoMuestra() {
+        if (this.getIdTipoMuestra() == Muestreo.MATRIZ_AGUA) {
+            return "ROSETA";
+        } else if (this.getIdTipoMuestra() == Muestreo.MATRIZ_SEDIMENTO) {
+            return "NUCLEADOR";
+        } else {
+            return "";
+        }
     }
 
     public ArrayList<Medicion> getMediciones() {

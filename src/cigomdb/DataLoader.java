@@ -5,6 +5,8 @@
  */
 package cigomdb;
 
+import bobjects.Muestra;
+import bobjects.Muestreo;
 import database.Transacciones;
 import java.util.ArrayList;
 
@@ -33,8 +35,10 @@ public class DataLoader {
         String user = "root";
         String host = "localhost";
         String password = "amorphis";
-        String input = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\4 db\\Pfam\\Pfam-A.clans.tsv\\Pfam-A.clans.tsv";
-        String output = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\4 db\\Pfam\\Pfam-A.clans.tsv\\Pfam-A.clans.sql";
+        String input = "";
+        String output = "";
+        String outFileFasta = "";//usado en marcadores
+        String outFileMetaxa = "";//usado en marcadores
         String mapPrefix = "gen_id_";
         String idPrefix = "M1SE3";
         String contigIn = "";
@@ -46,6 +50,10 @@ public class DataLoader {
         String nodes = "C:\\Users\\Alejandro\\Documents\\Projects\\taxonomydb\\taxdmp\\nodes.dmp";
         String uri = "";
         String url = "";
+        String combined_file = "";
+        String nc1_file = "";
+        String nc2_file = "";
+        String metatax_file = "";
         boolean insertaAmplicones = true;//--no-insert-amplicon
         boolean processOutAmplicones = false; //-poa --process_out_amplicon
         boolean processMetaxaAmplicones = false; //-mamp --metaxa_amp
@@ -54,6 +62,7 @@ public class DataLoader {
         int campania = -1;
         int idGenoma = -1;
         int idMetagenoma = -1;
+        int metodo_medida = -1; //-mm
         String marker_meth = "";//para escoger el metodo de processamiento en modo markers 
         String delimiter = "\t";
         boolean debug = false;
@@ -67,6 +76,7 @@ public class DataLoader {
         modes.add("derrotero");
         modes.add("ncbitax");
         modes.add("muestreo");
+        modes.add("muestra");
         modes.add("pfam");
         modes.add("markers");
         modes.add("cog");
@@ -107,6 +117,24 @@ public class DataLoader {
                     i++;
                 } catch (ArrayIndexOutOfBoundsException aiobe) {
                     System.out.println("Opcion o - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            } else if (args[i].equals("-outseq")) {
+                try {
+                    outFileFasta = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion -outseq - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            } else if (args[i].equals("-outmetaxa")) {
+                try {
+                    outFileMetaxa = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion -outmetaxa - Se esperaba un argumento\n\n");
                     printHelp();
                     System.exit(1);
                 }
@@ -161,7 +189,7 @@ public class DataLoader {
             } else if (args[i].equals("--swiss-batch")) {
                 swissBatch = true;
 
-            }else if (args[i].equals("--start-at-one") || args[i].equals("-sao")) {
+            } else if (args[i].equals("--start-at-one") || args[i].equals("-sao")) {
                 startAtZero = false;
 
             } else if (args[i].equals("--no-hash")) {
@@ -197,6 +225,42 @@ public class DataLoader {
                     i++;
                 } catch (ArrayIndexOutOfBoundsException aiobe) {
                     System.out.println("Opcion gff - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            } else if (args[i].equals("-metatax")) {
+                try {
+                    metatax_file = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion metatax - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            } else if (args[i].equals("-combined")) {
+                try {
+                    combined_file = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion combined - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            } else if (args[i].equals("-nc1")) {
+                try {
+                    nc1_file = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion nc1 - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            } else if (args[i].equals("-nc2")) {
+                try {
+                    nc2_file = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion nc2 - Se esperaba un argumento\n\n");
                     printHelp();
                     System.exit(1);
                 }
@@ -321,6 +385,19 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
+            } else if (args[i].equals("-mm")) {
+                try {
+                    metodo_medida = Integer.parseInt(args[i + 1]);
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion metodo de medidad - mm. Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                } catch (NumberFormatException nfe) {
+                    System.out.println("Opcion  metodo de medidad - mm. Se esperaba un argumento numerico\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
             } else if (args[i].equals("-sep")) {
                 try {
                     delimiter = args[i + 1];
@@ -365,11 +442,11 @@ public class DataLoader {
             String log = "";
             long start = System.currentTimeMillis();
             if (mode.equals("swiss")) {
-                 SwissProt swiss = new SwissProt(transacciones);
+                SwissProt swiss = new SwissProt(transacciones);
                 if (swissBatch) {
                     swiss.loadSwissProtFromWEBBulk(debug, swissBulk);
                 } else {
-                   
+
                     //log = swiss.loadSwissProtFromXML(input, debug);
                     log = swiss.loadSwissProtFromWEB(debug);
                     System.out.println("END:\n" + log);
@@ -430,7 +507,51 @@ public class DataLoader {
                 EventProcesor eventMuestreo = new EventProcesor(transacciones);
                 eventMuestreo.setNextIDMuestreo(idMuestreo);
                 eventMuestreo.setNextIDMuestra(idMuestra);
-                log += eventMuestreo.parseFileMMFI_Muestreo(input, output, true, delimiter, campania);
+                //       log += eventMuestreo.parseFileMMFI_Muestreo(input, output, true, delimiter, campania);
+                if (campania == -1) {
+                    System.out.println("Para correr el programa muestreo se espera un id de campaña");
+                    //printHelp();
+                    System.exit(1);
+                }
+                if (metodo_medida == -1) {
+                    System.out.println("Para correr el programa muestreo se espera un metodo de medidad");
+                    //printHelp();
+                    System.exit(1);
+                }
+                ArrayList<Muestreo> muestreos = eventMuestreo.parseFileColectas(input, output, toFile, delimiter, campania, metodo_medida, false, false);
+                if (muestreos != null) {
+                    System.out.println("Procesamiento de colectas");
+                    for (Muestreo muestreo : muestreos) {
+                        System.out.println(muestreo.getIdMuestreo() + " - " + muestreo.getEtiqueta() + " - " + muestreo.isOk() + " " + muestreo.getError());
+                    }
+                } else {
+                    System.out.println("Error al obtener id de muestreo/colecta");
+                }
+            } else if (mode.equals("muestra")) {
+                int idMuestra = transacciones.getMaxIDMuestra();
+                //  int idMuestreo = transacciones.getMaxIDMuestreo();
+                EventProcesor eventMuestreo = new EventProcesor(transacciones);
+                eventMuestreo.setNextIDMuestra(idMuestra);
+                //       log += eventMuestreo.parseFileMMFI_Muestreo(input, output, true, delimiter, campania);
+          /*      if (campania == -1) {
+                 System.out.println("Para correr el programa muestreo se espera un id de campaña");
+                 //printHelp();
+                 System.exit(1);
+                 }
+                 if (metodo_medida == -1) {
+                 System.out.println("Para correr el programa muestreo se espera un metodo de medidad");
+                 //printHelp();
+                 System.exit(1);
+                 }*/
+                ArrayList<Muestra> muestras = eventMuestreo.parseFileMuestras(input, output, toFile, delimiter);
+                if (muestras != null) {
+                    System.out.println("Procesamiento de muestras");
+                    for (Muestra muestra : muestras) {
+                        System.out.println(muestra.getIdMuestra() + " - " + muestra.getEtiqueta() + " - " + muestra.isOk() + " " + muestra.getError());
+                    }
+                } else {
+                    System.out.println("Error al obtener id de muestreo/colecta");
+                }
             } else if (mode.equals("pfam")) {
                 PfamProcesor pProcessor = new PfamProcesor(transacciones);
                 log += pProcessor.parsePfamAClans(input, true, output);
@@ -454,9 +575,22 @@ public class DataLoader {
                 }
             } else if (mode.equals("markers")) {
                 if (marker_meth.length() > 0) {
+
                     MarkerLoader loader = new MarkerLoader(transacciones);
+                    if (combined_file.length() > 2) {
+                        loader.setProc_combined_file(combined_file);
+                    }
+                    if (nc1_file.length() > 2) {
+                        loader.setProc_nc1_file(nc1_file);
+                    }
+                    if (nc2_file.length() > 2) {
+                        loader.setProc_nc2_file(nc2_file);
+                    }
+                    if (metatax_file.length() > 2) {
+                        loader.setProc_metaxa_file(metatax_file);
+                    }
                     if (marker_meth.equals("mv1")) {
-                        log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
+                        log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext, output, outFileFasta, outFileMetaxa);
                     } else if (marker_meth.equals("mv2")) {
                         log += loader.parseMarkerFileFormatIPacbio(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
                     } else {
@@ -503,6 +637,9 @@ public class DataLoader {
         System.out.println("\tpfam\t Carga archivos de PFAM como ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam30.0/Pfam-A.clans.tsv.gz\n\t\tParams: inout y output ");
         System.out.println("\tobo\t Carga archivos en formato OBO como ftp://ftp.geneontology.org/pub/go/www/GO.format.obo-1_4.shtml \n\t\t params: -i -o -uri(mandatory) -url");
         System.out.println("\tmarkers \tSe encarga de cargar secuencias de marcadores por muestra. tiene que entregarse el parametro marker_meth");
+        System.out.println("\tmuestreo \tSe encarga de anotar archivos con datos de muestreos. Utiliza los siguientes parámetros:"
+                + "\n\t\t\t-i\tArchivo de entrada con muestreos\n\t\t\t-o\tArchivo de salida\n\t\t\t-campana\tCamapaña a la cual se relacionan las muestras"
+                + "\n\t\t\t-mm\tEl método de medida usado para variables fisico químicas. Valores:\n\t\t\t\t1 = Medido con CTD.\n\t\t\t\t1 = Medido con PCTester TM 35.");
         System.out.println("\tensamble \tSe encarga de cargar secuencias de de ensambles de genes. Utiliza los siguientes parámetros:"
                 + "\n\t\t\t-contig\tArchivo de contigs\n\t\t\t-gff\tArchivo con las coordenadas\n\t\t\t-nc\tArchivo de nucleotidos\n\t\t\t-aa\tArchivo de proteinas"
                 + "\n\t\t\t-idpre\tPrefijo para el id de los genes\n\t\t\t-mapre\tPrefijo para mapeo a la anotación funcional\n\t\t\t---start-at-one | -sao\tTrue por defecto. False empieza la numeracion del mapeo en cero y no en uno\n\t\t\t-idgenoma\tID del genoma al cual pertenecen los genes predichos\n\t\t\t-idmetagenoma\tID del metagenomma al cual pertenecen los genes predichos."
