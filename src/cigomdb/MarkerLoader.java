@@ -250,7 +250,7 @@ public class MarkerLoader {
                             } else if (tok == idxQC) {
                                 data_qc = st.nextToken().trim();
                                 marcador.setData_qc(data_qc);
-                            }else{
+                            } else {
                                 st.nextToken();
                             }
                         }
@@ -264,19 +264,23 @@ public class MarkerLoader {
                             } else {
                                 boolean toFile = outFile.length() > 1 ? true : false;
                                 File rawFolder = new File(raw_data_path);
-                                for (File f : rawFolder.listFiles()) {
-                                    if (f.getName().endsWith(raw_ext)) {
-                                        ArchivoObj rawFile = new ArchivoObj(nextIDArchivo);
-                                        nextIDArchivo++;
-                                        rawFile.setTipoArchivo(ArchivoObj.TIPO_RAW);
-                                        rawFile.setNombre(f.getName());
-                                        rawFile.setPath(raw_data_path);
-                                        rawFile.setDescription("Datos crudos de amplicones");
-                                        rawFile.setExtension(raw_ext);
-                                        marcador.addArchivo(rawFile);
+                                if (rawFolder != null && rawFolder.exists()) {
+                                    for (File f : rawFolder.listFiles()) {
+                                        if (f.getName().endsWith(raw_ext)) {
+                                            ArchivoObj rawFile = new ArchivoObj(nextIDArchivo);
+                                            nextIDArchivo++;
+                                            rawFile.setTipoArchivo(ArchivoObj.TIPO_RAW);
+                                            rawFile.setNombre(f.getName());
+                                            rawFile.setPath(raw_data_path);
+                                            rawFile.setDescription("Datos crudos de amplicones");
+                                            rawFile.setExtension(raw_ext);
+                                            marcador.addArchivo(rawFile);
                                         // log += adao.insertaArchivo(rawFile, false, "", true);
-                                        //transacciones.insertaArchivoMarcador(idMarcador, rawFile.getIdArchivo());
+                                            //transacciones.insertaArchivoMarcador(idMarcador, rawFile.getIdArchivo());
+                                        }
                                     }
+                                }else{
+                                    System.err.println();
                                 }
                                 marcadorInsertado = mdao.almacenaMarcador(marcador, toFile, outFile, true, true);
 
@@ -360,7 +364,7 @@ public class MarkerLoader {
                                         String query = "INSERT INTO seq_marcador VALUES('"
                                                 + idSec + "'," + idMarcador + ",'" + raw_seq_id + "','" + sec + "'," + sec.length() + ");\n";
                                         writer.write(query);
-                                         seqMap.put(raw_seq_id, idSec);
+                                        seqMap.put(raw_seq_id, idSec);
 
                                     } else {
                                         if (!transacciones.insertaSeqMarcador(idSec, "" + idMarcador, raw_seq_id, sec)) {
@@ -406,7 +410,7 @@ public class MarkerLoader {
                                         String query = "INSERT INTO seq_marcador VALUES('"
                                                 + idSec + "'," + idMarcador + ",'" + raw_seq_id + "','" + sec + "'," + sec.length() + ");\n";
                                         writer.write(query);
-                                         seqMap.put(raw_seq_id, idSec);
+                                        seqMap.put(raw_seq_id, idSec);
 
                                     } else {
                                         if (!transacciones.insertaSeqMarcador(idSec, "" + idMarcador, raw_seq_id, sec)) {
@@ -427,7 +431,7 @@ public class MarkerLoader {
                             nc2File.setNum_secs(sec_num);
                             nc2File.setSeq_length(avg / sec_num);
                             if (toFile) {
-                                writer.write(nc1File.toSQLString() + ";\n");
+                                writer.write(nc2File.toSQLString() + ";\n");
                                 writer.write("INSERT INTO marcador_archivo VALUES(" + marcador.getIdMarcador() + "," + nc1File.getIdArchivo() + ");\n");
                                 writer.write("UPDATE marcador set seq_num_total = " + counterTotal + " WHERE idmarcador = " + idMarcador + ";\n");
                                 writer.close();
@@ -442,7 +446,7 @@ public class MarkerLoader {
                         }
                         if (processMetaxa) {
                             //to impl cargar metaxa
-                            processMeta(proc_data_path, idMarcador, adao, metaxa, outFileMetaxa,seqMap);
+                            processMeta(proc_data_path, idMarcador, adao, metaxa, outFileMetaxa, seqMap);
                         }
                     }
                 }
@@ -495,7 +499,7 @@ public class MarkerLoader {
             int lineas = 0;
             String lineaMetaxa;
             while ((lineaMetaxa = metaxaReader.readLine()) != null) {
-                metaxa.processMetaxaLine(lineaMetaxa, AnalisisClasificacion.METAXA_REGULAR, writer,seqMap);
+                metaxa.processMetaxaLine(lineaMetaxa, AnalisisClasificacion.METAXA_REGULAR, writer, seqMap);
             }
             if (toFile) {
                 writer.close();
@@ -613,7 +617,7 @@ public class MarkerLoader {
 
                     if (processMetaxa) {
                         //to impl cargar metaxa
-                        processMeta(proc_data_path, idMarcador, adao, metaxa, null,null);
+                        processMeta(proc_data_path, idMarcador, adao, metaxa, null, null);
                     }
                 }
             }
