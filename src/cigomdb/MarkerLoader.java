@@ -117,7 +117,7 @@ public class MarkerLoader {
                     return "ERROR No se puede determinar el siguiente ID de marcador";
                 }
             }
-            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), "ISO-8859-1"));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), "UTF-8"));
             String linea;
             ArchivoDAO adao = new ArchivoDAO(transacciones);
             MetaxaDAO metaxa = new MetaxaDAO(transacciones);
@@ -432,7 +432,7 @@ public class MarkerLoader {
                             nc2File.setSeq_length(avg / sec_num);
                             if (toFile) {
                                 writer.write(nc2File.toSQLString() + ";\n");
-                                writer.write("INSERT INTO marcador_archivo VALUES(" + marcador.getIdMarcador() + "," + nc1File.getIdArchivo() + ");\n");
+                                writer.write("INSERT INTO marcador_archivo VALUES(" + marcador.getIdMarcador() + "," + nc2File.getIdArchivo() + ");\n");
                                 writer.write("UPDATE marcador set seq_num_total = " + counterTotal + " WHERE idmarcador = " + idMarcador + ";\n");
                                 writer.close();
                             } else {
@@ -447,6 +447,7 @@ public class MarkerLoader {
                         if (processMetaxa) {
                             //to impl cargar metaxa
                             processMeta(proc_data_path, idMarcador, adao, metaxa, outFileMetaxa, seqMap);
+                            seqMap  = new HashMap<>();
                         }
                     }
                 }
