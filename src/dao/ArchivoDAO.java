@@ -43,4 +43,46 @@ public class ArchivoDAO {
         }
         return true;
     }
+
+    /**
+     * Metodo para guardar o escribir el query para crear una relaacion entre un
+     * objeto de tipo archivo y un genoma o metagenoma
+     *
+     * @param archivo
+     * @param id
+     * @param source
+     * @param toFile
+     * @param outFile
+     * @param append
+     * @return
+     */
+    public boolean insertaArchivoMetaGenoma(ArchivoObj archivo, int id, String source, boolean toFile, String outFile, boolean append) {
+
+        String query = archivo.toSQLString();
+        String queryArchivoMetagenoma = "INSERT INTO " + source + "_archivo "
+                + "VALUES(" + id + "," + archivo.getIdArchivo() + ")";
+        FileWriter writer = null;
+        if (!toFile) {
+            if (!transacciones.insertaQuery(query)) {
+                System.err.println("Error insertando archivo: " + archivo.getIdArchivo() + " - " + query + "\n");
+                return false;
+            } else {
+                if (!transacciones.insertaQuery(queryArchivoMetagenoma)) {
+                    System.err.println("Error insertando MetaGenoma_archivo: " + archivo.getIdArchivo() + " - " + query + "\n");
+                    return false;
+                }
+            }
+        } else {
+            try {
+                writer = new FileWriter(outFile, append);
+                writer.write(query + ";\n");
+                writer.write(queryArchivoMetagenoma + ";\n");
+                writer.close();
+            } catch (IOException ex) {
+                System.err.println("Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n");
+                return false;
+            }
+        }
+        return true;
+    }
 }

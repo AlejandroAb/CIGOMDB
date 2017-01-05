@@ -4,9 +4,11 @@
  */
 package cigomdb;
 
+import bobjects.ArchivoObj;
 import bobjects.GenObj;
 import bobjects.GenSeqObj;
 import bobjects.Intergenic;
+import dao.ArchivoDAO;
 import dao.GenDAO;
 import database.Transacciones;
 import java.io.BufferedReader;
@@ -188,6 +190,58 @@ public class GeneFuncLoader {
             FastaReader nucReader = new FastaReader(new InputStreamReader(new FileInputStream(nucFile)));
             FastaReader protReader = new FastaReader(new InputStreamReader(new FileInputStream(protFile)));
             GenDAO genDAO = new GenDAO(transacciones);
+            ArchivoDAO adao = new ArchivoDAO(transacciones);
+            int nextIDArchivo = transacciones.getNextIDArchivos();
+            int idx;
+            int id;
+            String source = "";
+            if (idGenoma != -1) {
+                source = "genoma";
+                id = idGenoma;
+            } else {
+                source = "metagenoma";
+                id = idMetageno;
+            }
+            ArchivoObj protA = new ArchivoObj(nextIDArchivo);
+            protA.setTipoArchivo(ArchivoObj.TIPO_PRE);
+            protA.setNombre(protFile.substring(protFile.lastIndexOf("/") + 1));
+            idx = protFile.lastIndexOf("/") != -1 ? protFile.lastIndexOf("/") + 1 : protFile.length();
+            protA.setPath(protFile.substring(0, idx));
+            protA.setDescription("Archivo fasta con las secuencias de proteinas predichas");
+            protA.setExtension(protFile.substring(protFile.lastIndexOf(".") + 1));
+            adao.insertaArchivoMetaGenoma(protA, id, source, toFile, outFile, true);
+            nextIDArchivo++;
+
+            ArchivoObj nucA = new ArchivoObj(nextIDArchivo);
+            nucA.setTipoArchivo(ArchivoObj.TIPO_PRE);
+            nucA.setNombre(nucFile.substring(nucFile.lastIndexOf("/") + 1));
+            idx = nucFile.lastIndexOf("/") != -1 ? nucFile.lastIndexOf("/") + 1 : nucFile.length();
+            nucA.setPath(nucFile.substring(0, idx));
+            nucA.setDescription("Archivo fasta con las secuencias de nucleótidos predichas");
+            nucA.setExtension(nucFile.substring(nucFile.lastIndexOf(".") + 1));
+            nextIDArchivo++;
+            adao.insertaArchivoMetaGenoma(nucA, id, source, toFile, outFile, true);
+
+            ArchivoObj contigA = new ArchivoObj(nextIDArchivo);
+            contigA.setTipoArchivo(ArchivoObj.TIPO_PRE);
+            contigA.setNombre(contigFile.substring(contigFile.lastIndexOf("/") + 1));
+            idx = contigFile.lastIndexOf("/") != -1 ? contigFile.lastIndexOf("/") + 1 : contigFile.length();
+            contigA.setPath(contigFile.substring(0, idx));
+            contigA.setDescription("Archivo fasta con las secuencias de los contigs ensamblados");
+            contigA.setExtension(contigFile.substring(contigFile.lastIndexOf(".") + 1));
+            nextIDArchivo++;
+            adao.insertaArchivoMetaGenoma(contigA, id, source, toFile, outFile, true);
+
+            ArchivoObj gffA = new ArchivoObj(nextIDArchivo);
+            gffA.setTipoArchivo(ArchivoObj.TIPO_PRE);
+            gffA.setNombre(gffFile.substring(gffFile.lastIndexOf("/") + 1));
+            idx = gffFile.lastIndexOf("/") != -1 ? gffFile.lastIndexOf("/") + 1 : gffFile.length();
+            gffA.setPath(gffFile.substring(0, idx));
+            gffA.setDescription("Archivo gff con las coordenadas de las genes mapeados en el archivo de contigs");
+            gffA.setExtension(gffFile.substring(gffFile.lastIndexOf(".") + 1));
+            nextIDArchivo++;
+            adao.insertaArchivoMetaGenoma(gffA, id, source, toFile, outFile, true);
+
             genDAO.setDebug(debug);
             GFFLine gffLine;
             int gen_num = 0;

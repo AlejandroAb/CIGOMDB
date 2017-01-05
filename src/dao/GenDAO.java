@@ -163,6 +163,13 @@ public class GenDAO {
                 }
             }
         }
+        if (toFile) {
+            try {
+                writer.close();
+            } catch (IOException ioe) {
+                System.err.println("Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n");
+            }
+        }
 
         return true;
     }
