@@ -32,9 +32,9 @@ public class DataLoader {
         //String output = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\sogom\\Muestras.sql";
 
         String database = "cigomdb";
-        String user = "root";
+        String user = "cigomdb";
         String host = "localhost";
-        String password = "amorphis";
+        String password = "CigomWeb2016";
         String input = "";
         String output = "";
         String outFileFasta = "";//usado en marcadores
