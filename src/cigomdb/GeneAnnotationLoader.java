@@ -10,6 +10,7 @@ import database.Transacciones;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -28,9 +29,27 @@ import utils.StringUtils;
 public class GeneAnnotationLoader {
 
     private Transacciones transacciones;
+    private boolean toFile = false;
+    private String outFile;
 
     public GeneAnnotationLoader(Transacciones transacciones) {
         this.transacciones = transacciones;
+    }
+
+    public boolean isToFile() {
+        return toFile;
+    }
+
+    public void setToFile(boolean toFile) {
+        this.toFile = toFile;
+    }
+
+    public String getOutFile() {
+        return outFile;
+    }
+
+    public void setOutFile(String outFile) {
+        this.outFile = outFile;
     }
 
     /**
@@ -301,6 +320,16 @@ public class GeneAnnotationLoader {
         if (!linea.trim().equals(".")) {
             // StringTokenizer st_l = new StringTokenizer(linea, "`");
             StringUtils su = new StringUtils();
+            FileWriter writer = null;
+            if (toFile) {
+                try {
+                    writer = new FileWriter(outFile);
+                } catch (IOException ex) {
+                    System.err.println("Error abriendo archivo para swiss_prot_gen: " + gen_id + " - " + outFile);
+                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            }
             for (String blast_line : linea.split("`")) {
                 String id1 = "";
                 String id2 = "";
@@ -337,19 +366,46 @@ public class GeneAnnotationLoader {
                     // String taxo[] = mdao.searchNCBINode(tax);
                     String q = "INSERT INTO swiss_prot (uniprot_id, uniprot_acc, ncbi_tax_id, prot_name) "
                             + "VALUES('" + id1 + "','-1','-1','" + function + "')";
-                    if (!transacciones.insertaQuery(q)) {
-                        System.err.println("Error insertando swiss_prot: " + id1 + "\nQ:" + q);
+                    if (toFile) {
+                        try {
+                            writer.write(q + ";\n");
+                        } catch (IOException ex) {
+                            System.err.println("Error escribiendo archivo para swiss_prot_gen: " + gen_id + " - " + outFile);
+                            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
                     } else {
-                        System.out.println("Nueva SwissProt: " + id1);
+                        if (!transacciones.insertaQuery(q)) {
+                            System.err.println("Error insertando swiss_prot: " + id1 + "\nQ:" + q);
+                        } else {
+                            System.out.println("Nueva SwissProt: " + id1);
+                        }
                     }
                 }
                 String q = "INSERT INTO gen_swiss_prot (uniprot_id, gen_id, prediction_method, eval,identity, query) "
                         + "VALUES('" + id1 + "','" + gen_id + "','" + metodo + "'," + eval + "," + identity + ",'" + query + "')";
-                if (!transacciones.insertaQuery(q)) {
-                    System.err.println("Error insertando swiss_prot_gen: " + id1 + " - " + gen_id);
+                if (toFile) {
+                    try {
+                        writer.write(q + ";\n");
+                    } catch (IOException ex) {
+                        System.err.println("Error escribiendo archivo para swiss_prot_gen: " + gen_id + " - " + outFile);
+                        Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
+                } else {
+                    if (!transacciones.insertaQuery(q)) {
+                        System.err.println("Error insertando swiss_prot_gen: " + id1 + " - " + gen_id);
+                    }
                 }
             }
-
+            if (toFile) {
+                try {
+                    writer.close();
+                } catch (IOException ex) {
+                    System.err.println("Error escribiendo archivo para swiss_prot_gen: " + gen_id + " - " + outFile);
+                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
     }
 
@@ -423,7 +479,16 @@ public class GeneAnnotationLoader {
      */
     public void splitLineaPfamTrinotate(String linea, String gen_id) {
         if (!linea.equals(".")) {
-            
+            FileWriter writer = null;
+            if (toFile) {
+                try {
+                    writer = new FileWriter(outFile);
+                } catch (IOException ex) {
+                    System.err.println("Error abriendo archivo para pfam_gen: " + gen_id + " - " + outFile);
+                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            }
             StringUtils su = new StringUtils();
             for (String pfam_line : linea.split("`")) {
                 String tokens[] = pfam_line.split("\\^");
@@ -452,19 +517,47 @@ public class GeneAnnotationLoader {
                     if (!transacciones.validaPfamAccID(pf)) {
                         String query = "INSERT INTO pfam(pfam_acc, id_pfam, pfam_deff, pfam_comments) VALUES"
                                 + "('" + pf + "','" + pf_id + "','" + pfam_def + "','Annotated from trinotate')";
-                        if (!transacciones.insertaQuery(query)) {
-                            System.err.println("Error insertando pfam: " + query);
+                        if (toFile) {
+                            try {
+                                writer.write(query + ";\n");
+                            } catch (IOException ex) {
+                                System.err.println("Error escribiendo archivo para pfam_gen: " + gen_id + " - " + outFile);
+                                Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+
                         } else {
-                            System.out.println("Nuevo PFAM: " + pf);
+                            if (!transacciones.insertaQuery(query)) {
+                                System.err.println("Error insertando pfam: " + query);
+                            } else {
+                                System.out.println("Nuevo PFAM: " + pf);
+                            }
                         }
                     }
                     String q = "INSERT INTO gen_pfam (gen_id,pfam_acc,pfam_from,pfam_to,eval) "
                             + "VALUES('" + gen_id + "','" + pf + "'," + from + "," + to + "," + eval + ")";
-                    if (!transacciones.insertaQuery(q)) {
-                        System.err.println("Error insertando pfam_gen: " + pf + " - " + gen_id + "\nQ:" + q);
+                    if (toFile) {
+                        try {
+                            writer.write(q + ";\n");
+                        } catch (IOException ex) {
+                            System.err.println("Error escribiendo archivo para pfam_gen: " + gen_id + " - " + outFile);
+                            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    } else {
+                        if (!transacciones.insertaQuery(q)) {
+                            System.err.println("Error insertando pfam_gen: " + pf + " - " + gen_id + "\nQ:" + q);
+                        }
                     }
                 }
 
+            }
+            if (toFile) {
+                try {
+                    writer.close();
+                } catch (IOException ex) {
+                    System.err.println("Error cerrando archivo para pfam_gen: " + gen_id + " - " + outFile);
+                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
     }
@@ -548,7 +641,17 @@ public class GeneAnnotationLoader {
      */
     public void splitLineaCogTrinotate(String linea, String gen_id) {
         if (!linea.trim().equals(".")) {
-           
+            FileWriter writer = null;
+            if (toFile) {
+                try {
+                    writer = new FileWriter(outFile);
+                } catch (IOException ex) {
+                    System.err.println("Error abriendo archivo para swiss_prot_gen: " + gen_id + " - " + outFile);
+                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            }
+
             StringUtils su = new StringUtils();
             for (String cog_line : linea.split("`")) {
                 String tokens[] = cog_line.split("\\^");
@@ -562,6 +665,7 @@ public class GeneAnnotationLoader {
                         //INSERTA EN EGGNOG
                         String q = "INSERT INTO eggnog (ideggnog, description) "
                                 + "VALUES('" + ideggnog + "','" + desc + "')";
+
                         if (!transacciones.insertaQuery(q)) {
                             System.err.println("Error insertando eggnog: " + ideggnog + "\nQ:" + q);
                         }
@@ -569,8 +673,18 @@ public class GeneAnnotationLoader {
                         //INSERTA NOG
                         String q = "INSERT INTO nog (id_nog, nog_description) "
                                 + "VALUES('" + ideggnog + "','" + desc + "')";
-                        if (!transacciones.insertaQuery(q)) {
-                            System.err.println("Error insertando nog: " + ideggnog + "\nQ:" + q);
+                        if (toFile) {
+                            try {
+                                writer.write(q + ";\n");
+                            } catch (IOException ex) {
+                                System.err.println("Error escribiendo archivo para nog: " + ideggnog + " - " + outFile);
+                                Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+
+                        } else {
+                            if (!transacciones.insertaQuery(q)) {
+                                System.err.println("Error insertando nog: " + ideggnog + "\nQ:" + q);
+                            }
                         }
                     } else {
                         System.err.println("ID no esperado COG|EGGNOG|NOG: " + ideggnog);
@@ -579,27 +693,76 @@ public class GeneAnnotationLoader {
                 if (ideggnog.startsWith("E")) {
                     String q = "INSERT INTO gen_eggnog (gen_id,ideggnog) "
                             + "VALUES('" + gen_id + "','" + ideggnog + "')";
-                    if (!transacciones.insertaQuery(q)) {
-                        System.err.println("Error insertando gen_eggnog: " + ideggnog + " - " + gen_id + "\nQ:" + q);
+                    if (toFile) {
+                        try {
+                            writer.write(q + ";\n");
+                        } catch (IOException ex) {
+                            System.err.println("Error escribiendo archivo para gen_egnog: " + gen_id + " - " + outFile);
+                            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    } else {
+                        if (!transacciones.insertaQuery(q)) {
+                            System.err.println("Error insertando gen_eggnog: " + ideggnog + " - " + gen_id + "\nQ:" + q);
+                        }
                     }
                 } else if (ideggnog.startsWith("C")) {
                     String q = "INSERT INTO gen_eggnog (gen_id,ideggnog) "
                             + "VALUES('" + gen_id + "','" + ideggnog + "')";
-                    if (!transacciones.insertaQuery(q)) {
-                        System.err.println("Error insertando gen_eggnog: " + ideggnog + " - " + gen_id + "\nQ:" + q);
+                    if (toFile) {
+                        try {
+                            writer.write(q + ";\n");
+                        } catch (IOException ex) {
+                            System.err.println("Error escribiendo archivo para gen_eggnog: " + gen_id + " - " + outFile);
+                            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    } else {
+                        if (!transacciones.insertaQuery(q)) {
+                            System.err.println("Error insertando gen_eggnog: " + ideggnog + " - " + gen_id + "\nQ:" + q);
+                        }
                     }
                     q = "INSERT INTO gen_cog (gen_id,id_cog) "
                             + "VALUES('" + gen_id + "','" + ideggnog + "')";
-                    if (!transacciones.insertaQuery(q)) {
-                        System.err.println("Error insertando gen_cog: " + ideggnog + " - " + gen_id + "\nQ:" + q);
+                    if (toFile) {
+                        try {
+                            writer.write(q + ";\n");
+                        } catch (IOException ex) {
+                            System.err.println("Error escribiendo archivo para gen_cog: " + gen_id + " - " + outFile);
+                            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    } else {
+                        if (!transacciones.insertaQuery(q)) {
+                            System.err.println("Error insertando gen_cog: " + ideggnog + " - " + gen_id + "\nQ:" + q);
+                        }
                     }
                 } else if (ideggnog.startsWith("N")) {
                     String q = "INSERT INTO gen_nog (gen_id,id_nog) "
                             + "VALUES('" + gen_id + "','" + ideggnog + "')";
-                    if (!transacciones.insertaQuery(q)) {
-                        System.err.println("Error insertando gen_nog: " + ideggnog + " - " + gen_id + "\nQ:" + q);
+                    if (toFile) {
+                        try {
+                            writer.write(q + ";\n");
+                        } catch (IOException ex) {
+                            System.err.println("Error escribiendo archivo para gen_nog: " + gen_id + " - " + outFile);
+                            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    } else {
+                        if (!transacciones.insertaQuery(q)) {
+                            System.err.println("Error insertando gen_nog: " + ideggnog + " - " + gen_id + "\nQ:" + q);
+                        }
                     }
                 }
+            }
+            if (toFile) {
+                try {
+                    writer.close();
+                } catch (IOException ex) {
+                    System.err.println("Error cerrando archivo para swiss_prot_gen: " + gen_id + " - " + outFile);
+                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
             }
         }
     }
@@ -668,7 +831,16 @@ public class GeneAnnotationLoader {
      */
     public void splitLineaGOTrinotate(String linea, String gen_id, ArrayList<String> gos) {
         if (!linea.trim().equals(".")) {
-           
+            FileWriter writer = null;
+            if (toFile) {
+                try {
+                    writer = new FileWriter(outFile);
+                } catch (IOException ex) {
+                    System.err.println("Error abriendo archivo para GO: " + gen_id + " - " + outFile);
+                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            }
             StringUtils su = new StringUtils();
             for (String go_line : linea.split("`")) {
                 String tokens[] = go_line.split("\\^");
@@ -683,17 +855,47 @@ public class GeneAnnotationLoader {
                     //no nos interesan mas tokens pues la anotacion funcional la tenemos nosotros
                     String q = "INSERT INTO gen_go (gen_id,id_GO) "
                             + "VALUES('" + gen_id + "','" + idGO + "')";
-                    if (!transacciones.insertaQuery(q)) {
-                        System.err.println("Error insertando gen_go: " + idGO + " - " + gen_id + "\nQ:" + q);
+                    if (toFile) {
+                        try {
+                            writer.write(q + ";\n");
+                        } catch (IOException ex) {
+                            System.err.println("Error escribiendo archivo para swiss_prot_gen: " + gen_id + " - " + outFile);
+                            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    } else {
+                        if (!transacciones.insertaQuery(q)) {
+                            System.err.println("Error insertando gen_go: " + idGO + " - " + gen_id + "\nQ:" + q);
+                        }
                     }
+
                     if (!transacciones.validaGO(idGO)) {
                         String query = "INSERT INTO gontology(id_GO, go_name,namespace) VALUES ('"
                                 + idGO + "','" + name + "','" + namespace + "')";
-                        if (!transacciones.insertaQuery(query)) {
-                            System.err.println("Error insertando GO: " + idGO + "\nQ:" + q);
+                        if (toFile) {
+                            try {
+                                writer.write(q + ";\n");
+                            } catch (IOException ex) {
+                                System.err.println("Error escribiendo archivo para swiss_prot_gen: " + gen_id + " - " + outFile);
+                                Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+
+                        } else {
+                            if (!transacciones.insertaQuery(query)) {
+                                System.err.println("Error insertando GO: " + idGO + "\nQ:" + q);
+                            }
                         }
                     }
                 }
+            }
+            if (toFile) {
+                try {
+                    writer.close();
+                } catch (IOException ex) {
+                    System.err.println("Error cerrando archivo para GO_Trinotate: " + gen_id + " - " + outFile);
+                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
             }
         }
     }
@@ -707,9 +909,20 @@ public class GeneAnnotationLoader {
      */
     public void procesaSignalPTrinotate(String linea, String gen_id) {
         if (!linea.trim().equals(".")) {
+            FileWriter writer = null;
+            if (toFile) {
+                try {
+                    writer = new FileWriter(outFile);
+                } catch (IOException ex) {
+                    System.err.println("Error abriendo archivo para signalP: " + gen_id + " - " + outFile);
+                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            }
+
             if (linea.startsWith("sigP:")) {
                 linea = linea.substring(5);
-            }           
+            }
             StringTokenizer st = new StringTokenizer(linea, "^");
             String from = st.nextToken();
             String to = st.nextToken();
@@ -721,9 +934,19 @@ public class GeneAnnotationLoader {
                 String q = "UPDATE gen SET signal_p = true, "
                         + "signal_from = " + from + ", signal_to = " + to
                         + ", signal_val = " + value + " WHERE gen_id ='" + gen_id + "'";
+                if (toFile) {
+                    try {
+                        writer.write(q + ";\n");
+                        writer.close();
+                    } catch (IOException ex) {
+                        System.err.println("Error escribiendo archivo para signalP: " + gen_id + " - " + outFile);
+                        Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                    }
 
-                if (!transacciones.insertaQuery(q)) {
-                    System.err.println("Error actualiando signalP: " + gen_id + "\nQ:" + q);
+                } else {
+                    if (!transacciones.insertaQuery(q)) {
+                        System.err.println("Error actualizando signalP: " + gen_id + "\nQ:" + q);
+                    }
                 }
             } catch (NumberFormatException nfe) {
                 System.err.println("Error parseando SignaP f-t-v:" + from + " - " + to + " - " + value);

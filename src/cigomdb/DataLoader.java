@@ -32,9 +32,9 @@ public class DataLoader {
         //String output = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\6 cruceros\\sogom\\Muestras.sql";
 
         String database = "cigomdb";
-        String user = "cigomdb";
+        String user = "root";
         String host = "localhost";
-        String password = "CigomWeb2016";
+        String password = "adsqew13";
         String input = "";
         String output = "";
         String outFileFasta = "";//usado en marcadores
@@ -42,7 +42,7 @@ public class DataLoader {
         String mapPrefix = "gen_id_";
         String idPrefix = "M1SE3";
         String contigIn = "";
-
+        
         String gffIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.gff";
         String ncIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.ffn";
         String aaIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.faa";
@@ -185,21 +185,21 @@ public class DataLoader {
                 processMetaxaAmplicones = true;
             } else if (args[i].equals("--no-insert-amplicon")) {
                 insertaAmplicones = false;
-
+                
             } else if (args[i].equals("--swiss-batch")) {
                 swissBatch = true;
-
+                
             } else if (args[i].equals("--start-at-one") || args[i].equals("-sao")) {
                 startAtZero = false;
-
+                
             } else if (args[i].equals("--no-hash")) {
                 withHash = false;
-
+                
             } else if (args[i].equals("-vc")) {//validate cog
                 validateCog = true;
-
+                
             } else if (args[i].equals("-rawe")) {
-
+                
                 try {
                     raw_ext = args[i + 1];
                     i++;
@@ -209,7 +209,7 @@ public class DataLoader {
                     System.exit(1);
                 }
             } else if (args[i].equals("-idpre")) {
-
+                
                 try {
                     idPrefix = args[i + 1];
                     i++;
@@ -219,7 +219,7 @@ public class DataLoader {
                     System.exit(1);
                 }
             } else if (args[i].equals("-gff")) {
-
+                
                 try {
                     gffIn = args[i + 1];
                     i++;
@@ -265,7 +265,7 @@ public class DataLoader {
                     System.exit(1);
                 }
             } else if (args[i].equals("-uri")) {
-
+                
                 try {
                     uri = args[i + 1];
                     i++;
@@ -275,7 +275,7 @@ public class DataLoader {
                     System.exit(1);
                 }
             } else if (args[i].equals("-url")) {
-
+                
                 try {
                     url = args[i + 1];
                     i++;
@@ -478,7 +478,7 @@ public class DataLoader {
                 }
             } else if (mode.equals("trinotate")) {
                 String group = "";
-                String id = "";
+                String id = "";                
                 if (idMetagenoma != -1) {
                     group = "metagenoma";
                     id = "" + idMetagenoma;
@@ -492,8 +492,12 @@ public class DataLoader {
                 }
                 GeneAnnotationLoader loader = new GeneAnnotationLoader(transacciones);
                 //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
+                if (toFile) {
+                    loader.setToFile(toFile);
+                    loader.setOutFile(output);
+                }
                 loader.splitTrinotateFile(input, group, id);
-
+                
             } else if (mode.equals("derrotero")) {
                 DerroteroLoader derrotero = new DerroteroLoader(transacciones);
                 derrotero.parseMatrizDerrotero(campania, input, delimiter);
@@ -575,7 +579,7 @@ public class DataLoader {
                 }
             } else if (mode.equals("markers")) {
                 if (marker_meth.length() > 0) {
-
+                    
                     MarkerLoader loader = new MarkerLoader(transacciones);
                     if (combined_file.length() > 2) {
                         loader.setProc_combined_file(combined_file);
@@ -609,7 +613,7 @@ public class DataLoader {
             System.out.println("No hay conexion con la BD.\nAsegurese de introducir de manera correcta los parametros de conexion.\nDataLoader -h para mas ayuda.");
         }
     }
-
+    
     private static void printHelp() {
         System.out.println("*********CIGOM DATABASE LOADER***************");
         System.out.println("**@author:  Alejandro Abdala              **");
