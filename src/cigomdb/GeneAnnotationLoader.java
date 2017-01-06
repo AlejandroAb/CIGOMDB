@@ -123,7 +123,7 @@ public class GeneAnnotationLoader {
                         } else if (tok == idxPfam) {
                             procesaLineaPfamTrinotate(st.nextToken(), geneID);
                         } else if (tok == idxSignalP) {
-                            procesaSignalPTrinotate(st.nextToken(), geneID);
+                            procesaSignalPTrinotate(st.nextToken(), geneID,null);
                         } else if (tok == idxTransM) {
                             //procesaLineTrans
                             st.nextToken();
@@ -153,6 +153,10 @@ public class GeneAnnotationLoader {
         try {
             //y`
             BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), "ISO-8859-1"));
+            FileWriter writer = null;
+            if (toFile) {
+                writer = new FileWriter(outFile);
+            }
             String linea;
             int numLinea = 0;
             //defaults
@@ -172,7 +176,11 @@ public class GeneAnnotationLoader {
                     for (String tok : linea.split("\t")) {
                         toks++;
                         tok = tok.trim().toLowerCase();
-                        if (tok.contains("gene_id")) {
+                        if (tok.contains("ontology") && tok.contains("blast")) {//tipo de estacion
+                            idxGOBlast = toks;
+                        } else if (tok.contains("ontology") && tok.contains("pfam")) {//tipo de estacion
+                            idxGOPfam = toks;
+                        } else if (tok.contains("gene_id")) {
                             idxGeneID = toks;
                         } else if (tok.contains("blastx")) {
                             idxBlastX = toks;
@@ -186,10 +194,6 @@ public class GeneAnnotationLoader {
                             idxCog = toks;
                         } else if (tok.contains("tmhmm")) {//comentarios
                             idxTransM = toks;
-                        } else if (tok.contains("ontology") && tok.contains("blast")) {//tipo de estacion
-                            idxGOBlast = toks;
-                        } else if (tok.contains("ontology") && tok.contains("pfam")) {//tipo de estacion
-                            idxGOPfam = toks;
                         }
                     }
                 } else {
@@ -201,26 +205,29 @@ public class GeneAnnotationLoader {
                         if (tok == idxGeneID) {
                             geneID = transacciones.getGeneIDByMapID(group, groupID, token);
                         } else if (tok == idxBlastX) {
-                            splitLineaBlastTrinotate(token, "BLASTX", geneID);
+                            splitLineaBlastTrinotate(token, "BLASTX", geneID, writer);
                         } else if (tok == idxBlastP) {
-                            splitLineaBlastTrinotate(token, "BLASTP", geneID);
+                            splitLineaBlastTrinotate(token, "BLASTP", geneID, writer);
                         } else if (tok == idxPfam) {
-                            splitLineaPfamTrinotate(token, geneID);
+                            splitLineaPfamTrinotate(token, geneID, writer);
                         } else if (tok == idxSignalP) {
-                            procesaSignalPTrinotate(token, geneID);
+                            procesaSignalPTrinotate(token, geneID, writer);
                         } else if (tok == idxTransM) {
                             //procesaLineTrans
 
                         } else if (tok == idxCog) {
-                            splitLineaCogTrinotate(token, geneID);
+                            splitLineaCogTrinotate(token, geneID, writer);
                         } else if (tok == idxGOBlast || tok == idxGOPfam) {
-                            splitLineaGOTrinotate(token, geneID, gos);
+                            splitLineaGOTrinotate(token, geneID, gos, writer);
                         } else {
                             // st.nextToken();
                         }
                     }
                 }
 
+            }
+              if (toFile) {
+                writer.close();
             }
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
@@ -316,20 +323,10 @@ public class GeneAnnotationLoader {
      * BLASTP son valores v+alidos
      * @param gen_id El id del gen para el cual fue obtenido este hit
      */
-    public void splitLineaBlastTrinotate(String linea, String metodo, String gen_id) {
+    public void splitLineaBlastTrinotate(String linea, String metodo, String gen_id, FileWriter writer) {
         if (!linea.trim().equals(".")) {
             // StringTokenizer st_l = new StringTokenizer(linea, "`");
             StringUtils su = new StringUtils();
-            FileWriter writer = null;
-            if (toFile) {
-                try {
-                    writer = new FileWriter(outFile);
-                } catch (IOException ex) {
-                    System.err.println("Error abriendo archivo para swiss_prot_gen: " + gen_id + " - " + outFile);
-                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
-            }
             for (String blast_line : linea.split("`")) {
                 String id1 = "";
                 String id2 = "";
@@ -398,14 +395,7 @@ public class GeneAnnotationLoader {
                     }
                 }
             }
-            if (toFile) {
-                try {
-                    writer.close();
-                } catch (IOException ex) {
-                    System.err.println("Error escribiendo archivo para swiss_prot_gen: " + gen_id + " - " + outFile);
-                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+
         }
     }
 
@@ -477,18 +467,9 @@ public class GeneAnnotationLoader {
      * @param linea la linea a parsear
      * @param gen_id el id del gen al cual corresponde la predicción de pfam
      */
-    public void splitLineaPfamTrinotate(String linea, String gen_id) {
+    public void splitLineaPfamTrinotate(String linea, String gen_id, FileWriter writer) {
         if (!linea.equals(".")) {
-            FileWriter writer = null;
-            if (toFile) {
-                try {
-                    writer = new FileWriter(outFile);
-                } catch (IOException ex) {
-                    System.err.println("Error abriendo archivo para pfam_gen: " + gen_id + " - " + outFile);
-                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
-                }
 
-            }
             StringUtils su = new StringUtils();
             for (String pfam_line : linea.split("`")) {
                 String tokens[] = pfam_line.split("\\^");
@@ -550,14 +531,6 @@ public class GeneAnnotationLoader {
                     }
                 }
 
-            }
-            if (toFile) {
-                try {
-                    writer.close();
-                } catch (IOException ex) {
-                    System.err.println("Error cerrando archivo para pfam_gen: " + gen_id + " - " + outFile);
-                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
-                }
             }
         }
     }
@@ -639,18 +612,8 @@ public class GeneAnnotationLoader {
      * @param linea
      * @param gen_id
      */
-    public void splitLineaCogTrinotate(String linea, String gen_id) {
+    public void splitLineaCogTrinotate(String linea, String gen_id, FileWriter writer) {
         if (!linea.trim().equals(".")) {
-            FileWriter writer = null;
-            if (toFile) {
-                try {
-                    writer = new FileWriter(outFile);
-                } catch (IOException ex) {
-                    System.err.println("Error abriendo archivo para swiss_prot_gen: " + gen_id + " - " + outFile);
-                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
-            }
 
             StringUtils su = new StringUtils();
             for (String cog_line : linea.split("`")) {
@@ -665,9 +628,17 @@ public class GeneAnnotationLoader {
                         //INSERTA EN EGGNOG
                         String q = "INSERT INTO eggnog (ideggnog, description) "
                                 + "VALUES('" + ideggnog + "','" + desc + "')";
-
-                        if (!transacciones.insertaQuery(q)) {
-                            System.err.println("Error insertando eggnog: " + ideggnog + "\nQ:" + q);
+                        if (toFile) {
+                            try {
+                                writer.write(q + ";\n");
+                            } catch (IOException ex) {
+                                System.err.println("Error escribiendo archivo para swiss_prot_gen: " + gen_id + " - " + outFile);
+                                Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        } else {
+                            if (!transacciones.insertaQuery(q)) {
+                                System.err.println("Error insertando eggnog: " + ideggnog + "\nQ:" + q);
+                            }
                         }
                     } else if (ideggnog.startsWith("N")) {
                         //INSERTA NOG
@@ -700,7 +671,6 @@ public class GeneAnnotationLoader {
                             System.err.println("Error escribiendo archivo para gen_egnog: " + gen_id + " - " + outFile);
                             Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
                         }
-
                     } else {
                         if (!transacciones.insertaQuery(q)) {
                             System.err.println("Error insertando gen_eggnog: " + ideggnog + " - " + gen_id + "\nQ:" + q);
@@ -754,16 +724,7 @@ public class GeneAnnotationLoader {
                         }
                     }
                 }
-            }
-            if (toFile) {
-                try {
-                    writer.close();
-                } catch (IOException ex) {
-                    System.err.println("Error cerrando archivo para swiss_prot_gen: " + gen_id + " - " + outFile);
-                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
-            }
+            }        
         }
     }
 
@@ -829,18 +790,8 @@ public class GeneAnnotationLoader {
      * @param linea
      * @param gen_id
      */
-    public void splitLineaGOTrinotate(String linea, String gen_id, ArrayList<String> gos) {
-        if (!linea.trim().equals(".")) {
-            FileWriter writer = null;
-            if (toFile) {
-                try {
-                    writer = new FileWriter(outFile);
-                } catch (IOException ex) {
-                    System.err.println("Error abriendo archivo para GO: " + gen_id + " - " + outFile);
-                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
-            }
+    public void splitLineaGOTrinotate(String linea, String gen_id, ArrayList<String> gos, FileWriter writer) {
+        if (!linea.trim().equals(".")) {           
             StringUtils su = new StringUtils();
             for (String go_line : linea.split("`")) {
                 String tokens[] = go_line.split("\\^");
@@ -887,16 +838,7 @@ public class GeneAnnotationLoader {
                         }
                     }
                 }
-            }
-            if (toFile) {
-                try {
-                    writer.close();
-                } catch (IOException ex) {
-                    System.err.println("Error cerrando archivo para GO_Trinotate: " + gen_id + " - " + outFile);
-                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
-            }
+            }          
         }
     }
 
@@ -907,18 +849,8 @@ public class GeneAnnotationLoader {
      * @param linea sigP:1^21^0.679^YES
      * @param gen_id
      */
-    public void procesaSignalPTrinotate(String linea, String gen_id) {
+    public void procesaSignalPTrinotate(String linea, String gen_id, FileWriter writer) {
         if (!linea.trim().equals(".")) {
-            FileWriter writer = null;
-            if (toFile) {
-                try {
-                    writer = new FileWriter(outFile);
-                } catch (IOException ex) {
-                    System.err.println("Error abriendo archivo para signalP: " + gen_id + " - " + outFile);
-                    Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
-            }
 
             if (linea.startsWith("sigP:")) {
                 linea = linea.substring(5);
@@ -937,7 +869,6 @@ public class GeneAnnotationLoader {
                 if (toFile) {
                     try {
                         writer.write(q + ";\n");
-                        writer.close();
                     } catch (IOException ex) {
                         System.err.println("Error escribiendo archivo para signalP: " + gen_id + " - " + outFile);
                         Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
