@@ -34,7 +34,7 @@ public class DataLoader {
         String database = "cigomdb";
         String user = "root";
         String host = "localhost";
-        String password = "amorphis";
+        String password = "adsqew13";
         String input = "";
         String output = "";
         String outFileFasta = "";//usado en marcadores
