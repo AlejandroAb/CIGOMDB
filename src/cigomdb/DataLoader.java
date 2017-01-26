@@ -34,7 +34,7 @@ public class DataLoader {
         String database = "cigomdb";
         String user = "root";
         String host = "localhost";
-        String password = "adsqew13";
+        String password = "amorphis";
         String input = "";
         String output = "";
         String outFileFasta = "";//usado en marcadores
@@ -42,6 +42,9 @@ public class DataLoader {
         String mapPrefix = "gen_id_";
         String idPrefix = "M1SE3";
         String contigIn = "";
+        String postFix = "";
+        boolean useEquivalencias = false;
+        String equivFile = "";
         
         String gffIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.gff";
         String ncIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.ffn";
@@ -176,6 +179,25 @@ public class DataLoader {
                 }
             } else if (args[i].equals("-d")) {
                 debug = true;
+            } else if (args[i].equals("-equiv")) {
+                 try {
+                    equivFile = args[i + 1];
+                    i++;
+                    useEquivalencias = true;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion -equiv - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            } else if (args[i].equals("-post")) {
+                 try {
+                    postFix = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion -post - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
             } else if (args[i].equals("-h") || args[i].equals("--help")) {
                 printHelp();
                 System.exit(1);
@@ -489,12 +511,16 @@ public class DataLoader {
                     System.out.println("Para correr el programa trinotate se espera minimo un id de genoma o id de metagenoma");
                     printHelp();
                     System.exit(1);
-                }
+                }                
                 GeneAnnotationLoader loader = new GeneAnnotationLoader(transacciones);
                 //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
                 if (toFile) {
                     loader.setToFile(toFile);
                     loader.setOutFile(output);
+                }
+                if(useEquivalencias){
+                    loader.setEquiv_names_file(equivFile);
+                    loader.setUseEquivalencia(useEquivalencias);
                 }
                 loader.splitTrinotateFile(input, group, id);
                 
@@ -613,7 +639,7 @@ public class DataLoader {
             System.out.println("No hay conexion con la BD.\nAsegurese de introducir de manera correcta los parametros de conexion.\nDataLoader -h para mas ayuda.");
         }
     }
-    
+  
     private static void printHelp() {
         System.out.println("*********CIGOM DATABASE LOADER***************");
         System.out.println("**@author:  Alejandro Abdala              **");

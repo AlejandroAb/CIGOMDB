@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,9 +32,17 @@ public class GeneAnnotationLoader {
     private Transacciones transacciones;
     private boolean toFile = false;
     private String outFile;
+    private String equiv_names_file;
+    private HashMap<String, String> mapaEquivalencias;
+    boolean useEquivalencia;
+    private String postFix = "_c0_g1";
 
     public GeneAnnotationLoader(Transacciones transacciones) {
         this.transacciones = transacciones;
+    }
+
+    public boolean usaEquivalencias() {
+        return useEquivalencia;
     }
 
     public boolean isToFile() {
@@ -79,6 +88,9 @@ public class GeneAnnotationLoader {
             int idxCog = 7;
             int idxGOBlast = 8;
             int idxGOPfam = 9;
+            if (usaEquivalencias()) {
+                llenaHashEquivalencias();
+            }
             while ((linea = reader.readLine()) != null) {
                 numLinea++;
                 if (numLinea == 1) {
@@ -115,7 +127,21 @@ public class GeneAnnotationLoader {
                     while (st.hasMoreTokens()) {
                         tok++;
                         if (tok == idxGeneID) {
-                            geneID = transacciones.getGeneIDByMapID(group, groupID, st.nextToken());
+                            String genMapTrinotate = st.nextToken();
+                            if (usaEquivalencias()) {
+                                genMapTrinotate = mapaEquivalencias.get(genMapTrinotate);
+                            }
+                            if (genMapTrinotate != null && genMapTrinotate.length() > 0) {
+                                geneID = transacciones.getGeneIDByMapID(group, groupID, st.nextToken());
+                                if (geneID.length() == 0) {
+                                    System.err.println("No se encontró gen en BD. genMap = " + genMapTrinotate);
+                                    break;
+                                }
+                            } else {
+                                System.err.println("No se encontró gen en hashmapa. Entry = " + genMapTrinotate);
+                                break;
+                            }
+
                         } else if (tok == idxBlastX) {
                             procesaLineaBlastTrinotate(st.nextToken(), "BLASTX", geneID);
                         } else if (tok == idxBlastP) {
@@ -123,7 +149,7 @@ public class GeneAnnotationLoader {
                         } else if (tok == idxPfam) {
                             procesaLineaPfamTrinotate(st.nextToken(), geneID);
                         } else if (tok == idxSignalP) {
-                            procesaSignalPTrinotate(st.nextToken(), geneID,null);
+                            procesaSignalPTrinotate(st.nextToken(), geneID, null);
                         } else if (tok == idxTransM) {
                             //procesaLineTrans
                             st.nextToken();
@@ -157,6 +183,9 @@ public class GeneAnnotationLoader {
             if (toFile) {
                 writer = new FileWriter(outFile);
             }
+            if (usaEquivalencias()) {
+                llenaHashEquivalencias();
+            }
             String linea;
             int numLinea = 0;
             //defaults
@@ -176,9 +205,9 @@ public class GeneAnnotationLoader {
                     for (String tok : linea.split("\t")) {
                         toks++;
                         tok = tok.trim().toLowerCase();
-                        if (tok.contains("ontology") && tok.contains("blast")) {//tipo de estacion
+                        if (tok.contains("ontology") && tok.contains("blast")) {//GO
                             idxGOBlast = toks;
-                        } else if (tok.contains("ontology") && tok.contains("pfam")) {//tipo de estacion
+                        } else if (tok.contains("ontology") && tok.contains("pfam")) {//PFAM ONTOLGY
                             idxGOPfam = toks;
                         } else if (tok.contains("gene_id")) {
                             idxGeneID = toks;
@@ -203,7 +232,20 @@ public class GeneAnnotationLoader {
                     for (String token : linea.split("\t")) {
                         tok++;
                         if (tok == idxGeneID) {
-                            geneID = transacciones.getGeneIDByMapID(group, groupID, token);
+                            String genMapTrinotate = token;
+                            if (usaEquivalencias()) {
+                                genMapTrinotate = mapaEquivalencias.get(genMapTrinotate);
+                            }
+                            if (genMapTrinotate != null && genMapTrinotate.length() > 0) {
+                                geneID = transacciones.getGeneIDByMapID(group, groupID, genMapTrinotate);
+                                if (geneID.length() == 0) {
+                                    System.err.println("No se encontró gen en BD. genMap = " + genMapTrinotate);
+                                    break;
+                                }
+                            } else {
+                                System.err.println("No se encontró gen en hashmapa. Entry = " + genMapTrinotate);
+                                break;
+                            }
                         } else if (tok == idxBlastX) {
                             splitLineaBlastTrinotate(token, "BLASTX", geneID, writer);
                         } else if (tok == idxBlastP) {
@@ -226,7 +268,7 @@ public class GeneAnnotationLoader {
                 }
 
             }
-              if (toFile) {
+            if (toFile) {
                 writer.close();
             }
         } catch (UnsupportedEncodingException ex) {
@@ -237,6 +279,69 @@ public class GeneAnnotationLoader {
             Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
         }
         return true;
+    }
+
+    public String getEquiv_names_file() {
+        return equiv_names_file;
+    }
+
+    public void setEquiv_names_file(String equiv_names_file) {
+        this.equiv_names_file = equiv_names_file;
+    }
+
+    public boolean isUseEquivalencia() {
+        return useEquivalencia;
+    }
+
+    public void setUseEquivalencia(boolean useEquivalencia) {
+        this.useEquivalencia = useEquivalencia;
+    }
+
+    public String getPostFix() {
+        return postFix;
+    }
+
+    public void setPostFix(String postFix) {
+        this.postFix = postFix;
+    }
+
+    /**
+     * Este método se encarga de llenar una tabla hash con las equivalencias
+     * entre el archivo de trinotate y los genes anotados en la base de datos.
+     * El problema es que para algunas anotaciones funcionales, el gene_1 en el
+     * archivo de trinotate no equivale al gene_1 que sale del ensamble. Es poor
+     * esto que se hace una tabla de equivalencias. Algo importante es que en el
+     * archivo generalmente llamado equiv_names.txt (a la altura de
+     * trinotate_annotation_report... tiene dos columnas:______________________
+     * *** gene_221859_c0_g1 gene_99994|GeneMark.hmm|651_nt|-|2|652 **********
+     * *** gene_221860_c0_g1 gene_99995|GeneMark.hmm|423_nt|-|649|1071 ********
+     * En la primera viene el nombre del gen como aparece en el archivo de
+     * trinotate ORIGINAL, el REDUCED se llama igual pero sin el postfijo
+     * "_c0_g1" y en la segunda el nombre con el que se encuentra en el
+     * ensamble.
+     *
+     */
+    public void llenaHashEquivalencias() {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(equiv_names_file), "ISO-8859-1"));
+            mapaEquivalencias = new HashMap<>();
+            String linea;
+            while ((linea = reader.readLine()) != null) {
+                if (linea.startsWith("gene_")) {
+                    String genes[] = linea.split("\t");
+                    String trinoGen = genes[0].substring(0, genes[0].indexOf(postFix));
+                    String dbMapGen = genes[1].substring(0, genes[1].indexOf("|"));
+                    mapaEquivalencias.put(trinoGen, dbMapGen);
+                }
+            }
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
     }
 
     /**
@@ -724,7 +829,7 @@ public class GeneAnnotationLoader {
                         }
                     }
                 }
-            }        
+            }
         }
     }
 
@@ -791,7 +896,7 @@ public class GeneAnnotationLoader {
      * @param gen_id
      */
     public void splitLineaGOTrinotate(String linea, String gen_id, ArrayList<String> gos, FileWriter writer) {
-        if (!linea.trim().equals(".")) {           
+        if (!linea.trim().equals(".")) {
             StringUtils su = new StringUtils();
             for (String go_line : linea.split("`")) {
                 String tokens[] = go_line.split("\\^");
@@ -838,7 +943,7 @@ public class GeneAnnotationLoader {
                         }
                     }
                 }
-            }          
+            }
         }
     }
 
