@@ -166,6 +166,12 @@ public class Transacciones {
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         return dbResult;
     }
+      public ArrayList<ArrayList> getNCBINodes(String where) {
+        String query = "SELECT tax_id, rank, name, hierarchy FROM ncbi_node";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        return dbResult;
+    }
 
     public ArrayList<ArrayList> testUsuarioByFullName(String nombre, String apellido, boolean exact) {
         String query;
@@ -504,7 +510,7 @@ public class Transacciones {
      * @return
      */
     public boolean validaUniprotAcc(String uniID) {
-        String query = "SELECT uniprot_id FROM swiss_prot WHERE uniprot_id = '" + uniID + "' AND uniprot_acc != '-1'";
+        String query = "SELECT uniprot_id FROM swiss_prot WHERE uniprot_id = '" + uniID + "' AND uniprot_acc = '-1'";
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         if (dbResult == null || dbResult.isEmpty()) {

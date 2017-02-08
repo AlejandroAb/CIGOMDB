@@ -206,7 +206,8 @@ public class SwissProtObj {
                 + ",pathway = '" +this.pathway + "'"
                 + ",alternative_p = '" +this.alternative_product + "'"
                 + ",temp_dep = '" +this.dependencia_temp + "'"
-                + ",ph_dep = '" +this.dependencia_ph+ "'";
+                + ",ph_dep = '" +this.dependencia_ph+ "'"
+                + " where uniprot_id = '" +this.uniprotID+"'";
         return sqlString;
     }
 

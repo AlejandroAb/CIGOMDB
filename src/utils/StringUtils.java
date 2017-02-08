@@ -43,7 +43,7 @@ public class StringUtils {
                 } else if (base == 'N') {
                     base = 'N';
                 } else {
-                    System.err.println("Caracter No Esperado. SUtils.reversoComplementarioNuc: " + base);
+                    System.err.println("Caracter No Esperado. SUtils.reversoComplementarioNuc: " + base + "\nSecuencia: " + cadena);
                 }
                 invertida += base;
             }

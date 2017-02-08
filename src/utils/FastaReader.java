@@ -17,13 +17,14 @@ import java.util.HashMap;
 public class FastaReader extends BufferedReader {
 
     private HashMap<String, Sequence> seqMap;
+    String currentLine;
     public FastaReader(Reader in) {
         super(in);
     }
     public void loadHash(int seqType) throws IOException{
         seqMap = new HashMap<>();
         Sequence seq;
-        while((seq = readSequence(seqType))!= null){
+        while((seq = readSequenceML(seqType))!= null){
             seqMap.put(seq.getSeqId(), seq);
         }
     }

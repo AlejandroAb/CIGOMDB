@@ -11,10 +11,12 @@ package cigomdb;
 import database.Transacciones;
 import bobjects.NCBINode;
 import bobjects.NCBISyn;
+import bobjects.Taxon;
 //import dbPersistantObjects.Phylo;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +24,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import utils.StringUtils;
 //import utils.Config;
 //import utils.FileUtils;
 
@@ -154,7 +157,7 @@ public class NCBITaxCreator {
             //NCBINode node;
             NCBINode tmpNode;
             String hierarchy;
-            for (String key : dataFile.keySet()) {                
+            for (String key : dataFile.keySet()) {
                 node = dataFile.get(key);
                 hierarchy = node.getParent_tax_id().trim();
                 tmpNode = node;
@@ -167,7 +170,7 @@ public class NCBITaxCreator {
                 boolean ok = transacciones.updateHierarchyNCBINode(node.getTax_id(), node.getHirarchy());
                 if (ok) {
                     totOK++;
-                //    for (NCBISyn syn : node.getSynms()) {
+                    //    for (NCBISyn syn : node.getSynms()) {
                     //       ok &= transacciones.insertaQuery(syn.toSQLInsertString());
                     //      if (!ok) {
                     //         log += "Error insertando NCBI_SYN: " + syn.toString();
@@ -193,6 +196,53 @@ public class NCBITaxCreator {
             Logger.getLogger(NCBITaxCreator.class.getName()).log(Level.SEVERE, null, ex);
         }
         return log;
+    }
+
+    /**
+     * Este método popula la tabla taxon con los datos de ncbi_node
+     * 
+     * @param outFile
+     * @param toFile
+     */
+    public void createTaxon(String outFile, boolean toFile) {
+        ArrayList<ArrayList> nodos = transacciones.getNCBINodes("");
+        FileWriter writer = null;
+        StringUtils su = new StringUtils();
+        try {
+            if (toFile) {
+                writer = new FileWriter(outFile);
+            }
+            for (ArrayList<String> nodo : nodos) {
+                int idTax = Integer.parseInt(nodo.get(0));
+                String rank = nodo.get(1);
+                if (rank.equals("superkingdom")) {
+                    rank = "kingdom";
+                }
+                String name = su.scapeSQL(nodo.get(2));                
+                String hierarchy = nodo.get(3);
+                Taxon tax = new Taxon(idTax);
+                tax.setRank(rank);
+                tax.setTaxon(name);
+                ArrayList<ArrayList> linaje = transacciones.getNCBINodes(" WHERE tax_id IN(" + hierarchy + ")");
+                for (ArrayList<String> nodoPadre : linaje) {
+                   // String rankP = nodoPadre.get(1);
+                   // String nameP = nodoPadre.get(2);
+                    tax.assignRank(su.scapeSQL(nodoPadre.get(2)), nodoPadre.get(1));
+                }
+                if (!toFile) {
+                    if (!transacciones.insertaQuery(tax.toSQLString())) {
+                        System.err.println("Error insertando: " + tax.toSQLString());
+                    }
+                } else {
+                    writer.write(tax.toSQLString() + ";\n");
+                }
+            }
+            if (toFile) {
+                writer.close();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(NCBITaxCreator.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**

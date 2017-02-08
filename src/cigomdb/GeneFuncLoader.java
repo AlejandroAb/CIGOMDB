@@ -257,6 +257,7 @@ public class GeneFuncLoader {
             } else {
                 contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
             }
+            //posiciona gff en número de linea
             while (gen_num < startAtLine) {
                 gffLine = gffReader.readGffLine();
                 gen_num++;
@@ -403,6 +404,7 @@ public class GeneFuncLoader {
                             }
                         } //como aca estamos hablando del anterior gen lo mas probable es que sea en el contig y no tmpContig
                         else if (tmpContig != null && tmpContig.getSeqId().equals(tmpGene.getContig_id())) {
+                            System.err.println("ACA NUNCA TIENE QUE ENTRAR 1");
                             tresp.setTo(tmpContig.getSequence().length());
                             if (tresp.getTo() - tresp.getFrom() < 0) {
                                 tresp.setSecuenciaValidada(tmpContig, tresp.getTo(), tresp.getFrom());
@@ -410,6 +412,7 @@ public class GeneFuncLoader {
                                 tresp.setSecuenciaValidada(tmpContig, tresp.getFrom(), tresp.getTo());
                             }
                         } else {
+                            System.err.println("ACA NUNCA TIENE QUE ENTRAR 2");
                             //no se si tiene mucho sentido esto...
                             tmpContig = contig;
                             contig = contigReader.readSequence(Sequence.NUCLEOTIDOS);
@@ -419,12 +422,14 @@ public class GeneFuncLoader {
                         //ANOTA TMP GENE
                         genDAO.almacenaValidaGen(tmpGene, toFile, outFile);
                         //ACA EMPIEZA EL NUEVO CONTIG
+                        //TODO:ACA FALTA LEER NUEVO CONTIG!!!!!!
                         Intergenic cincop = new Intergenic(Intergenic.I5P);
                         cincop.setFrom(0);
                         cincop.setTo(gen.getContig_from() - 1);
                         // cincop.setSize(gen.getContig_from() - 1);
                         GenSeqObj seqObj = new GenSeqObj();
                         if (contig.getSeqId().equals(gen.getContig_id())) {
+                             System.err.println("ACA NUNCA TIENE QUE ENTRAR 3");
                             if (cincop.getTo() - cincop.getFrom() < 0) {
                                 cincop.setSecuenciaValidada(contig, cincop.getTo(), cincop.getFrom());
                             } else {

@@ -330,7 +330,8 @@ public class GeneAnnotationLoader {
                 if (linea.startsWith("gene_")) {
                     String genes[] = linea.split("\t");
                     String trinoGen = genes[0].substring(0, genes[0].indexOf(postFix));
-                    String dbMapGen = genes[1].substring(0, genes[1].indexOf("|"));
+                    int index = genes[1].indexOf("|")!=-1?genes[1].indexOf("|"):genes[1].length();                    
+                    String dbMapGen = genes[1].substring(0, index);
                     mapaEquivalencias.put(trinoGen, dbMapGen);
                 }
             }

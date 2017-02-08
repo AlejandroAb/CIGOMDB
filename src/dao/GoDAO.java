@@ -54,4 +54,28 @@ public class GoDAO {
         }
         return log;
     }
+
+    public void insertaTerm(GOObj go, int idOnto, boolean toFile, String outFile, boolean append) {
+        String log = "";
+        String query = "INSERT INTO term (idTerm, idOntologia, name, definition, is_a, "
+                + "namespace, relationship, is_obsolete, replaced_by, url, comment) VALUES  "
+                + "('" + go.getId() + "'," + idOnto + ",'" + go.getName() + "','" + go.getDefinition() + "','"
+                + go.getIs_a() + "','" + go.getNamespace() + "','" + go.getRelationship() + "',"
+                + go.getIs_obsolete() + ",'" + go.getReplace_by() + "','" + go.getUrl() + "','" + go.getCommentario() + "')";
+        FileWriter writer = null;
+        if (!toFile) {
+            if (!transacciones.insertaQuery(query)) {
+                System.err.println("Error insertando GO: " + go.getId() + " - " + query + "\n");
+            }
+        } else {
+            try {
+                writer = new FileWriter(outFile, append);
+                writer.write(query + ";\n");
+                writer.close();
+            } catch (IOException ex) {
+                System.err.println("Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n");
+            }
+        }
+        
+    }
 }

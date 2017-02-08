@@ -34,18 +34,18 @@ public class DataLoader {
         String database = "cigomdb";
         String user = "root";
         String host = "localhost";
-        String password = "adsqew13";
+        String password = "amorphis";
         String input = "";
         String output = "";
         String outFileFasta = "";//usado en marcadores
         String outFileMetaxa = "";//usado en marcadores
         String mapPrefix = "gen_id_";
-        String idPrefix = "M1SE3";
+        String idPrefix = "";
         String contigIn = "";
         String postFix = "";
         boolean useEquivalencias = false;
         String equivFile = "";
-        
+
         String gffIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.gff";
         String ncIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.ffn";
         String aaIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.faa";
@@ -69,7 +69,7 @@ public class DataLoader {
         String marker_meth = "";//para escoger el metodo de processamiento en modo markers 
         String delimiter = "\t";
         boolean debug = false;
-        boolean startAtZero = true;
+        boolean startAtZero = false;
         boolean withHash = true;
         boolean validateCog = false;
         int startAtLine = 0;
@@ -84,10 +84,13 @@ public class DataLoader {
         modes.add("markers");
         modes.add("cog");
         modes.add("nog");
-        modes.add("obo");
+        modes.add("obo"); //cargar terms a term table
+        modes.add("gobo");//cargar GO
         modes.add("ensamble");
         modes.add("egg");
         modes.add("trinotate");
+        modes.add("taxon");
+        
         int swissBulk = 20;
         boolean swissBatch = false;
         String mode = "";
@@ -180,7 +183,7 @@ public class DataLoader {
             } else if (args[i].equals("-d")) {
                 debug = true;
             } else if (args[i].equals("-equiv")) {
-                 try {
+                try {
                     equivFile = args[i + 1];
                     i++;
                     useEquivalencias = true;
@@ -190,7 +193,7 @@ public class DataLoader {
                     System.exit(1);
                 }
             } else if (args[i].equals("-post")) {
-                 try {
+                try {
                     postFix = args[i + 1];
                     i++;
                 } catch (ArrayIndexOutOfBoundsException aiobe) {
@@ -207,21 +210,21 @@ public class DataLoader {
                 processMetaxaAmplicones = true;
             } else if (args[i].equals("--no-insert-amplicon")) {
                 insertaAmplicones = false;
-                
+
             } else if (args[i].equals("--swiss-batch")) {
                 swissBatch = true;
-                
-            } else if (args[i].equals("--start-at-one") || args[i].equals("-sao")) {
-                startAtZero = false;
-                
+
+            } else if (args[i].equals("--start-at-zero") || args[i].equals("-saz")) {
+                startAtZero = true;
+
             } else if (args[i].equals("--no-hash")) {
                 withHash = false;
-                
+
             } else if (args[i].equals("-vc")) {//validate cog
                 validateCog = true;
-                
+
             } else if (args[i].equals("-rawe")) {
-                
+
                 try {
                     raw_ext = args[i + 1];
                     i++;
@@ -231,7 +234,7 @@ public class DataLoader {
                     System.exit(1);
                 }
             } else if (args[i].equals("-idpre")) {
-                
+
                 try {
                     idPrefix = args[i + 1];
                     i++;
@@ -241,7 +244,7 @@ public class DataLoader {
                     System.exit(1);
                 }
             } else if (args[i].equals("-gff")) {
-                
+
                 try {
                     gffIn = args[i + 1];
                     i++;
@@ -287,7 +290,7 @@ public class DataLoader {
                     System.exit(1);
                 }
             } else if (args[i].equals("-uri")) {
-                
+
                 try {
                     uri = args[i + 1];
                     i++;
@@ -297,7 +300,7 @@ public class DataLoader {
                     System.exit(1);
                 }
             } else if (args[i].equals("-url")) {
-                
+
                 try {
                     url = args[i + 1];
                     i++;
@@ -456,6 +459,12 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
+            } else {
+                if (i != 0) {
+                    System.out.println("Opcion no valída: " + args[i]);
+                    printHelp();
+                    System.exit(1);
+                }
             }
         }
         Transacciones transacciones = new Transacciones(database, user, host, password);
@@ -484,7 +493,7 @@ public class DataLoader {
                 }
             } else if (mode.equals("ensamble")) {
                 if (gffIn.length() > 0 && (aaIn.length() + ncIn.length()) > 0) {
-                    if (idMetagenoma + idGenoma == -1) {
+                    if (idMetagenoma + idGenoma == -2) {
                         System.out.println("Para correr el programa ensamble se espera minimo un id de genoma o id de metagenoma");
                         printHelp();
                         System.exit(1);
@@ -500,7 +509,7 @@ public class DataLoader {
                 }
             } else if (mode.equals("trinotate")) {
                 String group = "";
-                String id = "";                
+                String id = "";
                 if (idMetagenoma != -1) {
                     group = "metagenoma";
                     id = "" + idMetagenoma;
@@ -511,19 +520,19 @@ public class DataLoader {
                     System.out.println("Para correr el programa trinotate se espera minimo un id de genoma o id de metagenoma");
                     printHelp();
                     System.exit(1);
-                }                
+                }
                 GeneAnnotationLoader loader = new GeneAnnotationLoader(transacciones);
                 //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
                 if (toFile) {
                     loader.setToFile(toFile);
                     loader.setOutFile(output);
                 }
-                if(useEquivalencias){
+                if (useEquivalencias) {
                     loader.setEquiv_names_file(equivFile);
                     loader.setUseEquivalencia(useEquivalencias);
                 }
                 loader.splitTrinotateFile(input, group, id);
-                
+
             } else if (mode.equals("derrotero")) {
                 DerroteroLoader derrotero = new DerroteroLoader(transacciones);
                 derrotero.parseMatrizDerrotero(campania, input, delimiter);
@@ -531,7 +540,11 @@ public class DataLoader {
                 NCBITaxCreator ncbi = new NCBITaxCreator(transacciones);
                 log += ncbi.createTaxaListFromNCBI(nodes, names);
                 //System.out.println(log);
-            } else if (mode.equals("muestreo")) {
+            } else if(mode.equals("taxon")){
+                NCBITaxCreator ncbi = new NCBITaxCreator(transacciones);
+                ncbi.createTaxon(output, toFile);
+                
+            }else if (mode.equals("muestreo")) {
                 int idMuestra = transacciones.getMaxIDMuestra();
                 int idMuestreo = transacciones.getMaxIDMuestreo();
                 EventProcesor eventMuestreo = new EventProcesor(transacciones);
@@ -597,7 +610,16 @@ public class DataLoader {
             } else if (mode.equals("obo")) {
                 if (uri.length() > 0) {
                     OBOProcessor obo = new OBOProcessor(transacciones);
-                    log += obo.processOBOFile(input, uri, url, toFile, output);
+                    obo.processOBOFile(input, uri, url, toFile, output);
+                } else {
+                    System.out.println("Para correr el programa obo se espera el parámetro URI (go|envo|obi...) o culquier OBO ");
+                    printHelp();
+                    System.exit(1);
+                }
+            }else if (mode.equals("gobo")) {
+                if (uri.length() > 0) {
+                    OBOProcessor obo = new OBOProcessor(transacciones);
+                    log += obo.processOBOGoFile(input, uri, url, toFile, output);
                 } else {
                     System.out.println("Para correr el programa obo se espera el parámetro URI (go|envo|obi...) o culquier OBO ");
                     printHelp();
@@ -605,7 +627,7 @@ public class DataLoader {
                 }
             } else if (mode.equals("markers")) {
                 if (marker_meth.length() > 0) {
-                    
+
                     MarkerLoader loader = new MarkerLoader(transacciones);
                     if (combined_file.length() > 2) {
                         loader.setProc_combined_file(combined_file);
@@ -639,7 +661,7 @@ public class DataLoader {
             System.out.println("No hay conexion con la BD.\nAsegurese de introducir de manera correcta los parametros de conexion.\nDataLoader -h para mas ayuda.");
         }
     }
-  
+
     private static void printHelp() {
         System.out.println("*********CIGOM DATABASE LOADER***************");
         System.out.println("**@author:  Alejandro Abdala              **");
@@ -672,7 +694,7 @@ public class DataLoader {
                 + "\n\t\t\t-mm\tEl método de medida usado para variables fisico químicas. Valores:\n\t\t\t\t1 = Medido con CTD.\n\t\t\t\t1 = Medido con PCTester TM 35.");
         System.out.println("\tensamble \tSe encarga de cargar secuencias de de ensambles de genes. Utiliza los siguientes parámetros:"
                 + "\n\t\t\t-contig\tArchivo de contigs\n\t\t\t-gff\tArchivo con las coordenadas\n\t\t\t-nc\tArchivo de nucleotidos\n\t\t\t-aa\tArchivo de proteinas"
-                + "\n\t\t\t-idpre\tPrefijo para el id de los genes\n\t\t\t-mapre\tPrefijo para mapeo a la anotación funcional\n\t\t\t---start-at-one | -sao\tTrue por defecto. False empieza la numeracion del mapeo en cero y no en uno\n\t\t\t-idgenoma\tID del genoma al cual pertenecen los genes predichos\n\t\t\t-idmetagenoma\tID del metagenomma al cual pertenecen los genes predichos."
+                + "\n\t\t\t-idpre\tPrefijo para el id de los genes\n\t\t\t-mapre\tPrefijo para mapeo a la anotación funcional\n\t\t\t---start-at-zero | -saz\tFalse por defecto. True empieza la numeracion del mapeo en cero y no en uno\n\t\t\t-idgenoma\tID del genoma al cual pertenecen los genes predichos\n\t\t\t-idmetagenoma\tID del metagenomma al cual pertenecen los genes predichos."
                 + "\n\t\t\t-line\tLinea a patir de la cual empieza a procesar el gff\n\t\t\t--no-hash\tPor default los aechivos de contigs, nuc y prots se cargan en memoria en lugar de iterarlos para las búsquedas. Usar esta bandera para no usar hash");
         System.out.println("\trinotate  \tPrograma que se encarga de parsear archivos de anotacion de Trinotate. Es importante que el gen_map_id de la BD cuadre con el gen_id del archivo de entrada. Este programa utiliza:"
                 + "\n\t\t\trinotate <-i -idmetagnoma|-idgenoma>\n\t\t\t-input\tArchivo de trinotate\n\t\t\t-idmetagenoma\tID del metagenoma para el cual se hace la anotación\n\t\t\t-idgenoma\tID del genoma para el cual se hace la anotación");
