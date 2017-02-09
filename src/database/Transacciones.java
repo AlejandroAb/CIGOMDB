@@ -167,7 +167,7 @@ public class Transacciones {
         return dbResult;
     }
       public ArrayList<ArrayList> getNCBINodes(String where) {
-        String query = "SELECT tax_id, rank, name, hierarchy FROM ncbi_node";
+        String query = "SELECT tax_id, rank, name, hierarchy FROM ncbi_node "+ where;
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         return dbResult;

@@ -43,6 +43,7 @@ public class DataLoader {
         String idPrefix = "";
         String contigIn = "";
         String postFix = "";
+        String where = "";
         boolean useEquivalencias = false;
         String equivFile = "";
 
@@ -135,7 +136,16 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            } else if (args[i].equals("-outmetaxa")) {
+            } else if (args[i].equals("-w")|| args[i].equals("--where")) {
+                try {
+                    where = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion -w  Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            }else if (args[i].equals("-outmetaxa")) {
                 try {
                     outFileMetaxa = args[i + 1];
                     i++;
@@ -542,7 +552,7 @@ public class DataLoader {
                 //System.out.println(log);
             } else if(mode.equals("taxon")){
                 NCBITaxCreator ncbi = new NCBITaxCreator(transacciones);
-                ncbi.createTaxon(output, toFile);
+                ncbi.createTaxon(output, toFile,where);
                 
             }else if (mode.equals("muestreo")) {
                 int idMuestra = transacciones.getMaxIDMuestra();

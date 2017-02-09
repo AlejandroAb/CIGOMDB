@@ -200,34 +200,43 @@ public class NCBITaxCreator {
 
     /**
      * Este método popula la tabla taxon con los datos de ncbi_node
-     * 
+     *
      * @param outFile
      * @param toFile
      */
-    public void createTaxon(String outFile, boolean toFile) {
-        ArrayList<ArrayList> nodos = transacciones.getNCBINodes("");
+    public void createTaxon(String outFile, boolean toFile, String where) {
+        //  ArrayList<ArrayList> nodos = transacciones.getNCBINodes(" WHERE hierarchy not like '%,2759,%'");
+        System.out.println("Leyendo Nodos");
+        ArrayList<ArrayList> nodos = transacciones.getNCBINodes(where);
+        System.out.println("Nodos: " + nodos.size());
         FileWriter writer = null;
         StringUtils su = new StringUtils();
         try {
             if (toFile) {
                 writer = new FileWriter(outFile);
             }
+            ArrayList<ArrayList> linaje;
+            int taxones = 0;
             for (ArrayList<String> nodo : nodos) {
+                taxones++;
                 int idTax = Integer.parseInt(nodo.get(0));
                 String rank = nodo.get(1);
                 if (rank.equals("superkingdom")) {
                     rank = "kingdom";
                 }
-                String name = su.scapeSQL(nodo.get(2));                
+                String name = su.scapeSQL(nodo.get(2));
                 String hierarchy = nodo.get(3);
                 Taxon tax = new Taxon(idTax);
                 tax.setRank(rank);
                 tax.setTaxon(name);
-                ArrayList<ArrayList> linaje = transacciones.getNCBINodes(" WHERE tax_id IN(" + hierarchy + ")");
+                linaje = transacciones.getNCBINodes(" WHERE tax_id IN(" + hierarchy + ")");
                 for (ArrayList<String> nodoPadre : linaje) {
-                   // String rankP = nodoPadre.get(1);
-                   // String nameP = nodoPadre.get(2);
-                    tax.assignRank(su.scapeSQL(nodoPadre.get(2)), nodoPadre.get(1));
+                    String rankP = nodoPadre.get(1);
+                    String nameP = su.scapeSQL(nodoPadre.get(2));
+                    if (rankP.equals("superkingdom")) {
+                        rank = "kingdom";
+                    }
+                    tax.assignRank(nameP, rankP);
                 }
                 if (!toFile) {
                     if (!transacciones.insertaQuery(tax.toSQLString())) {
@@ -236,7 +245,14 @@ public class NCBITaxCreator {
                 } else {
                     writer.write(tax.toSQLString() + ";\n");
                 }
+                if (taxones % 25000 == 0) {
+                    System.out.println("Taxones procesados: " + taxones);
+                }
+
             }
+            System.out.println("#########SE FINI###########");
+            System.out.println("Taxones procesados: " + taxones);
+
             if (toFile) {
                 writer.close();
             }
