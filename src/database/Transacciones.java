@@ -167,7 +167,7 @@ public class Transacciones {
         return dbResult;
     }
       public ArrayList<ArrayList> getNCBINodes(String where) {
-        String query = "SELECT tax_id, rank, name, hierarchy FROM ncbi_node "+ where;
+        String query = "SELECT ncbi_node.tax_id, ncbi_node.rank, ncbi_node.name, hierarchy FROM ncbi_node "+ where;
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         return dbResult;
@@ -449,7 +449,8 @@ public class Transacciones {
         } else {
             return dbResult.get(0).get(0).toString();
         }
-    }
+    }    
+   
 
     /**
      * Este método se encarga de traer el ID real (de la BD - gen_id) de la
@@ -690,6 +691,16 @@ public class Transacciones {
 
     public boolean updateHierarchyNCBINode(String taxid, String hierarchy) {
         String query = "UPDATE NCBI_NODE SET hierarchy = '" + hierarchy + "' WHERE tax_id =" + taxid;
+        if (conexion.queryUpdate(query)) {
+            return true;
+        } else {
+            System.out.println(conexion.getLog());
+            return false;
+        }
+    }
+    
+     public boolean updateGenKO(String genID, String idKO) {
+        String query = "UPDATE gen SET idKO= '" + idKO + "' WHERE gen_id = '" + genID + "'";
         if (conexion.queryUpdate(query)) {
             return true;
         } else {

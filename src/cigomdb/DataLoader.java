@@ -91,6 +91,7 @@ public class DataLoader {
         modes.add("egg");
         modes.add("trinotate");
         modes.add("taxon");
+        modes.add("ko");
         
         int swissBulk = 20;
         boolean swissBatch = false;
@@ -136,7 +137,7 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            } else if (args[i].equals("-w")|| args[i].equals("--where")) {
+            } else if (args[i].equals("-w") || args[i].equals("--where")) {
                 try {
                     where = args[i + 1];
                     i++;
@@ -145,7 +146,7 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            }else if (args[i].equals("-outmetaxa")) {
+            } else if (args[i].equals("-outmetaxa")) {
                 try {
                     outFileMetaxa = args[i + 1];
                     i++;
@@ -543,6 +544,24 @@ public class DataLoader {
                 }
                 loader.splitTrinotateFile(input, group, id);
 
+            } else if (mode.equals("ko")) {
+                String group = "";
+                String id = "";
+                if (idMetagenoma != -1) {
+                    group = "metagenoma";
+                    id = "" + idMetagenoma;
+                } else if (idGenoma != -1) {
+                    group = "genoma";
+                    id = "" + idGenoma;
+                } else {
+                    System.out.println("Para correr el programa ko se espera minimo un id de genoma o id de metagenoma");
+                    printHelp();
+                    System.exit(1);
+                }
+                KeggProcessor keggP = new KeggProcessor(transacciones);
+                //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
+                keggP.procesaKOList(input, group, id, output, toFile);
+
             } else if (mode.equals("derrotero")) {
                 DerroteroLoader derrotero = new DerroteroLoader(transacciones);
                 derrotero.parseMatrizDerrotero(campania, input, delimiter);
@@ -550,11 +569,11 @@ public class DataLoader {
                 NCBITaxCreator ncbi = new NCBITaxCreator(transacciones);
                 log += ncbi.createTaxaListFromNCBI(nodes, names);
                 //System.out.println(log);
-            } else if(mode.equals("taxon")){
+            } else if (mode.equals("taxon")) {
                 NCBITaxCreator ncbi = new NCBITaxCreator(transacciones);
-                ncbi.createTaxon(output, toFile,where);
-                
-            }else if (mode.equals("muestreo")) {
+                ncbi.createTaxon(output, toFile, where);
+
+            } else if (mode.equals("muestreo")) {
                 int idMuestra = transacciones.getMaxIDMuestra();
                 int idMuestreo = transacciones.getMaxIDMuestreo();
                 EventProcesor eventMuestreo = new EventProcesor(transacciones);
@@ -626,7 +645,7 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            }else if (mode.equals("gobo")) {
+            } else if (mode.equals("gobo")) {
                 if (uri.length() > 0) {
                     OBOProcessor obo = new OBOProcessor(transacciones);
                     log += obo.processOBOGoFile(input, uri, url, toFile, output);

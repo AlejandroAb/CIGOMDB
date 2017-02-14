@@ -229,12 +229,13 @@ public class NCBITaxCreator {
                 Taxon tax = new Taxon(idTax);
                 tax.setRank(rank);
                 tax.setTaxon(name);
+                tax.assignRank(name, rank);
                 linaje = transacciones.getNCBINodes(" WHERE tax_id IN(" + hierarchy + ")");
                 for (ArrayList<String> nodoPadre : linaje) {
                     String rankP = nodoPadre.get(1);
                     String nameP = su.scapeSQL(nodoPadre.get(2));
                     if (rankP.equals("superkingdom")) {
-                        rank = "kingdom";
+                        rankP = "kingdom";
                     }
                     tax.assignRank(nameP, rankP);
                 }
