@@ -299,7 +299,7 @@ public class MarkerLoader {
                             if (idMuestra.length() == 0) {
                                 System.err.println("No se encontró el ID  de la muestra y no se pudo determinar mediante la etiqueta: " + tag);
                             } else {
-                                marcadorInsertado = processAmplicones(marcador, idMuestra, tag, outFile, raw_data_path, raw_ext, mdao);
+                                marcadorInsertado = processAmplicones(marcador, outFile, raw_data_path, raw_ext, mdao);
                             }
                         }
                         //PROCESAR ARCHIVOS DE SECUENCIAS FASTA
@@ -619,16 +619,14 @@ public class MarkerLoader {
      * Este método se encarga de insertar los amplicones en la BD y asociar los
      * archivos crudos a este marcador
      *
-     * @param marcador
-     * @param idMuestra
-     * @param tag
+     * @param marcador   
      * @param outFile
      * @param raw_data_path
      * @param raw_ext
      * @param mdao
      * @return
      */
-    public boolean processAmplicones(Marcador marcador, String idMuestra, String tag, String outFile, String raw_data_path, String raw_ext, MarcadorDAO mdao) {
+    public boolean processAmplicones(Marcador marcador,  String outFile, String raw_data_path, String raw_ext, MarcadorDAO mdao) {
 
         boolean toFile = outFile.length() > 1;
         File rawFolder = new File(raw_data_path);

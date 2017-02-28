@@ -70,6 +70,7 @@ public class MetaxaDAO {
             score = "null";
         }
         String seq_id = "";
+        raw_id = raw_id.split("[_ \t]")[0];
         if (toFile) {
             seq_id = seqMap.get(raw_id);
         } else {
