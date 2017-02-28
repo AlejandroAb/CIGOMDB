@@ -8,7 +8,15 @@ package utils;
 import bobjects.Muestreo;
 import cigomdb.GeneAnnotationLoader;
 import database.Transacciones;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.bind.DatatypeConverter;
 
 /**
  *
@@ -16,43 +24,55 @@ import java.util.ArrayList;
  */
 public class Tester {
 
-    public static void main(String args[]) {
+    public static void main(String args[]) {        
+        System.exit(0);
         Transacciones transacciones = new Transacciones("cigomdb", "root", "localhost", "amorphis");
         String testBlastLine = "Y898_MYCBO^Y898_MYCBO^Q:147-362,H:166-381^26.73%ID^E:4e-16^RecName: Full=Uncharacterized protein Mb0898c;^Bacteria; Actinobacteria; Actinobacteridae; Actinomycetales; Corynebacterineae; Mycobacteriaceae; Mycobacterium; Mycobacterium tuberculosis complex";
         String testPfamLine = "PF04060.8^FeS^Putative Fe-S cluster^16-49^E:8.1e-16`PF14697.1^Fer4_21^4Fe-4S dicluster domain^81-134^E:8.5e-14`PF00037.22^Fer4^4Fe-4S binding domain^82-103^E:5.6e-06`PF13237.1^Fer4_10^4Fe-4S dicluster domain^82-129^E:1.4e-06`PF12798.2^Fer4_3^4Fe-4S binding domain^88-102^E:0.013";
         String testUniprot = "A0A0F6NZX8		Putative replicating factor	10493					";
         String uni[] = testUniprot.split("\t", -1);
         int i = 0;
+        try {
+            byte[] b = Files.readAllBytes(Paths.get("C:\\Users\\Alejandro\\Documents\\hola.txt"));
+            byte[] hash = MessageDigest.getInstance("MD5").digest(b);
+            String actual = DatatypeConverter.printHexBinary(hash);
+            System.out.println(actual);
+            System.exit(1);
+        } catch (IOException ex) {
+            Logger.getLogger(Tester.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(Tester.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         for (String u : uni) {
             System.out.println("Tok " + i + ": " + u);
             i++;
         }
-        String text[] = {"Usuario (Acciones)","Usuario(Acciones)","Nombre Apellido {Acciones}", "Nombre[Acciones]", "Nombre Apellido[Acciones]"};
-        String rexEx = "[\\(\\)\\[\\]\\{\\}]";       
-        for(String toTest: text){
-            i =  0;
-            for(String sp : toTest.split(rexEx)){
-                System.out.println(toTest + " termino "+i+" = " + sp);
+        String text[] = {"Usuario (Acciones)", "Usuario(Acciones)", "Nombre Apellido {Acciones}", "Nombre[Acciones]", "Nombre Apellido[Acciones]"};
+        String rexEx = "[\\(\\)\\[\\]\\{\\}]";
+        for (String toTest : text) {
+            i = 0;
+            for (String sp : toTest.split(rexEx)) {
+                System.out.println(toTest + " termino " + i + " = " + sp);
                 i++;
             }
         }
-        System.out.println("muestreoss");       
+        System.out.println("muestreoss");
         ArrayList<Muestreo> muestreos = new ArrayList<Muestreo>();
         muestreos.add(new Muestreo(1));
         muestreos.add(new Muestreo(2));
         muestreos.add(new Muestreo(3));
-        for(Muestreo muestreo : muestreos){
-            System.out.println(""+muestreo.getIdMuestreo());
+        for (Muestreo muestreo : muestreos) {
+            System.out.println("" + muestreo.getIdMuestreo());
             muestreo.setIdMuestreo(100);
         }
-        for(Muestreo muestreo : muestreos){
-            System.out.println(""+muestreo.getIdMuestreo());
+        for (Muestreo muestreo : muestreos) {
+            System.out.println("" + muestreo.getIdMuestreo());
             //muestreo.setIdMuestreo(100);
         }
-        
-    //    GeneAnnotationLoader ga = new GeneAnnotationLoader(transacciones);
-        //  ga.procesaLineaBlastTrinotate(testBlastLine, "", "");
 
+        //    GeneAnnotationLoader ga = new GeneAnnotationLoader(transacciones);
+        //  ga.procesaLineaBlastTrinotate(testBlastLine, "", "");
         //  ga.procesaLineaPfamTrinotate(testPfamLine, testPfamLine);
         //http://stackoverflow.com/questions/15491894/regex-to-validate-date-format-dd-mm-yyyy
         String dataExp = "^(?:(?:31(\\/|-|\\.)(?:0?[13578]|1[02]))\\1|(?:(?:29|30)(\\/|-|\\.)(?:0?[1,3-9]|1[0-2])\\2))(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$|^(?:29(\\/|-|\\.)0?2\\3(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\\d|2[0-8])(\\/|-|\\.)(?:(?:0?[1-9])|(?:1[0-2]))\\4(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$";

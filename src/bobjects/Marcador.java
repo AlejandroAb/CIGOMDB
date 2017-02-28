@@ -33,12 +33,15 @@ public class Marcador {
     boolean visible = true;
     String volumen = "";
     ArrayList<ArchivoObj> archivos = new ArrayList<>();
+
     public String getIdMarcador() {
         return idMarcador;
     }
-    public void addArchivo(ArchivoObj archivo){
+
+    public void addArchivo(ArchivoObj archivo) {
         archivos.add(archivo);
     }
+
     public ArrayList<ArchivoObj> getArchivos() {
         return archivos;
     }
@@ -97,6 +100,39 @@ public class Marcador {
 
     public void setMarc_name(String marc_name) {
         this.marc_name = marc_name;
+    }
+
+    /**
+     * Se encarga de formatear el nombre del marcador, para que en base a este
+     * genere un patron de etiqueta que es usado para asignar el id de
+     * secuencias correspondiente a este marcador. Los nombres del marcador son
+     * generalmente AMP-MAX-MMF1-A1.1, AMP-SED-SOG02-S02.1 para los cuales see
+     * genera el siguiente patron AXMMF1A1.1.# y ASSOG02S02.1.# respectivamente
+     *
+     * @return
+     */
+    public String getIdSeqFormat() {
+        String marcParts[] = getMarc_name().split("[-\\.]");
+        String idSec = "";
+        if (marcParts.length < 5) {
+            System.err.println("Error de convención en el nombre del marcador!");
+            idSec = getMarc_name();
+        } else {
+            String type = "";
+            if (marcParts[1].equals("MAX")) {
+                type = "X";
+            } else if (marcParts[1].equals("MIN")) {
+                type = "M";
+            } else if (marcParts[1].equals("SED")) {
+                type = "S";
+            } else if (marcParts[1].equals("FON")) {
+                type = "F";
+            } else {
+                type = marcParts[1].substring(0, 1);
+            }
+            idSec = marcParts[0].substring(0, 1) + type + marcParts[2] + marcParts[3] + "." + marcParts[4] + ".";
+        }
+        return idSec;
     }
 
     public String getMarc_desc() {

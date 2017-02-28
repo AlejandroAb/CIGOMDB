@@ -5,6 +5,9 @@
  */
 package utils;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
@@ -19,6 +22,33 @@ public class MyDate {
     int anio;
     String fecha;
     String time = "00:00:00";
+
+    public MyDate(long milliDate) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date d = new Date(milliDate);
+        String tmpDate = dateFormat.format(d);
+        String tmp[] = tmpDate.split("[/ ]");
+        if (tmp.length >= 3) {
+            try{
+            dia = Integer.parseInt(tmp[0]);
+            mes = Integer.parseInt(tmp[1]);
+            anio = Integer.parseInt(tmp[2]);
+            }catch(NumberFormatException nfe){
+                System.err.println("Error parsing date: " + tmpDate);
+                dia = 0;
+            mes = 1;
+            anio = 2;
+            }
+        } else {
+            dia = 0;
+            mes = 0;
+            anio = 0;
+        }
+        if (tmp.length >= 4) {
+            time = tmp[3];
+        }
+        fecha = tmpDate;
+    }
 
     public MyDate(String fecha) {
         this.fecha = fecha;
@@ -140,7 +170,7 @@ public class MyDate {
         if (horas.length() == 0) {
             return false;
         }
-        this.time = horas+":"+minutos+":"+segundos;
+        this.time = horas + ":" + minutos + ":" + segundos;
         return true;
 
     }

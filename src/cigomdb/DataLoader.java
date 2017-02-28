@@ -61,6 +61,9 @@ public class DataLoader {
         boolean insertaAmplicones = true;//--no-insert-amplicon
         boolean processOutAmplicones = false; //-poa --process_out_amplicon
         boolean processMetaxaAmplicones = false; //-mamp --metaxa_amp
+        boolean processNotPaired = false; //-pnp
+        boolean processKrona = false;//-pk
+        int nextIDArchivo = -1;
         String raw_ext = "fastq"; //-rawe
         boolean toFile = false;
         int campania = -1;
@@ -92,7 +95,7 @@ public class DataLoader {
         modes.add("trinotate");
         modes.add("taxon");
         modes.add("ko");
-        
+
         int swissBulk = 20;
         boolean swissBatch = false;
         String mode = "";
@@ -219,6 +222,10 @@ public class DataLoader {
                 processOutAmplicones = true;
             } else if (args[i].equals("-mamp") || args[i].equals("--metaxa_amp")) {
                 processMetaxaAmplicones = true;
+            } else if (args[i].equals("-pk")) {
+                processKrona = true;
+            } else if (args[i].equals("-pnp")) {
+                processNotPaired = true;
             } else if (args[i].equals("--no-insert-amplicon")) {
                 insertaAmplicones = false;
 
@@ -369,7 +376,20 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            } else if (args[i].equals("-line")) {
+            }  else if (args[i].equals("-next-archivo")) {
+                try {
+                    nextIDArchivo = Integer.parseInt(args[i + 1]);
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion -next-archivo - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                } catch (NumberFormatException nfe) {
+                    System.out.println("Opcion -next-archivo - Se esperaba un argumento numerico\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            }else if (args[i].equals("-line")) {
                 try {
                     startAtLine = Integer.parseInt(args[i + 1]);
                     i++;
@@ -656,7 +676,6 @@ public class DataLoader {
                 }
             } else if (mode.equals("markers")) {
                 if (marker_meth.length() > 0) {
-
                     MarkerLoader loader = new MarkerLoader(transacciones);
                     if (combined_file.length() > 2) {
                         loader.setProc_combined_file(combined_file);
@@ -670,8 +689,11 @@ public class DataLoader {
                     if (metatax_file.length() > 2) {
                         loader.setProc_metaxa_file(metatax_file);
                     }
+                    if(nextIDArchivo>-1){
+                        loader.setNextIDArchivo(nextIDArchivo);
+                    }
                     if (marker_meth.equals("mv1")) {
-                        log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext, output, outFileFasta, outFileMetaxa);
+                        log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext, output, outFileFasta, outFileMetaxa,processNotPaired, processKrona);
                     } else if (marker_meth.equals("mv2")) {
                         log += loader.parseMarkerFileFormatIPacbio(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
                     } else {

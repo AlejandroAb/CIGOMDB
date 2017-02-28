@@ -135,8 +135,8 @@ public class Transacciones {
         return ++id;
 
     }
-    
-     public int getNextIDMarcador() {
+
+    public int getNextIDMarcador() {
         String query = "SELECT MAX(idMarcador) FROM marcador";
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
@@ -166,8 +166,9 @@ public class Transacciones {
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         return dbResult;
     }
-      public ArrayList<ArrayList> getNCBINodes(String where) {
-        String query = "SELECT ncbi_node.tax_id, ncbi_node.rank, ncbi_node.name, hierarchy FROM ncbi_node "+ where;
+
+    public ArrayList<ArrayList> getNCBINodes(String where) {
+        String query = "SELECT ncbi_node.tax_id, ncbi_node.rank, ncbi_node.name, hierarchy FROM ncbi_node " + where;
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         return dbResult;
@@ -415,6 +416,23 @@ public class Transacciones {
     }
 
     /**
+     * Busca el id de unmarcador, dado su nombre
+     *
+     * @param label
+     * @return
+     */
+    public String getIdMarcadorByLabel(String label) {
+        String query = "SELECT idmarcador FROM marcador WHERE marc_name ='" + label + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult == null || dbResult.isEmpty()) {
+            return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+
+    /**
      * Trea el nccbi tax id de un nombre de nodo
      *
      * @param node_name
@@ -449,8 +467,7 @@ public class Transacciones {
         } else {
             return dbResult.get(0).get(0).toString();
         }
-    }    
-   
+    }
 
     /**
      * Este método se encarga de traer el ID real (de la BD - gen_id) de la
@@ -611,7 +628,7 @@ public class Transacciones {
      * @return
      */
     public boolean insertaArchivoMarcador(String idMarcador, int idArchivo) {
-        String query = "INSERT INTO marcador_archivo VALUES(" + idMarcador + "," + idArchivo + ")";
+        String query = "INSERT INTO marcador_archivo (idUsuario, idarchivo) VALUES(" + idMarcador + "," + idArchivo + ")";
         return conexion.queryUpdate(query);
     }
 
@@ -632,6 +649,11 @@ public class Transacciones {
     public boolean insertMarcadorClassification(String taxID, String idseq_marcador, int idAnalisis, String identity, String eval, String score, String length, String comments) {
         String query = "INSERT INTO seq_marcador_classif VALUES(" + taxID + ",'" + idseq_marcador + "', "
                 + idAnalisis + "," + identity + "," + eval + "," + score + "," + length + ",'" + comments + "')";
+        return conexion.queryUpdate(query);
+    }
+
+    public boolean updateTaxaSeqMarcador(String taxid, String idseq) {
+        String query = "UPDATE seq_marcador SET taxon_tax_id = " + taxid + " WHERE idseq_marcador = '" + idseq + "';\n";
         return conexion.queryUpdate(query);
     }
 
@@ -698,8 +720,8 @@ public class Transacciones {
             return false;
         }
     }
-    
-     public boolean updateGenKO(String genID, String idKO) {
+
+    public boolean updateGenKO(String genID, String idKO) {
         String query = "UPDATE gen SET idKO= '" + idKO + "' WHERE gen_id = '" + genID + "'";
         if (conexion.queryUpdate(query)) {
             return true;

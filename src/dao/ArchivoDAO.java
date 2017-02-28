@@ -24,12 +24,19 @@ public class ArchivoDAO {
 
     public boolean insertaArchivo(ArchivoObj archivo, boolean toFile, String outFile, boolean append) {
 
-        String query = archivo.toSQLString();
+        String query = archivo.toNewSQLString();
         FileWriter writer = null;
         if (!toFile) {
             if (!transacciones.insertaQuery(query)) {
                 System.err.println("Error insertando archivo: " + archivo.getIdArchivo() + " - " + query + "\n");
                 return false;
+            } else {
+                for (String qUsuarios : archivo.archivoUsuariosToSQLString()) {
+                    if (!transacciones.insertaQuery(qUsuarios)) {
+                        System.err.println("Error insertando relación usuario-archivo: "
+                               + archivo.getIdArchivo() + "(idArchivo) - q: " + qUsuarios);
+                    }
+                }
             }
         } else {
             try {

@@ -71,7 +71,7 @@ public class MetaxaDAO {
         }
         String seq_id = "";
         if (toFile) {
-             seq_id = seqMap.get(raw_id);
+            seq_id = seqMap.get(raw_id);
         } else {
             seq_id = transacciones.getSecMarcadorByRawID(raw_id);
         }
@@ -84,11 +84,17 @@ public class MetaxaDAO {
             String query = "INSERT INTO seq_marcador_classif VALUES(" + taxid[0] + ",'" + seq_id + "', "
                     + idAnalisis_clasificacion + "," + identity + "," + "-1" + "," + score + "," + length + ",'" + taxid[1] + "');\n";
             writer.write(query);
+            String query2 = "UPDATE seq_marcador SET taxon_tax_id = " + taxid[0] + " WHERE idseq_marcador = '" + seq_id + "';\n";
+            writer.write(query2);
             return "";
         } else {
             if (!transacciones.insertMarcadorClassification(taxid[0], seq_id, idAnalisis_clasificacion, identity, "-1", score, length, taxid[1])) {
                 System.err.println("Error insertando seq_marcador_classif: " + "INSERT INTO seq_marcador_classif VALUES(" + taxid[0] + ",'" + seq_id + "', "
                         + idAnalisis_clasificacion + "," + identity + ",-1," + score + ",'" + taxid[1] + "')");
+            } else {
+                if (!transacciones.updateTaxaSeqMarcador(taxid[0], seq_id)) {
+                    System.err.println("Error actualizando seq_marcador --  taxid: " + taxid[0] + "    seqid: " + seq_id);
+                }
             }
             return "";
         }

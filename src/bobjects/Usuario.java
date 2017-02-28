@@ -18,8 +18,10 @@ public class Usuario {
     private String correo;
     private String cite;
     //wild keys para otras relaciones
-    private String acciones; //como ser wildkey para muestreo usuario
+    private String acciones; //como ser wildkey para muestreo usuario  o relType
     private String comentarios;
+    
+
     public Usuario(int idUsuario) {
         this.idUsuario = idUsuario;
     }
@@ -40,7 +42,6 @@ public class Usuario {
         this.comentarios = comentarios;
     }
 
-    
     public int getIdUsuario() {
         return idUsuario;
     }
@@ -88,5 +89,5 @@ public class Usuario {
     public void setCite(String cite) {
         this.cite = cite;
     }
-    
+
 }
