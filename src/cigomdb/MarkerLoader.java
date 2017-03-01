@@ -44,9 +44,32 @@ public class MarkerLoader {
     private String proc_metaxa_file = "metaxa/metaxa.taxonomy.txt";
     private int nextIDMarcador = -1;
     private int nextIDArchivo = -1;
+    /**
+     * set de caracteres que se puede utilizar para hacer split en algun raw id
+     * de secuencia por ejemplo caso de
+     * /data/cigom_proc_data/MMF1/amplicon/samples/B6_MIN_2/metaxa/metaxa_out.taxonomy.txt.extended
+     * el raw_id es
+     *
+     * @M03516_004_FC_000000000-APFV8:1:2107:18953:22442#CGGAGCCT+CTCTCTAT y en
+     * metaxa viene como: M03516_004_FC_000000000-APFV8:1:2107:18953:22442 hay
+     * varios archivos donde el raw tiene el # y metaxa también entonces si
+     * hacemos el split por default funciona para este caso pero truena para los
+     * demás, por lo tanto se creó esta variable, la cual permite asignar un
+     * caracter o set de caracteres para realziar el split para casos como
+     * estos.
+     */
+    private String splitSpecial = "";
 
     public Transacciones getTransacciones() {
         return transacciones;
+    }
+
+    public String getSplitSpecial() {
+        return splitSpecial;
+    }
+
+    public void setSplitSpecial(String splitSpecial) {
+        this.splitSpecial = splitSpecial;
     }
 
     public int getNextIDMarcador() {
@@ -160,7 +183,7 @@ public class MarkerLoader {
                     idxMarcName = -1, idxMarcDesc = -1, idxSelection = -1,
                     idxLayout = -1, idxIdMarcador = -1, idxTipoMarcador = -1,
                     idxTipoSec = -1, idxSecuenciador = -1, idxPcr = -1,
-                    idxQC = -1, idxPre = -1, idxVol = -1, idxVector = -1, idxExtended = -1, idxMetaxa = -1, idxNC1 = -1, idxNC2 = -1;
+                    idxQC = -1, idxPre = -1, idxVol = -1, idxVector = -1, idxExtended = -1, idxMetaxa = -1, idxNC1 = -1, idxNC2 = -1, idxSplit = -1;
             int numLinea = 0;
             while (((linea = reader.readLine()) != null)) {
                 if (linea.length() > 0 && !linea.startsWith("#")) {
@@ -209,6 +232,8 @@ public class MarkerLoader {
                                 idxExtended = toks;
                             } else if (tok.contains("METAXA")) {//metaxa file name
                                 idxMetaxa = toks;
+                            } else if (tok.contains("SPLIT")) {//metaxa file name
+                                idxSplit = toks;
                             }
                         }
                     } else {
@@ -310,6 +335,11 @@ public class MarkerLoader {
                                 marcador.setNc1FName(st.nextToken().trim());
                             } else if (tok == idxNC2) {
                                 marcador.setNc2FName(st.nextToken().trim());
+                            } else if (tok == idxSplit) {
+                                String tmpSplit = st.nextToken().trim();
+                                if (!tmpSplit.toUpperCase().equals("ND") && !tmpSplit.toUpperCase().equals("NA")) {
+                                    this.splitSpecial = tmpSplit;
+                                }
                             } else {
                                 st.nextToken();
                             }
@@ -401,7 +431,15 @@ public class MarkerLoader {
                     String query = "INSERT INTO seq_marcador (idseq_marcador, idmarcador,raw_seq_id,seq,seq_length) VALUES('"
                             + idSec + "'," + marcador.getIdMarcador() + ",'" + raw_seq_id + "','" + sec + "'," + sec.length() + ");\n";
                     writer.write(query);
-                    seqMap.put(raw_seq_id, idSec);
+                    if (this.splitSpecial.length() > 0) {
+                        raw_seq_id = raw_seq_id.split(splitSpecial)[0];
+                    }
+                    //limitacion metaxa raw id max 59
+                    if (raw_seq_id.length() > 59) {
+                        seqMap.put(raw_seq_id.substring(0, 59), idSec);
+                    } else {
+                        seqMap.put(raw_seq_id, idSec);
+                    }
 
                 } else {
                     if (!transacciones.insertaSeqMarcador(idSec, "" + marcador.getIdMarcador(), raw_seq_id, sec)) {
@@ -485,7 +523,12 @@ public class MarkerLoader {
                         String query = "INSERT INTO seq_marcador (idseq_marcador, idmarcador,raw_seq_id,seq,seq_length) VALUES('"
                                 + idSec + "'," + marcador.getIdMarcador() + ",'" + raw_seq_id + "','" + sec + "'," + sec.length() + ");\n";
                         writer.write(query);
-                        seqMap.put(raw_seq_id, idSec);
+                        //limitacion metaxa raw id max 59
+                        if (raw_seq_id.length() > 59) {
+                            seqMap.put(raw_seq_id.substring(0, 59), idSec);
+                        } else {
+                            seqMap.put(raw_seq_id, idSec);
+                        }
 
                     } else {
                         if (!transacciones.insertaSeqMarcador(idSec, "" + marcador.getIdMarcador(), raw_seq_id, sec)) {
@@ -539,7 +582,12 @@ public class MarkerLoader {
                         String query = "INSERT INTO seq_marcador (idseq_marcador, idmarcador,raw_seq_id,seq,seq_length) VALUES('"
                                 + idSec + "'," + marcador.getIdMarcador() + ",'" + raw_seq_id + "','" + sec + "'," + sec.length() + ");\n";
                         writer.write(query);
-                        seqMap.put(raw_seq_id, idSec);
+                        //limitacion metaxa raw id max 59
+                        if (raw_seq_id.length() > 59) {
+                            seqMap.put(raw_seq_id.substring(0, 59), idSec);
+                        } else {
+                            seqMap.put(raw_seq_id, idSec);
+                        }
 
                     } else {
                         if (!transacciones.insertaSeqMarcador(idSec, "" + marcador.getIdMarcador(), raw_seq_id, sec)) {
@@ -712,7 +760,7 @@ public class MarkerLoader {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    public boolean processMeta(String proc_data_path,String metaxFile, String idMarcador, ArchivoDAO adao, MetaxaDAO metaxa, String outFile, HashMap<String, String> seqMap, boolean processNotPaired) throws FileNotFoundException, IOException {
+    public boolean processMeta(String proc_data_path, String metaxFile, String idMarcador, ArchivoDAO adao, MetaxaDAO metaxa, String outFile, HashMap<String, String> seqMap, boolean processNotPaired) throws FileNotFoundException, IOException {
         File metaxaF = new File(proc_data_path + metaxFile);
         //FileUtils fUtils = new FileUtils();
         if (metaxaF.exists()) {
@@ -774,17 +822,16 @@ public class MarkerLoader {
                     }
                 }
             }
-            int lineas = 0;
             String lineaMetaxa;
             while ((lineaMetaxa = metaxaReader.readLine()) != null) {
-                metaxa.processMetaxaLine(lineaMetaxa, AnalisisClasificacion.METAXA_REGULAR, writer, seqMap);
+                metaxa.processMetaxaLine(lineaMetaxa, proc_data_path + metaxFile,splitSpecial, AnalisisClasificacion.METAXA_REGULAR, writer, seqMap);
             }
             if (toFile) {
                 writer.close();
             }
             metaxaReader.close();
         } else {
-            System.err.println("no se puede encontrar archivo de metaxa: " + proc_data_path + "metaxa/metaxa.taxonomy.txt\nidMarcador = " + idMarcador);
+            System.err.println("no se puede encontrar archivo de metaxa: " + proc_data_path + metaxFile + "\nidMarcador = " + idMarcador);
         }
         return true;
     }
@@ -895,7 +942,7 @@ public class MarkerLoader {
 
                     if (processMetaxa) {
                         //to impl cargar metaxa
-                        processMeta(proc_data_path,"", idMarcador, adao, metaxa, null, null, false);
+                        processMeta(proc_data_path, "", idMarcador, adao, metaxa, null, null, false);
                     }
                 }
             }

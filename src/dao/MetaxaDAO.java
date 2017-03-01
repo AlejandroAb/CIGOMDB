@@ -43,10 +43,12 @@ public class MetaxaDAO {
      * (80 by default). Scores above 80 can generally be considered good.
      *
      * @param mtxLine linea con todas las columnas
+     * @param fileName El nombre del archivo metaxa que se está árseando,
+     * lamentablemente sólo se usa para fines de control de errores
      * @param idAnalisis_clasificacion el id del tipo de analisis que se realizó
      * @return log del proceso
      */
-    public String processMetaxaLine(String mtxLine, int idAnalisis_clasificacion, FileWriter writer, HashMap<String, String> seqMap) throws IOException {
+    public String processMetaxaLine(String mtxLine, String fileName, String splitSpecial, int idAnalisis_clasificacion, FileWriter writer, HashMap<String, String> seqMap) throws IOException {
         StringTokenizer st = new StringTokenizer(mtxLine, "\t");
         String raw_id = st.nextToken();
         String classify = st.nextToken();
@@ -70,15 +72,35 @@ public class MetaxaDAO {
             score = "null";
         }
         String seq_id = "";
-        raw_id = raw_id.split("[_ \t]")[0];
         if (toFile) {
-            seq_id = seqMap.get(raw_id);
+            if (splitSpecial.length() > 0) {
+                String tmpraw_id = raw_id.split(splitSpecial)[0];
+                seq_id = seqMap.get(tmpraw_id);
+            } else {
+                seq_id = seqMap.get(raw_id);
+            }
         } else {
             seq_id = transacciones.getSecMarcadorByRawID(raw_id);
         }
         if (seq_id == null || seq_id.length() == 0) {
-            System.err.println("ERROR. No se encontró secuencia con raw_id = " + raw_id + "\n");
-
+            String tmpraw_id = raw_id.split("[_ \t]")[0];
+            if (toFile) {
+                seq_id = seqMap.get(tmpraw_id);
+            } else {
+                seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id);
+            }
+            if (seq_id == null || seq_id.length() == 0) {
+                //caso: /data/cigom_proc_data/MMF1/amplicon/samples/B6_MIN_2/metaxa/metaxa_out.taxonomy.txt.extended
+                tmpraw_id = raw_id.split("#")[0];
+                if (toFile) {
+                    seq_id = seqMap.get(tmpraw_id);
+                } else {
+                    seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id);
+                }
+                if (seq_id == null || seq_id.length() == 0) {
+                    System.err.println("ERROR. No se encontró secuencia con raw_id = " + raw_id + "\nEn archivo: " + fileName);
+                }
+            }
         }
         String taxid[] = searchNCBINode(classify);
         if (toFile) {
