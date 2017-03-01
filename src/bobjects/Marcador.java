@@ -33,9 +33,45 @@ public class Marcador {
     boolean visible = true;
     String volumen = "";
     ArrayList<ArchivoObj> archivos = new ArrayList<>();
+    String metaxaFName = "";
+    String extendedFName = "";
+    String nc1FName = "";
+    String nc2FName = "";
 
     public String getIdMarcador() {
         return idMarcador;
+    }
+
+    public String getMetaxaFName() {
+        return metaxaFName;
+    }
+
+    public void setMetaxaFName(String metaxaFName) {
+        this.metaxaFName = metaxaFName;
+    }
+
+    public String getExtendedFName() {
+        return extendedFName;
+    }
+
+    public void setExtendedFName(String extendedFName) {
+        this.extendedFName = extendedFName;
+    }
+
+    public String getNc1FName() {
+        return nc1FName;
+    }
+
+    public void setNc1FName(String nc1FName) {
+        this.nc1FName = nc1FName;
+    }
+
+    public String getNc2FName() {
+        return nc2FName;
+    }
+
+    public void setNc2FName(String nc2FName) {
+        this.nc2FName = nc2FName;
     }
 
     public void addArchivo(ArchivoObj archivo) {
