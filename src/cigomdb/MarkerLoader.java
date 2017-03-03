@@ -45,6 +45,13 @@ public class MarkerLoader {
     private int nextIDMarcador = -1;
     private int nextIDArchivo = -1;
     /**
+     * Hay veces que solo queremos regenerar las secuencias sin necesidad de
+     * anotar nuevamente los archivos y las relaciones que hay entre ellos, por
+     * def esta bandera es true, pero el usuario puedo configurar para evitar la
+     * reinclusión de archivos en un archivo de salida
+     */
+    private boolean generaArchivos = true;
+    /**
      * set de caracteres que se puede utilizar para hacer split en algun raw id
      * de secuencia por ejemplo caso de
      * /data/cigom_proc_data/MMF1/amplicon/samples/B6_MIN_2/metaxa/metaxa_out.taxonomy.txt.extended
@@ -450,56 +457,58 @@ public class MarkerLoader {
             }
         }
         extendedReader.close();
-        //Archivo merged
-        ArchivoObj mergeFile = new ArchivoObj(nextIDArchivo);
-        File tmpFile = new File(proc_data_path + marcador.getExtendedFName());
-        nextIDArchivo++;
-        mergeFile.setTipoArchivo(ArchivoObj.TIPO_PRE);
-        mergeFile.setNombre(marcador.getExtendedFName().substring(marcador.getExtendedFName().lastIndexOf("/") + 1));
-        mergeFile.setPath(proc_data_path + marcador.getExtendedFName().substring(0, marcador.getExtendedFName().indexOf("/") + 1));
-        mergeFile.setDescription("Fastq con lecturas pareadas - merge de FW y RV. Se construye el archivo usando FLASH.");
-        int tmpID = nextIDArchivo;
-        String tmpSource = "";
-        for (int i = 1; i <= marcador.getArchivos().size(); i++) {
-            if (i == 1) {
-                tmpSource += "" + (tmpID - i);
+        if (generaArchivos) {
+            //Archivo merged
+            ArchivoObj mergeFile = new ArchivoObj(nextIDArchivo);
+            File tmpFile = new File(proc_data_path + marcador.getExtendedFName());
+            nextIDArchivo++;
+            mergeFile.setTipoArchivo(ArchivoObj.TIPO_PRE);
+            mergeFile.setNombre(marcador.getExtendedFName().substring(marcador.getExtendedFName().lastIndexOf("/") + 1));
+            mergeFile.setPath(proc_data_path + marcador.getExtendedFName().substring(0, marcador.getExtendedFName().indexOf("/") + 1));
+            mergeFile.setDescription("Fastq con lecturas pareadas - merge de FW y RV. Se construye el archivo usando FLASH.");
+            int tmpID = nextIDArchivo;
+            String tmpSource = "";
+            for (int i = 1; i <= marcador.getArchivos().size(); i++) {
+                if (i == 1) {
+                    tmpSource += "" + (tmpID - i);
+                } else {
+                    tmpSource += "," + (tmpID - i);
+                }
+            }
+            mergeFile.setOrigen(tmpSource);
+            mergeFile.setExtension("fastq");
+            MyDate date = new MyDate(tmpFile.lastModified());
+            mergeFile.setDate(date);
+            mergeFile.setSize(tmpFile.getTotalSpace());
+            mergeFile.setChecksum(FileUtils.getMD5File(proc_data_path + marcador.getExtendedFName()));
+            mergeFile.setAlcance("Grupo de bioinformática");
+            mergeFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
+            mergeFile.setDerechos("Acceso limitado a miembros");
+            mergeFile.setTags("Secuencias pareadas, amplicones");
+            mergeFile.setTipo("Text");
+            Usuario user = new Usuario(20);//ALES
+            user.setAcciones("creator");
+            user.setComentarios("Se encarga de ejecutar el programa Flash para parear las lecturas que da como resultado este archivo.");
+            mergeFile.addUser(user);
+            Usuario user2 = new Usuario(25);//ALEXSF
+            user2.setAcciones("contributor");
+            user2.setComentarios("Investigador responsable de subproyecto");
+            mergeFile.addUser(user2);
+            marcador.addArchivo(mergeFile);
+            if (toFile) {
+                writer.write(mergeFile.toNewSQLString() + ";\n");
+                writer.write("INSERT INTO marcador_archivo VALUES(" + marcador.getIdMarcador() + "," + mergeFile.getIdArchivo() + ");\n");
+                for (String qUsuarios : mergeFile.archivoUsuariosToSQLString()) {
+                    writer.write(qUsuarios + ";\n");
+                }
             } else {
-                tmpSource += "," + (tmpID - i);
-            }
-        }
-        mergeFile.setOrigen(tmpSource);
-        mergeFile.setExtension("fastq");
-        MyDate date = new MyDate(tmpFile.lastModified());
-        mergeFile.setDate(date);
-        mergeFile.setSize(tmpFile.getTotalSpace());
-        mergeFile.setChecksum(FileUtils.getMD5File(proc_data_path + marcador.getExtendedFName()));
-        mergeFile.setAlcance("Grupo de bioinformática");
-        mergeFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
-        mergeFile.setDerechos("Acceso limitado a miembros");
-        mergeFile.setTags("Secuencias pareadas, amplicones");
-        mergeFile.setTipo("Text");
-        Usuario user = new Usuario(20);//ALES
-        user.setAcciones("creator");
-        user.setComentarios("Se encarga de ejecutar el programa Flash para parear las lecturas que da como resultado este archivo.");
-        mergeFile.addUser(user);
-        Usuario user2 = new Usuario(25);//ALEXSF
-        user2.setAcciones("contributor");
-        user2.setComentarios("Investigador responsable de subproyecto");
-        mergeFile.addUser(user2);
-        marcador.addArchivo(mergeFile);
-        if (toFile) {
-            writer.write(mergeFile.toNewSQLString() + ";\n");
-            writer.write("INSERT INTO marcador_archivo VALUES(" + marcador.getIdMarcador() + "," + mergeFile.getIdArchivo() + ");\n");
-            for (String qUsuarios : mergeFile.archivoUsuariosToSQLString()) {
-                writer.write(qUsuarios + ";\n");
-            }
-        } else {
-            adao.insertaArchivo(mergeFile, false, "", true);
-            transacciones.insertaArchivoMarcador(marcador.getIdMarcador(), mergeFile.getIdArchivo());
-            for (String qUsuarios : mergeFile.archivoUsuariosToSQLString()) {
-                if (!transacciones.insertaQuery(qUsuarios)) {
-                    System.err.println("Error insertando relación usuario-archivo: "
-                            + marcador.getIdMarcador() + "(idmarcador) - " + nextIDArchivo + "(idArchivo) - q: " + qUsuarios);
+                adao.insertaArchivo(mergeFile, false, "", true);
+                transacciones.insertaArchivoMarcador(marcador.getIdMarcador(), mergeFile.getIdArchivo());
+                for (String qUsuarios : mergeFile.archivoUsuariosToSQLString()) {
+                    if (!transacciones.insertaQuery(qUsuarios)) {
+                        System.err.println("Error insertando relación usuario-archivo: "
+                                + marcador.getIdMarcador() + "(idmarcador) - " + nextIDArchivo + "(idArchivo) - q: " + qUsuarios);
+                    }
                 }
             }
         }
@@ -538,29 +547,31 @@ public class MarkerLoader {
                     }
                 }
             }
-            nc1Reader.close();
-            ArchivoObj nc1File = new ArchivoObj(nextIDArchivo);
-            nextIDArchivo++;
-            nc1File.setTipoArchivo(ArchivoObj.TIPO_PRE);
-            nc1File.setNombre(marcador.getNc1FName().substring(marcador.getNc1FName().lastIndexOf("/") + 1));
-            nc1File.setPath(proc_data_path + marcador.getNc1FName().substring(0, marcador.getNc1FName().indexOf("/") + 1));
-            nc1File.setDescription("Fastq con las secuencias FW que no se pudieron empalmar con las de RV");
-            nc1File.setExtension("fastq");
-            nc1File.setNum_secs(sec_num);
-            nc1File.setSeq_length(avg / sec_num);
-            if (toFile) {
-                writer.write(nc1File.toNewSQLString() + ";\n");
-                writer.write("INSERT INTO marcador_archivo VALUES(" + marcador.getIdMarcador() + "," + nc1File.getIdArchivo() + ");\n");
-                for (String qUsuarios : nc1File.archivoUsuariosToSQLString()) {
-                    writer.write(qUsuarios + ";\n");
-                }
-            } else {
-                adao.insertaArchivo(nc1File, false, "", true);
-                transacciones.insertaArchivoMarcador(marcador.getIdMarcador(), nc1File.getIdArchivo());
-                for (String qUsuarios : nc1File.archivoUsuariosToSQLString()) {
-                    if (!transacciones.insertaQuery(qUsuarios)) {
-                        System.err.println("Error insertando relación usuario-archivo: "
-                                + marcador.getIdMarcador() + "(idmarcador) - " + nc1File.getIdArchivo() + "(idArchivo) - q: " + qUsuarios);
+            if (generaArchivos) {
+                nc1Reader.close();
+                ArchivoObj nc1File = new ArchivoObj(nextIDArchivo);
+                nextIDArchivo++;
+                nc1File.setTipoArchivo(ArchivoObj.TIPO_PRE);
+                nc1File.setNombre(marcador.getNc1FName().substring(marcador.getNc1FName().lastIndexOf("/") + 1));
+                nc1File.setPath(proc_data_path + marcador.getNc1FName().substring(0, marcador.getNc1FName().indexOf("/") + 1));
+                nc1File.setDescription("Fastq con las secuencias FW que no se pudieron empalmar con las de RV");
+                nc1File.setExtension("fastq");
+                nc1File.setNum_secs(sec_num);
+                nc1File.setSeq_length(avg / sec_num);
+                if (toFile) {
+                    writer.write(nc1File.toNewSQLString() + ";\n");
+                    writer.write("INSERT INTO marcador_archivo VALUES(" + marcador.getIdMarcador() + "," + nc1File.getIdArchivo() + ");\n");
+                    for (String qUsuarios : nc1File.archivoUsuariosToSQLString()) {
+                        writer.write(qUsuarios + ";\n");
+                    }
+                } else {
+                    adao.insertaArchivo(nc1File, false, "", true);
+                    transacciones.insertaArchivoMarcador(marcador.getIdMarcador(), nc1File.getIdArchivo());
+                    for (String qUsuarios : nc1File.archivoUsuariosToSQLString()) {
+                        if (!transacciones.insertaQuery(qUsuarios)) {
+                            System.err.println("Error insertando relación usuario-archivo: "
+                                    + marcador.getIdMarcador() + "(idmarcador) - " + nc1File.getIdArchivo() + "(idArchivo) - q: " + qUsuarios);
+                        }
                     }
                 }
             }
@@ -598,36 +609,43 @@ public class MarkerLoader {
                 }
             }
             nc2Reader.close();
-            ArchivoObj nc2File = new ArchivoObj(nextIDArchivo);
-            nextIDArchivo++;
-            nc2File.setTipoArchivo(ArchivoObj.TIPO_PRE);
-            nc2File.setNombre(marcador.getNc2FName().substring(marcador.getNc2FName().lastIndexOf("/") + 1));
-            nc2File.setPath(proc_data_path + marcador.getNc2FName().substring(0, marcador.getNc2FName().indexOf("/") + 1));
-            nc2File.setDescription("Fastq con las secuencias RV que no se pudieron empalmar con las de FW");
-            nc2File.setExtension("fastq");
-            nc2File.setNum_secs(sec_num);
-            nc2File.setSeq_length(avg / sec_num);
-            if (toFile) {
-                writer.write(nc2File.toNewSQLString() + ";\n");
-                writer.write("INSERT INTO marcador_archivo VALUES(" + marcador.getIdMarcador() + "," + nc2File.getIdArchivo() + ");\n");
-                writer.write("UPDATE marcador set seq_num_total = " + counterTotal + " WHERE idmarcador = " + marcador.getIdMarcador() + ";\n");
-                for (String qUsuarios : nc2File.archivoUsuariosToSQLString()) {
-                    writer.write(qUsuarios + ";\n");
-                }
-                writer.close();
-            } else {
-                adao.insertaArchivo(nc2File, false, "", true);
-                transacciones.insertaArchivoMarcador(marcador.getIdMarcador(), nc2File.getIdArchivo());
-                for (String qUsuarios : nc2File.archivoUsuariosToSQLString()) {
-                    if (!transacciones.insertaQuery(qUsuarios)) {
-                        System.err.println("Error insertando relación usuario-archivo: "
-                                + marcador.getIdMarcador() + "(idmarcador) - " + nc1File.getIdArchivo() + "(idArchivo) - q: " + qUsuarios);
+            if (generaArchivos) {
+                ArchivoObj nc2File = new ArchivoObj(nextIDArchivo);
+                nextIDArchivo++;
+                nc2File.setTipoArchivo(ArchivoObj.TIPO_PRE);
+                nc2File.setNombre(marcador.getNc2FName().substring(marcador.getNc2FName().lastIndexOf("/") + 1));
+                nc2File.setPath(proc_data_path + marcador.getNc2FName().substring(0, marcador.getNc2FName().indexOf("/") + 1));
+                nc2File.setDescription("Fastq con las secuencias RV que no se pudieron empalmar con las de FW");
+                nc2File.setExtension("fastq");
+                nc2File.setNum_secs(sec_num);
+                nc2File.setSeq_length(avg / sec_num);
+                if (toFile) {
+                    writer.write(nc2File.toNewSQLString() + ";\n");
+                    writer.write("INSERT INTO marcador_archivo VALUES(" + marcador.getIdMarcador() + "," + nc2File.getIdArchivo() + ");\n");
+                    writer.write("UPDATE marcador set seq_num_total = " + counterTotal + " WHERE idmarcador = " + marcador.getIdMarcador() + ";\n");
+                    for (String qUsuarios : nc2File.archivoUsuariosToSQLString()) {
+                        writer.write(qUsuarios + ";\n");
                     }
-                }
-                if (!transacciones.updateSeqNumMarcador(marcador.getIdMarcador(), counterTotal)) {
-                    System.err.println("Error actualizando marcador id : sec_num_t : " + marcador.getIdMarcador() + ":" + sec_num);
-                }
+                    writer.close();
+                } else {
+                    adao.insertaArchivo(nc2File, false, "", true);
+                    transacciones.insertaArchivoMarcador(marcador.getIdMarcador(), nc2File.getIdArchivo());
+                    for (String qUsuarios : nc2File.archivoUsuariosToSQLString()) {
+                        if (!transacciones.insertaQuery(qUsuarios)) {
+                            System.err.println("Error insertando relación usuario-archivo: "
+                                    + marcador.getIdMarcador() + "(idmarcador) - " + nc2File.getIdArchivo() + "(idArchivo) - q: " + qUsuarios);
+                        }
+                    }
+                    if (!transacciones.updateSeqNumMarcador(marcador.getIdMarcador(), counterTotal)) {
+                        System.err.println("Error actualizando marcador id : sec_num_t : " + marcador.getIdMarcador() + ":" + sec_num);
+                    }
 
+                }
+            }
+
+        } else {
+            if (toFile) {
+                writer.close();
             }
         }
     }
@@ -638,52 +656,83 @@ public class MarkerLoader {
      * que puede generar el input file necesario para generar el archivo html
      * que luego es desplegado en la aplicación
      *
-     * @param proc_data_path
-     * @param idMarcador
-     * @param inPut
+     * @param inputFile archivo con ids o etiquetas de marcadores
      */
-    public void processKrona(Marcador marcador, String proc_data_path, String inPut) {
-        ArchivoObj kronaFile = new ArchivoObj(nextIDArchivo);
-        nextIDArchivo++;
-        kronaFile.setTipoArchivo(ArchivoObj.TIPO_KRN);
-        //rawFile.setNombre(f.getName());
-        kronaFile.setPath(proc_data_path + "krona");
-        kronaFile.setExtension("html");
+    public void processKrona(String inputFile) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                boolean esID = false;
+                String id = line.trim();
+                try {
+                    Integer.parseInt(id);
+                    esID = true;
+                } catch (NumberFormatException nfe) {
 
-        kronaFile.setDescription("Datos crudos de amplicones con las secuencias FW");
-
-        //  kronaFile.setChecksum(FileUtils.getMD5File(raw_data_path + f.getName()));
-        kronaFile.setAlcance("Grupo de bioinformática");
-        kronaFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
-        kronaFile.setDerechos("Acceso limitado a miembros");
-        kronaFile.setTags("Secuencias crudas, amplicones");
-        kronaFile.setTipo("Text");
-        Usuario user = new Usuario(26);//UUSM
-        user.setAcciones("creator");
-        user.setComentarios("Se encargaron de generar las librerías que se mandaron a secuenciar y de donde se obtienen las secuencias");
-        kronaFile.addUser(user);
-        Usuario user2 = new Usuario(24);//Ricardo Grande
-        user2.setAcciones("contributor");
-        user2.setComentarios("Encargado de la secuenciación/envío de librerías");
-        kronaFile.addUser(user2);
-        marcador.addArchivo(kronaFile);
-        if (inPut.length() > 0) {
-
-        } else {
-            File proDir = new File(proc_data_path);
-            // MyDate date = new MyDate(f.lastModified());
-            // kronaFile.setDate(date);
-            //  kronaFile.setSize(f.getTotalSpace());
-            if (proDir.isDirectory()) {
-                boolean findKronaDir = false;
-                for (File f : proDir.listFiles()) {
-                    if (f.isDirectory() && f.getName().equals("krona")) {
-                    }
                 }
-            } else {
-                System.err.println("No se puede determinar el directorio de trabajao para paracador con ID: " + marcador.getIdMarcador() + " ruta: " + proc_data_path);
+                String proDataPath = "";
+                if (esID) {
+                    proDataPath = transacciones.getProcessDataPathByMarcadorID(id);
+                } else {
+                    proDataPath = transacciones.getProcessDataPathByMarcadorName(id);
+                }
             }
+
+            ArchivoObj kronaFile = new ArchivoObj(nextIDArchivo);
+            nextIDArchivo++;
+            kronaFile.setTipoArchivo(ArchivoObj.TIPO_KRN);
+            //rawFile.setNombre(f.getName());
+            // kronaFile.setPath(proc_data_path + "krona");
+            kronaFile.setExtension("html");
+
+            kronaFile.setDescription("Datos crudos de amplicones con las secuencias FW");
+
+            //  kronaFile.setChecksum(FileUtils.getMD5File(raw_data_path + f.getName()));
+            kronaFile.setAlcance("Grupo de bioinformática");
+            kronaFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
+            kronaFile.setDerechos("Acceso limitado a miembros");
+            kronaFile.setTags("Secuencias crudas, amplicones");
+            kronaFile.setTipo("Text");
+            Usuario user = new Usuario(26);//UUSM
+            user.setAcciones("creator");
+            user.setComentarios("Se encargaron de generar las librerías que se mandaron a secuenciar y de donde se obtienen las secuencias");
+            kronaFile.addUser(user);
+            Usuario user2 = new Usuario(24);//Ricardo Grande
+            user2.setAcciones("contributor");
+            user2.setComentarios("Encargado de la secuenciación/envío de librerías");
+            kronaFile.addUser(user2);
+            // marcador.addArchivo(kronaFile);
+            if (true) {
+
+            } else {
+                File proDir = new File("proc_data_path");
+                // MyDate date = new MyDate(f.lastModified());
+                // kronaFile.setDate(date);
+                //  kronaFile.setSize(f.getTotalSpace());
+                if (proDir.isDirectory()) {
+                    boolean findKronaDir = false;
+                    for (File f : proDir.listFiles()) {
+                        if (f.isDirectory() && f.getName().equals("krona")) {
+                        }
+                    }
+                } else {
+                    System.err.println("No se puede determinar el directorio de trabajao para paracador con ID: ");
+                }
+            }
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(MarkerLoader.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(MarkerLoader.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    public boolean isGeneraArchivos() {
+        return generaArchivos;
+    }
+
+    public void setGeneraArchivos(boolean generaArchivos) {
+        this.generaArchivos = generaArchivos;
     }
 
     /**
@@ -762,69 +811,69 @@ public class MarkerLoader {
      */
     public boolean processMeta(String proc_data_path, String metaxFile, String idMarcador, ArchivoDAO adao, MetaxaDAO metaxa, String outFile, HashMap<String, String> seqMap, boolean processNotPaired) throws FileNotFoundException, IOException {
         File metaxaF = new File(proc_data_path + metaxFile);
+          boolean toFile = outFile.length() > 0;
         //FileUtils fUtils = new FileUtils();
         if (metaxaF.exists()) {
             BufferedReader metaxaReader = new BufferedReader(new FileReader(proc_data_path + metaxFile));
             FileWriter writer = null;
-
-            ArchivoObj metaxaFile = new ArchivoObj(nextIDArchivo);
-            nextIDArchivo++;
-            metaxaFile.setTipoArchivo(ArchivoObj.TIPO_MTX);
-            metaxaFile.setNombre(metaxFile.substring(metaxFile.lastIndexOf("/") + 1));
-            metaxaFile.setPath(proc_data_path + metaxFile.substring(0, metaxFile.indexOf("/") + 1));
-            //metaxaFile.setPath(proc_data_path + "metaxa/");
-            metaxaFile.setDescription("Este archivo tiene toda la asignación taxonómica por secuencia. Es generado a partir del programa Metaxa");
-            metaxaFile.setExtension("txt");
-            int tmpID = nextIDArchivo;
-            String tmpSource = "";
-            if (processNotPaired) {
-                tmpSource += "" + (tmpID - 1);//NC2;
-                tmpSource += "," + (tmpID - 2);//NC1;
-                tmpSource += "," + (tmpID - 3);//MERGE FILE            
-            } else {
-                tmpSource += "" + (tmpID - 1);//MERGE FILE
-            }
-
-            metaxaFile.setOrigen(tmpSource);
-            MyDate date = new MyDate(metaxaF.lastModified());
-            metaxaFile.setDate(date);
-            metaxaFile.setSize(metaxaF.getTotalSpace());
-            metaxaFile.setChecksum(FileUtils.getMD5File(proc_data_path + metaxFile));
-            metaxaFile.setAlcance("Grupo de bioinformática");
-            metaxaFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
-            metaxaFile.setDerechos("Acceso limitado a miembros");
-            metaxaFile.setTags("Asignación taxonómica,Metaxa, amplicones");
-            metaxaFile.setTipo("Text");
-            Usuario user = new Usuario(20);//ALES
-            user.setAcciones("creator");
-            user.setComentarios("Desarrollo y ejecución del pipeline para obtener la clasificación taxonómica según Metaxa");
-            metaxaFile.addUser(user);
-            Usuario user2 = new Usuario(25);//ALEXSF
-            user2.setAcciones("contributor");
-            user2.setComentarios("Investigador responsable de subproyecto");
-            metaxaFile.addUser(user2);
-
-            boolean toFile = outFile.length() > 0;
-            if (toFile) {
-                writer = new FileWriter(outFile, true);
-                writer.write(metaxaFile.toNewSQLString() + ";\n");
-                writer.write("INSERT INTO marcador_archivo VALUES(" + idMarcador + "," + metaxaFile.getIdArchivo() + ");\n");
-                for (String qUsuarios : metaxaFile.archivoUsuariosToSQLString()) {
-                    writer.write(qUsuarios + ";\n");
+            if (generaArchivos) {
+                ArchivoObj metaxaFile = new ArchivoObj(nextIDArchivo);
+                nextIDArchivo++;
+                metaxaFile.setTipoArchivo(ArchivoObj.TIPO_MTX);
+                metaxaFile.setNombre(metaxFile.substring(metaxFile.lastIndexOf("/") + 1));
+                metaxaFile.setPath(proc_data_path + metaxFile.substring(0, metaxFile.indexOf("/") + 1));
+                //metaxaFile.setPath(proc_data_path + "metaxa/");
+                metaxaFile.setDescription("Este archivo tiene toda la asignación taxonómica por secuencia. Es generado a partir del programa Metaxa");
+                metaxaFile.setExtension("txt");
+                int tmpID = nextIDArchivo;
+                String tmpSource = "";
+                if (processNotPaired) {
+                    tmpSource += "" + (tmpID - 1);//NC2;
+                    tmpSource += "," + (tmpID - 2);//NC1;
+                    tmpSource += "," + (tmpID - 3);//MERGE FILE            
+                } else {
+                    tmpSource += "" + (tmpID - 1);//MERGE FILE
                 }
-            } else {
-                adao.insertaArchivo(metaxaFile, false, "", true);
-                transacciones.insertaArchivoMarcador(idMarcador, metaxaFile.getIdArchivo());
-                for (String qUsuarios : metaxaFile.archivoUsuariosToSQLString()) {
-                    if (!transacciones.insertaQuery(qUsuarios)) {
-                        System.err.println("Error insertando relación usuario-archivo-metaxa: "
-                                + idMarcador + "(idmarcador) - " + metaxaFile.getIdArchivo() + "(idArchivo) - q: " + qUsuarios);
+
+                metaxaFile.setOrigen(tmpSource);
+                MyDate date = new MyDate(metaxaF.lastModified());
+                metaxaFile.setDate(date);
+                metaxaFile.setSize(metaxaF.getTotalSpace());
+                metaxaFile.setChecksum(FileUtils.getMD5File(proc_data_path + metaxFile));
+                metaxaFile.setAlcance("Grupo de bioinformática");
+                metaxaFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
+                metaxaFile.setDerechos("Acceso limitado a miembros");
+                metaxaFile.setTags("Asignación taxonómica,Metaxa, amplicones");
+                metaxaFile.setTipo("Text");
+                Usuario user = new Usuario(20);//ALES
+                user.setAcciones("creator");
+                user.setComentarios("Desarrollo y ejecución del pipeline para obtener la clasificación taxonómica según Metaxa");
+                metaxaFile.addUser(user);
+                Usuario user2 = new Usuario(25);//ALEXSF
+                user2.setAcciones("contributor");
+                user2.setComentarios("Investigador responsable de subproyecto");
+                metaxaFile.addUser(user2);              
+                if (toFile) {
+                    writer = new FileWriter(outFile, true);
+                    writer.write(metaxaFile.toNewSQLString() + ";\n");
+                    writer.write("INSERT INTO marcador_archivo VALUES(" + idMarcador + "," + metaxaFile.getIdArchivo() + ");\n");
+                    for (String qUsuarios : metaxaFile.archivoUsuariosToSQLString()) {
+                        writer.write(qUsuarios + ";\n");
+                    }
+                } else {
+                    adao.insertaArchivo(metaxaFile, false, "", true);
+                    transacciones.insertaArchivoMarcador(idMarcador, metaxaFile.getIdArchivo());
+                    for (String qUsuarios : metaxaFile.archivoUsuariosToSQLString()) {
+                        if (!transacciones.insertaQuery(qUsuarios)) {
+                            System.err.println("Error insertando relación usuario-archivo-metaxa: "
+                                    + idMarcador + "(idmarcador) - " + metaxaFile.getIdArchivo() + "(idArchivo) - q: " + qUsuarios);
+                        }
                     }
                 }
             }
             String lineaMetaxa;
             while ((lineaMetaxa = metaxaReader.readLine()) != null) {
-                metaxa.processMetaxaLine(lineaMetaxa, proc_data_path + metaxFile,splitSpecial, AnalisisClasificacion.METAXA_REGULAR, writer, seqMap);
+                metaxa.processMetaxaLine(lineaMetaxa, proc_data_path + metaxFile, splitSpecial, AnalisisClasificacion.METAXA_REGULAR, writer, seqMap);
             }
             if (toFile) {
                 writer.close();

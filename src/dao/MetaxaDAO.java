@@ -9,6 +9,7 @@ import database.Transacciones;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import utils.StringUtils;
 
@@ -49,76 +50,82 @@ public class MetaxaDAO {
      * @return log del proceso
      */
     public String processMetaxaLine(String mtxLine, String fileName, String splitSpecial, int idAnalisis_clasificacion, FileWriter writer, HashMap<String, String> seqMap) throws IOException {
-        StringTokenizer st = new StringTokenizer(mtxLine, "\t");
-        String raw_id = st.nextToken();
-        String classify = st.nextToken();
-        String identity = st.nextToken();
-        boolean toFile = writer != null;
         try {
-            Float.parseFloat(identity);
-        } catch (NumberFormatException nfe) {
-            identity = "null";
-        }
-        String length = st.nextToken();
-        try {
-            Float.parseFloat(length);
-        } catch (NumberFormatException nfe) {
-            length = "null";
-        }
-        String score = st.nextToken();
-        try {
-            Float.parseFloat(score);
-        } catch (NumberFormatException nfe) {
-            score = "null";
-        }
-        String seq_id = "";
-        if (toFile) {
-            if (splitSpecial.length() > 0) {
-                String tmpraw_id = raw_id.split(splitSpecial)[0];
-                seq_id = seqMap.get(tmpraw_id);
-            } else {
-                seq_id = seqMap.get(raw_id);
+            StringTokenizer st = new StringTokenizer(mtxLine, "\t");
+            String raw_id = st.nextToken();
+            String classify = st.nextToken();
+            String identity = "";
+            st.nextToken();
+            boolean toFile = writer != null;
+            try {
+                Float.parseFloat(identity);
+            } catch (NumberFormatException nfe) {
+                identity = "null";
             }
-        } else {
-            seq_id = transacciones.getSecMarcadorByRawID(raw_id);
-        }
-        if (seq_id == null || seq_id.length() == 0) {
-            String tmpraw_id = raw_id.split("[_ \t]")[0];
+            String length = st.nextToken();
+            try {
+                Float.parseFloat(length);
+            } catch (NumberFormatException nfe) {
+                length = "null";
+            }
+            String score = st.nextToken();
+            try {
+                Float.parseFloat(score);
+            } catch (NumberFormatException nfe) {
+                score = "null";
+            }
+            String seq_id = "";
             if (toFile) {
-                seq_id = seqMap.get(tmpraw_id);
+                if (splitSpecial.length() > 0) {
+                    String tmpraw_id = raw_id.split(splitSpecial)[0];
+                    seq_id = seqMap.get(tmpraw_id);
+                } else {
+                    seq_id = seqMap.get(raw_id);
+                }
             } else {
-                seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id);
+                seq_id = transacciones.getSecMarcadorByRawID(raw_id);
             }
             if (seq_id == null || seq_id.length() == 0) {
-                //caso: /data/cigom_proc_data/MMF1/amplicon/samples/B6_MIN_2/metaxa/metaxa_out.taxonomy.txt.extended
-                tmpraw_id = raw_id.split("#")[0];
+                String tmpraw_id = raw_id.split("[_ \t]")[0];
                 if (toFile) {
                     seq_id = seqMap.get(tmpraw_id);
                 } else {
                     seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id);
                 }
                 if (seq_id == null || seq_id.length() == 0) {
-                    System.err.println("ERROR. No se encontró secuencia con raw_id = " + raw_id + "\nEn archivo: " + fileName);
+                    //caso: /data/cigom_proc_data/MMF1/amplicon/samples/B6_MIN_2/metaxa/metaxa_out.taxonomy.txt.extended
+                    tmpraw_id = raw_id.split("#")[0];
+                    if (toFile) {
+                        seq_id = seqMap.get(tmpraw_id);
+                    } else {
+                        seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id);
+                    }
+                    if (seq_id == null || seq_id.length() == 0) {
+                        System.err.println("ERROR. No se encontró secuencia con raw_id = " + raw_id + "\nEn archivo: " + fileName);
+                    }
                 }
             }
-        }
-        String taxid[] = searchNCBINode(classify);
-        if (toFile) {
-            String query = "INSERT INTO seq_marcador_classif VALUES(" + taxid[0] + ",'" + seq_id + "', "
-                    + idAnalisis_clasificacion + "," + identity + "," + "-1" + "," + score + "," + length + ",'" + taxid[1] + "');\n";
-            writer.write(query);
-            String query2 = "UPDATE seq_marcador SET taxon_tax_id = " + taxid[0] + " WHERE idseq_marcador = '" + seq_id + "';\n";
-            writer.write(query2);
-            return "";
-        } else {
-            if (!transacciones.insertMarcadorClassification(taxid[0], seq_id, idAnalisis_clasificacion, identity, "-1", score, length, taxid[1])) {
-                System.err.println("Error insertando seq_marcador_classif: " + "INSERT INTO seq_marcador_classif VALUES(" + taxid[0] + ",'" + seq_id + "', "
-                        + idAnalisis_clasificacion + "," + identity + ",-1," + score + ",'" + taxid[1] + "')");
+            String taxid[] = searchNCBINode(classify);
+            if (toFile) {
+                String query = "INSERT INTO seq_marcador_classif VALUES(" + taxid[0] + ",'" + seq_id + "', "
+                        + idAnalisis_clasificacion + "," + identity + "," + "-1" + "," + score + "," + length + ",'" + taxid[1] + "');\n";
+                writer.write(query);
+                String query2 = "UPDATE seq_marcador SET taxon_tax_id = " + taxid[0] + " WHERE idseq_marcador = '" + seq_id + "';\n";
+                writer.write(query2);
+                return "";
             } else {
-                if (!transacciones.updateTaxaSeqMarcador(taxid[0], seq_id)) {
-                    System.err.println("Error actualizando seq_marcador --  taxid: " + taxid[0] + "    seqid: " + seq_id);
+                if (!transacciones.insertMarcadorClassification(taxid[0], seq_id, idAnalisis_clasificacion, identity, "-1", score, length, taxid[1])) {
+                    System.err.println("Error insertando seq_marcador_classif: " + "INSERT INTO seq_marcador_classif VALUES(" + taxid[0] + ",'" + seq_id + "', "
+                            + idAnalisis_clasificacion + "," + identity + ",-1," + score + ",'" + taxid[1] + "')");
+                } else {
+                    if (!transacciones.updateTaxaSeqMarcador(taxid[0], seq_id)) {
+                        System.err.println("Error actualizando seq_marcador --  taxid: " + taxid[0] + "    seqid: " + seq_id);
+                    }
                 }
+                return "";
             }
+        } catch (NoSuchElementException nsee) {
+            System.err.println("Error archivo: " + fileName + "\nLine:" + mtxLine);
             return "";
         }
 

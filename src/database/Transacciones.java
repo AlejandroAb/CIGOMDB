@@ -495,6 +495,35 @@ public class Transacciones {
         }
     }
 
+    public String getProcessDataPathByMarcadorID(String idMarcador) {
+        String query = "SELECT pro_data_path FROM marcador WHERE idMarcador = " + idMarcador;
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult == null || dbResult.isEmpty()) {
+            System.err.println("No se puede enconrar el path para ID: " + idMarcador);
+            System.err.println("Q: " + query);
+            return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+
+    public String getProcessDataPathByMarcadorName(String etiqueta) {
+        String query = "SELECT pro_data_path FROM marcador WHERE marc_name = '" + etiqueta+"'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult == null || dbResult.isEmpty()) {
+            System.err.println("No se puede enconrar el path para etiqueta: " + etiqueta);
+            System.err.println("Q: " + query);
+            return "";
+        } else {
+            if(dbResult.size()>1){
+                System.err.println("Mas de un resultado para etiqueta: " + etiqueta);
+            }
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+
     /**
      * Este método valida que tengamos la información de uniprot en nuestra
      * base, de lo contrario se busca anotar la protena en nuestra entidad de

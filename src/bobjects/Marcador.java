@@ -163,7 +163,9 @@ public class Marcador {
                 type = "S";
             } else if (marcParts[1].equals("FON")) {
                 type = "F";
-            } else {
+            } else if (marcParts[1].equals("MIL")) {
+                type = "K";
+            }else {
                 type = marcParts[1].substring(0, 1);
             }
             idSec = marcParts[0].substring(0, 1) + type + marcParts[2] + marcParts[3] + "." + marcParts[4] + ".";

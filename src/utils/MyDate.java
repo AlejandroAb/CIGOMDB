@@ -30,9 +30,9 @@ public class MyDate {
         String tmp[] = tmpDate.split("[/ ]");
         if (tmp.length >= 3) {
             try{
-            dia = Integer.parseInt(tmp[0]);
+            anio = Integer.parseInt(tmp[0]);
             mes = Integer.parseInt(tmp[1]);
-            anio = Integer.parseInt(tmp[2]);
+            dia = Integer.parseInt(tmp[2]);
             }catch(NumberFormatException nfe){
                 System.err.println("Error parsing date: " + tmpDate);
                 dia = 0;
@@ -253,7 +253,7 @@ public class MyDate {
             if (withTime) {
                 date = "" + anio + "-" + getMesPadded() + "-" + getDiaPadded() + " " + time;
             } else {
-                date = "" + anio + "-" + getMesPadded() + "-" + getDiaPadded() + " " + time;
+                date = "" + anio + "-" + getMesPadded() + "-" + getDiaPadded();
             }
         } else {
             return "NULL";

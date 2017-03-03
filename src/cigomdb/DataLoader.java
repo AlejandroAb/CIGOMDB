@@ -63,6 +63,7 @@ public class DataLoader {
         boolean processMetaxaAmplicones = false; //-mamp --metaxa_amp
         boolean processNotPaired = false; //-pnp
         boolean processKrona = false;//-pk
+        boolean processArchivos = true;
         int nextIDArchivo = -1;
         String raw_ext = "fastq"; //-rawe
         boolean toFile = false;
@@ -376,7 +377,7 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            }  else if (args[i].equals("-next-archivo")) {
+            } else if (args[i].equals("-next-archivo -next-archivo")) {
                 try {
                     nextIDArchivo = Integer.parseInt(args[i + 1]);
                     i++;
@@ -389,7 +390,7 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            }else if (args[i].equals("-line")) {
+            } else if (args[i].equals("-line")) {
                 try {
                     startAtLine = Integer.parseInt(args[i + 1]);
                     i++;
@@ -481,6 +482,9 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
+            } else if (args[i].equals("--no-file")) {//para marcadores no crea la relacion de archivos
+                processArchivos = false;
+
             } else if (args[i].equals("-names")) {
                 try {
                     names = args[i + 1];
@@ -689,11 +693,14 @@ public class DataLoader {
                     if (metatax_file.length() > 2) {
                         loader.setProc_metaxa_file(metatax_file);
                     }
-                    if(nextIDArchivo>-1){
+                    if (nextIDArchivo > -1) {
                         loader.setNextIDArchivo(nextIDArchivo);
                     }
+                    //por def true
+                    loader.setGeneraArchivos(processArchivos);
+                    
                     if (marker_meth.equals("mv1")) {
-                        log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext, output, outFileFasta, outFileMetaxa,processNotPaired, processKrona);
+                        log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext, output, outFileFasta, outFileMetaxa, processNotPaired, processKrona);
                     } else if (marker_meth.equals("mv2")) {
                         log += loader.parseMarkerFileFormatIPacbio(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
                     } else {
