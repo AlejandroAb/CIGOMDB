@@ -377,7 +377,7 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            } else if (args[i].equals("-next-archivo -next-archivo")) {
+            } else if (args[i].equals("-next-archivo")) {
                 try {
                     nextIDArchivo = Integer.parseInt(args[i + 1]);
                     i++;
