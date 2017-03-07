@@ -622,8 +622,22 @@ public class MarkerLoader {
                         notCombinedFile.addUser(user2);
 
                         marcador.addArchivo(notCombinedFile);
-                        // log += adao.insertaArchivo(rawFile, false, "", true);
-                        //transacciones.insertaArchivoMarcador(idMarcador, rawFile.getIdArchivo());
+                        if (toFile) {
+                            writer.write(notCombinedFile.toNewSQLString() + ";\n");
+                            writer.write("INSERT INTO marcador_archivo VALUES(" + marcador.getIdMarcador() + "," + notCombinedFile.getIdArchivo() + ");\n");
+                            for (String qUsuarios : notCombinedFile.archivoUsuariosToSQLString()) {
+                                writer.write(qUsuarios + ";\n");
+                            }
+                        } else {
+                            adao.insertaArchivo(notCombinedFile, false, "", true);
+                            transacciones.insertaArchivoMarcador(marcador.getIdMarcador(), notCombinedFile.getIdArchivo());
+                            for (String qUsuarios : notCombinedFile.archivoUsuariosToSQLString()) {
+                                if (!transacciones.insertaQuery(qUsuarios)) {
+                                    System.err.println("Error insertando relación usuario-archivo: "
+                                            + marcador.getIdMarcador() + "(idmarcador) - " + nextIDArchivo + "(idArchivo) - q: " + qUsuarios);
+                                }
+                            }
+                        }
                     }
                 }
             } else {
