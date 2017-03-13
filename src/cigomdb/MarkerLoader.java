@@ -760,15 +760,17 @@ public class MarkerLoader {
      */
     public boolean addKronaFile(String idMarcador, String proDataPath, String fName, boolean isFromApp, FileWriter writer) throws IOException {
         ArchivoObj kronaFile = new ArchivoObj(nextIDArchivo);
+        File f = new File(proDataPath + fName);
         nextIDArchivo++;
         kronaFile.setTipoArchivo(ArchivoObj.TIPO_KRN);
         kronaFile.setNombre(fName);
         kronaFile.setPath(proDataPath);
         kronaFile.setExtension("html");
-
+        MyDate date = new MyDate(f.lastModified());
+        kronaFile.setDate(date);
+        kronaFile.setSize(f.length());
         kronaFile.setDescription("Archivo HTML generado por Krona a aprtir de la matriz de abundancia del marcador");
-
-        //  kronaFile.setChecksum(FileUtils.getMD5File(raw_data_path + f.getName()));
+        kronaFile.setChecksum(FileUtils.getMD5File(proDataPath + fName));
         kronaFile.setAlcance("CIGOM");
         kronaFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
         kronaFile.setDerechos("Acceso limitado a miembros del consorcio");
@@ -827,14 +829,16 @@ public class MarkerLoader {
     public boolean addMatrixFile(String idMarcador, String proDataPath, String fName, boolean isFromApp, FileWriter writer) throws IOException {
         ArchivoObj matrixFile = new ArchivoObj(nextIDArchivo);
         nextIDArchivo++;
+        File f = new File(proDataPath + fName);
         matrixFile.setTipoArchivo(ArchivoObj.TIPO_MTX);
         matrixFile.setNombre(fName);
         matrixFile.setPath(proDataPath);
         matrixFile.setExtension("txt");
-
+        MyDate date = new MyDate(f.lastModified());
+        matrixFile.setDate(date);
+        matrixFile.setSize(f.length());
         matrixFile.setDescription("Archivo generado a partir de las anotaciones realizadas en la base de datos");
-
-        //  kronaFile.setChecksum(FileUtils.getMD5File(raw_data_path + f.getName()));
+        matrixFile.setChecksum(FileUtils.getMD5File(proDataPath + fName));
         matrixFile.setAlcance("CIGOM - bioinformática");
         matrixFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
         matrixFile.setDerechos("Acceso limitado a miembros del consorcio");

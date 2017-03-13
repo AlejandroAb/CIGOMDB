@@ -459,7 +459,7 @@ public class Transacciones {
      * @return
      */
     public String getEtiquetaMarcadorByLabel(String idMarcador) {
-        String query = "SELECT etiqueta FROM marcador WHERE idmarcador =" + idMarcador;
+        String query = "SELECT marc_name FROM marcador WHERE idmarcador =" + idMarcador;
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         if (dbResult == null || dbResult.isEmpty()) {
