@@ -661,8 +661,11 @@ public class MarkerLoader {
      *
      * @param inputFile archivo con ids o etiquetas de marcadores
      * @param outFile
+     * @param withNoRank esta bandera es usada al momento de crear la matriz, si
+     * viene true rellena los "huecos" con false, de lo contrario lo deja en
+     * blanco
      */
-    public void processKrona(String inputFile, String outFile) {
+    public void processKrona(String inputFile, String outFile, boolean withNoRank) {
         if (nextIDArchivo == -1) {
             nextIDArchivo = transacciones.getNextIDArchivos();
             if (nextIDArchivo == -1) {
@@ -685,50 +688,52 @@ public class MarkerLoader {
             String htmlName = "";
             String proDataPath = "";
             while ((line = reader.readLine()) != null) {
-                boolean esID = false;
-                String id = line.trim();
-                String etiqueta = "";
-                try {
-                    Integer.parseInt(id);
-                    esID = true;//else es etiqueta
-                } catch (NumberFormatException nfe) {
+                if (line.trim().length() > 0 && !line.startsWith("#")) {
+                    boolean esID = false;
+                    String id = line.trim();
+                    String etiqueta = "";
+                    try {
+                        Integer.parseInt(id);
+                        esID = true;//else es etiqueta
+                    } catch (NumberFormatException nfe) {
 
-                }
-                if (!esID) {
-                    etiqueta = id;
-                    id = transacciones.getIdMarcadorByLabel(etiqueta);
-                } else {
-                    etiqueta = transacciones.getEtiquetaMarcadorByLabel(id);
-                }
-                proDataPath = transacciones.getProcessDataPathByMarcadorID(id);
-                /**
-                 * Para los kronas se espera que en el proc_data_path exista la
-                 * karpeta krona y dentro de esta el archivo html. si no existe
-                 * se crea como krona/krona.html
-                 */
-                proDataPath += "krona/";
-                File kronaPath = new File(proDataPath);
-                fu.validateFile(proDataPath, true);//crea el directorio si no existe
-                boolean findHTML = false;
-
-                for (File f : kronaPath.listFiles()) {
-                    if (f.getName().endsWith("html")) {
-                        htmlName = f.getName();
-                        findHTML = true;
-                        //String idMarcador, String proDataPath, String fName, boolean isFromApp, FileWriter writer
-                        addKronaFile(id, proDataPath, htmlName, false, writer);
-                        break;
                     }
-                }
-                if (!findHTML) {
-                    htmlName = "krona.html";
-                    if (kdao.writeKronaInput(proDataPath + "matrix.krona.txt", id)) {
-                        addMatrixFile(id, proDataPath, htmlName, true, writer);
-                        String command = "/scratch/share/apps/KronaTools-2.7/scripts/ImportText.pl -o " + proDataPath + htmlName + " " + proDataPath + "matrix.frona.txt," + etiqueta;
-                        if (executeKronaScript(command)) {
-                            addKronaFile(id, proDataPath, htmlName, true, writer);
-                        } else {
-                            System.err.println("Error ejecutando: " + command);
+                    if (!esID) {
+                        etiqueta = id;
+                        id = transacciones.getIdMarcadorByLabel(etiqueta);
+                    } else {
+                        etiqueta = transacciones.getEtiquetaMarcadorByLabel(id);
+                    }
+                    proDataPath = transacciones.getProcessDataPathByMarcadorID(id);
+                    /**
+                     * Para los kronas se espera que en el proc_data_path exista
+                     * la karpeta krona y dentro de esta el archivo html. si no
+                     * existe se crea como krona/krona.html
+                     */
+                    proDataPath += "krona/";
+                    File kronaPath = new File(proDataPath);
+                    fu.validateFile(proDataPath, true);//crea el directorio si no existe
+                    boolean findHTML = false;
+
+                    for (File f : kronaPath.listFiles()) {
+                        if (f.getName().endsWith("html")) {
+                            htmlName = f.getName();
+                            findHTML = true;
+                            //String idMarcador, String proDataPath, String fName, boolean isFromApp, FileWriter writer
+                            addKronaFile(id, proDataPath, htmlName, false, writer);
+                            break;
+                        }
+                    }
+                    if (!findHTML) {
+                        htmlName = "krona.html";
+                        if (kdao.writeKronaInput(proDataPath + "matrix.krona.txt", id,withNoRank)) {
+                            addMatrixFile(id, proDataPath, "matrix.krona.txt", true, writer);
+                            String command = "/scratch/share/apps/KronaTools-2.7/scripts/ImportText.pl -o " + proDataPath + htmlName + " " + proDataPath + "matrix.krona.txt," + etiqueta;
+                            if (executeKronaScript(command)) {
+                                addKronaFile(id, proDataPath, htmlName, true, writer);
+                            } else {
+                                System.err.println("Error ejecutando: " + command);
+                            }
                         }
                     }
                 }

@@ -32,7 +32,19 @@ public class KronaDAO {
         this.transacciones = transacciones;
     }
 
-    public boolean writeKronaInput(String fileName, String idMarcador) {
+    /**
+     * Este método se encarga dee crear la matriz de abundancia que sirve de
+     * input file para crear el krona.
+     *
+     * @param fileName el nombre y path completo de la matriz a crear
+     * @param idMarcador el marcador paara el cual se crea la matriz
+     * @param withNoRank en caso de que no exista un nivel taxonómico, ya sea de
+     * los niveles intermedios o de los más específicos, si esta bandera está en
+     * true, estos valores serán creados con la palabra no_rank en ese nivel si
+     * viene en false, este campo simplemente tendrá un tabulador.
+     * @return
+     */
+    public boolean writeKronaInput(String fileName, String idMarcador, boolean withNoRank) {
         try {
             FileWriter writer = new FileWriter(fileName);
             ArrayList<ArrayList> taxaCounts = transacciones.getCountsByMarcador(idMarcador);
@@ -45,11 +57,15 @@ public class KronaDAO {
                     if (phylo != null && phylo.size() > 0) {
                         for (String p : phylo) {
                             if (p.trim().length() < 2) {
-                                line.append("no_rank").append("\t");
+                                if (withNoRank) {
+                                    line.append("no_rank").append("\t");
+                                } else {
+                                    line.append("\t");
+                                }
                             } else {
                                 p = p.trim().replaceAll("\\s+", "_");
                                 line.append(p).append("\t");
-                            }                         
+                            }
                         }
                         line.append("\n");
                         writer.write(line.toString());

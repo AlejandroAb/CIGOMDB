@@ -46,6 +46,7 @@ public class DataLoader {
         String where = "";
         boolean useEquivalencias = false;
         String equivFile = "";
+        boolean withNoRank = false;
 
         String gffIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.gff";
         String ncIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.ffn";
@@ -233,7 +234,10 @@ public class DataLoader {
             } else if (args[i].equals("--swiss-batch")) {
                 swissBatch = true;
 
-            } else if (args[i].equals("--start-at-zero") || args[i].equals("-saz")) {
+            } else if (args[i].equals("--no-rank")) {
+                withNoRank = true;
+
+            }  else if (args[i].equals("--start-at-zero") || args[i].equals("-saz")) {
                 startAtZero = true;
 
             } else if (args[i].equals("--no-hash")) {
@@ -704,7 +708,7 @@ public class DataLoader {
                     } else if (marker_meth.equals("mv2")) {
                         log += loader.parseMarkerFileFormatIPacbio(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
                     } else if (marker_meth.equals("krona")) {
-                        loader.processKrona(input, output);
+                        loader.processKrona(input, output,withNoRank);
                     } else {
                         System.out.println("Para correr el programa gen se espera el parámetro -marker_meth: <mv1>");
                     }
