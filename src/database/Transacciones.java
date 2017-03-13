@@ -174,6 +174,26 @@ public class Transacciones {
         return dbResult;
     }
 
+    public ArrayList<ArrayList> getCountsByMarcador(String idMarcador) {
+        String query = "SELECT tax_id, counts FROM conteos where idmarcador = " + idMarcador;
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        return dbResult;
+    }
+
+    public ArrayList getRegularPhylogenyByTaxID(String tax_id) {
+        String query = "SELECT kingdom, phylum, class, orden, family, genus, species "
+                + "FROM taxon WHERE tax_id = " + tax_id;
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult != null && dbResult.size() > 0) {
+            return dbResult.get(0);
+        } else {
+            return null;
+        }
+
+    }
+
     public ArrayList<ArrayList> testUsuarioByFullName(String nombre, String apellido, boolean exact) {
         String query;
         if (exact) {
@@ -433,6 +453,23 @@ public class Transacciones {
     }
 
     /**
+     * Busca la etiqueta de un marcador dado su nombre
+     *
+     * @param idMarcador
+     * @return
+     */
+    public String getEtiquetaMarcadorByLabel(String idMarcador) {
+        String query = "SELECT etiqueta FROM marcador WHERE idmarcador =" + idMarcador;
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult == null || dbResult.isEmpty()) {
+            return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+
+    /**
      * Trea el nccbi tax id de un nombre de nodo
      *
      * @param node_name
@@ -509,7 +546,7 @@ public class Transacciones {
     }
 
     public String getProcessDataPathByMarcadorName(String etiqueta) {
-        String query = "SELECT pro_data_path FROM marcador WHERE marc_name = '" + etiqueta+"'";
+        String query = "SELECT id_marcador, pro_data_path FROM marcador WHERE marc_name = '" + etiqueta + "'";
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         if (dbResult == null || dbResult.isEmpty()) {
@@ -517,7 +554,7 @@ public class Transacciones {
             System.err.println("Q: " + query);
             return "";
         } else {
-            if(dbResult.size()>1){
+            if (dbResult.size() > 1) {
                 System.err.println("Mas de un resultado para etiqueta: " + etiqueta);
             }
             return dbResult.get(0).get(0).toString();

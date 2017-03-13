@@ -19,10 +19,12 @@ import bobjects.ArchivoObj;
 import bobjects.Marcador;
 import bobjects.Usuario;
 import dao.ArchivoDAO;
+import dao.KronaDAO;
 import dao.MarcadorDAO;
 import dao.MetaxaDAO;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -583,7 +585,6 @@ public class MarkerLoader {
                 }
             }
             nc2Reader.close();
-
         }
         if (generaArchivos) {
             File proFolder = new File(proc_data_path);
@@ -659,73 +660,254 @@ public class MarkerLoader {
      * que luego es desplegado en la aplicación
      *
      * @param inputFile archivo con ids o etiquetas de marcadores
+     * @param outFile
      */
-    public void processKrona(String inputFile) {
+    public void processKrona(String inputFile, String outFile) {
+        if (nextIDArchivo == -1) {
+            nextIDArchivo = transacciones.getNextIDArchivos();
+            if (nextIDArchivo == -1) {
+                System.err.println("ERROR No se puede determinar el siguiente ID de archivo");
+            }
+        }
+        boolean toFile = false;
+        if (outFile != null && outFile.length() > 0) {
+            toFile = true;
+        }
         try {
+            FileWriter writer = null;
+            if (toFile) {
+                writer = new FileWriter(outFile, true);
+            }
+            KronaDAO kdao = new KronaDAO(transacciones);
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
             String line = "";
+            FileUtils fu = new FileUtils();
+            String htmlName = "";
+            String proDataPath = "";
             while ((line = reader.readLine()) != null) {
                 boolean esID = false;
                 String id = line.trim();
+                String etiqueta = "";
                 try {
                     Integer.parseInt(id);
-                    esID = true;
+                    esID = true;//else es etiqueta
                 } catch (NumberFormatException nfe) {
 
                 }
-                String proDataPath = "";
-                if (esID) {
-                    proDataPath = transacciones.getProcessDataPathByMarcadorID(id);
+                if (!esID) {
+                    etiqueta = id;
+                    id = transacciones.getIdMarcadorByLabel(etiqueta);
                 } else {
-                    proDataPath = transacciones.getProcessDataPathByMarcadorName(id);
+                    etiqueta = transacciones.getEtiquetaMarcadorByLabel(id);
                 }
-            }
+                proDataPath = transacciones.getProcessDataPathByMarcadorID(id);
+                /**
+                 * Para los kronas se espera que en el proc_data_path exista la
+                 * karpeta krona y dentro de esta el archivo html. si no existe
+                 * se crea como krona/krona.html
+                 */
+                proDataPath += "krona/";
+                File kronaPath = new File(proDataPath);
+                fu.validateFile(proDataPath, true);//crea el directorio si no existe
+                boolean findHTML = false;
 
-            ArchivoObj kronaFile = new ArchivoObj(nextIDArchivo);
-            nextIDArchivo++;
-            kronaFile.setTipoArchivo(ArchivoObj.TIPO_KRN);
-            //rawFile.setNombre(f.getName());
-            // kronaFile.setPath(proc_data_path + "krona");
-            kronaFile.setExtension("html");
-
-            kronaFile.setDescription("Datos crudos de amplicones con las secuencias FW");
-
-            //  kronaFile.setChecksum(FileUtils.getMD5File(raw_data_path + f.getName()));
-            kronaFile.setAlcance("Grupo de bioinformática");
-            kronaFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
-            kronaFile.setDerechos("Acceso limitado a miembros");
-            kronaFile.setTags("Secuencias crudas, amplicones");
-            kronaFile.setTipo("Text");
-            Usuario user = new Usuario(26);//UUSM
-            user.setAcciones("creator");
-            user.setComentarios("Se encargaron de generar las librerías que se mandaron a secuenciar y de donde se obtienen las secuencias");
-            kronaFile.addUser(user);
-            Usuario user2 = new Usuario(24);//Ricardo Grande
-            user2.setAcciones("contributor");
-            user2.setComentarios("Encargado de la secuenciación/envío de librerías");
-            kronaFile.addUser(user2);
-            // marcador.addArchivo(kronaFile);
-            if (true) {
-
-            } else {
-                File proDir = new File("proc_data_path");
-                // MyDate date = new MyDate(f.lastModified());
-                // kronaFile.setDate(date);
-                //  kronaFile.setSize(f.getTotalSpace());
-                if (proDir.isDirectory()) {
-                    boolean findKronaDir = false;
-                    for (File f : proDir.listFiles()) {
-                        if (f.isDirectory() && f.getName().equals("krona")) {
+                for (File f : kronaPath.listFiles()) {
+                    if (f.getName().endsWith("html")) {
+                        htmlName = f.getName();
+                        findHTML = true;
+                        //String idMarcador, String proDataPath, String fName, boolean isFromApp, FileWriter writer
+                        addKronaFile(id, proDataPath, htmlName, false, writer);
+                        break;
+                    }
+                }
+                if (!findHTML) {
+                    htmlName = "krona.html";
+                    if (kdao.writeKronaInput(proDataPath + "matrix.krona.txt", id)) {
+                        addMatrixFile(id, proDataPath, htmlName, true, writer);
+                        String command = "/scratch/share/apps/KronaTools-2.7/scripts/ImportText.pl -o " + proDataPath + htmlName + " " + proDataPath + "matrix.frona.txt," + etiqueta;
+                        if (executeKronaScript(command)) {
+                            addKronaFile(id, proDataPath, htmlName, true, writer);
+                        } else {
+                            System.err.println("Error ejecutando: " + command);
                         }
                     }
-                } else {
-                    System.err.println("No se puede determinar el directorio de trabajao para paracador con ID: ");
                 }
             }
+            if (toFile) {
+                writer.close();
+            }
+
         } catch (FileNotFoundException ex) {
             Logger.getLogger(MarkerLoader.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(MarkerLoader.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
+     * Este método se encarga de crear la relación marcador archivo, así como
+     * dar de alta el archivo en la BD
+     *
+     * @param idMarcador El id del marcador al cual pertenece el archivo
+     * @param proDataPath el path donde se encuentraa el archivo
+     * @param fName el nombre del archivo
+     * @param isFromApp true si el archivo krona fue generado mediante esta
+     * aplicación
+     * @param writer null si va a directo a la BD o un writer válido si se
+     * escribe a archivo
+     * @return true si no hubo problemas
+     * @throws IOException
+     */
+    public boolean addKronaFile(String idMarcador, String proDataPath, String fName, boolean isFromApp, FileWriter writer) throws IOException {
+        ArchivoObj kronaFile = new ArchivoObj(nextIDArchivo);
+        nextIDArchivo++;
+        kronaFile.setTipoArchivo(ArchivoObj.TIPO_KRN);
+        kronaFile.setNombre(fName);
+        kronaFile.setPath(proDataPath);
+        kronaFile.setExtension("html");
+
+        kronaFile.setDescription("Archivo HTML generado por Krona a aprtir de la matriz de abundancia del marcador");
+
+        //  kronaFile.setChecksum(FileUtils.getMD5File(raw_data_path + f.getName()));
+        kronaFile.setAlcance("CIGOM");
+        kronaFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
+        kronaFile.setDerechos("Acceso limitado a miembros del consorcio");
+        kronaFile.setTags("krona, matriz, abundancia, html");
+        kronaFile.setTipo("HTML");
+        if (isFromApp) {
+            Usuario user = new Usuario(1);//A.ABDALA
+            user.setAcciones("creator");
+            user.setComentarios("Se encargó del desarrollo y  ejecución de un programa automatizado para la generación de este archivo");
+            kronaFile.addUser(user);
+            Usuario user2 = new Usuario(20);//A. Escaobar
+            user2.setAcciones("contributor");
+            user2.setComentarios("Encargada de las asignaciones taxonómicas a partir de las cuales se generar la matriz de abundancia que sirve de entrada para generar este archivo");
+            kronaFile.addUser(user2);
+        } else {
+            Usuario user = new Usuario(20);//A.ABDALA
+            user.setAcciones("creator");
+            user.setComentarios("Se encargó de la generación de este archivo mediante la implemntación de un pipeline para anotación taxonómica");
+            kronaFile.addUser(user);
+        }
+        if (writer != null) {
+            writer.write(kronaFile.toNewSQLString() + ";\n");
+            writer.write("INSERT INTO marcador_archivo VALUES(" + idMarcador + "," + kronaFile.getIdArchivo() + ");\n");
+            for (String qUsuarios : kronaFile.archivoUsuariosToSQLString()) {
+                writer.write(qUsuarios + ";\n");
+            }
+        } else {
+            ArchivoDAO adao = new ArchivoDAO(transacciones);
+            adao.insertaArchivo(kronaFile, false, "", true);
+            transacciones.insertaArchivoMarcador(idMarcador, kronaFile.getIdArchivo());
+            for (String qUsuarios : kronaFile.archivoUsuariosToSQLString()) {
+                if (!transacciones.insertaQuery(qUsuarios)) {
+                    System.err.println("Error insertando relación usuario-archivo: "
+                            + idMarcador + "(idmarcador) - " + nextIDArchivo + "(idArchivo) - q: " + qUsuarios);
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Este método se encarga de crear la relación marcador archivo, así como
+     * dar de alta el archivo en la BD
+     *
+     * @param idMarcador El id del marcador al cual pertenece el archivo
+     * @param proDataPath el path donde se encuentraa el archivo
+     * @param fName el nombre del archivo
+     * @param isFromApp true si el archivo krona fue generado mediante esta
+     * aplicación
+     * @param writer null si va a directo a la BD o un writer válido si se
+     * escribe a archivo
+     * @return true si no hubo problemas
+     * @throws IOException
+     */
+    public boolean addMatrixFile(String idMarcador, String proDataPath, String fName, boolean isFromApp, FileWriter writer) throws IOException {
+        ArchivoObj matrixFile = new ArchivoObj(nextIDArchivo);
+        nextIDArchivo++;
+        matrixFile.setTipoArchivo(ArchivoObj.TIPO_MTX);
+        matrixFile.setNombre(fName);
+        matrixFile.setPath(proDataPath);
+        matrixFile.setExtension("txt");
+
+        matrixFile.setDescription("Archivo generado a partir de las anotaciones realizadas en la base de datos");
+
+        //  kronaFile.setChecksum(FileUtils.getMD5File(raw_data_path + f.getName()));
+        matrixFile.setAlcance("CIGOM - bioinformática");
+        matrixFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
+        matrixFile.setDerechos("Acceso limitado a miembros del consorcio");
+        matrixFile.setTags("krona, matriz, abundancia");
+        matrixFile.setTipo("txt");
+        if (isFromApp) {
+            Usuario user = new Usuario(1);//A.ABDALA
+            user.setAcciones("creator");
+            user.setComentarios("Se encargó del desarrollo y  ejecución de un programa automatizado para la generación de este archivo");
+            matrixFile.addUser(user);
+            Usuario user2 = new Usuario(20);//A. Escaobar
+            user2.setAcciones("contributor");
+            user2.setComentarios("Encargada de las asignaciones taxonómicas a partir de las cuales se generar la matriz de abundancia");
+            matrixFile.addUser(user2);
+        } else {
+            Usuario user = new Usuario(20);//A. Escobar
+            user.setAcciones("creator");
+            user.setComentarios("Se encargó de la generación de este archivo mediante la implemntación de un pipeline para anotación taxonómica");
+            matrixFile.addUser(user);
+        }
+        if (writer != null) {
+            writer.write(matrixFile.toNewSQLString() + ";\n");
+            writer.write("INSERT INTO marcador_archivo VALUES(" + idMarcador + "," + matrixFile.getIdArchivo() + ");\n");
+            for (String qUsuarios : matrixFile.archivoUsuariosToSQLString()) {
+                writer.write(qUsuarios + ";\n");
+            }
+        } else {
+            ArchivoDAO adao = new ArchivoDAO(transacciones);
+            adao.insertaArchivo(matrixFile, false, "", true);
+            transacciones.insertaArchivoMarcador(idMarcador, matrixFile.getIdArchivo());
+            for (String qUsuarios : matrixFile.archivoUsuariosToSQLString()) {
+                if (!transacciones.insertaQuery(qUsuarios)) {
+                    System.err.println("Error insertando relación usuario-archivo: "
+                            + idMarcador + "(idmarcador) - " + nextIDArchivo + "(idArchivo) - q: " + qUsuarios);
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public boolean executeKronaScript(String command) {
+        try {
+            // System.out.println("Rscript c:\\Users\\Alejandro\\Documents\\Cursos\\R\\Project\\release\\taxascript.R " + workingDir + fileName + " " + longitudInicial + " " + longitudFinal + " " + latitudInicial + " " + latitudFinal + " " + cellWG + " " + cellHG + " " + fDir);
+            //Process proc = Runtime.getRuntime().exec("c:/Program Files/R/R-3.0.3/bin/Rscript c:/Users/Alejandro/Documents/Cursos/R/Project/release/taxascript.R " + workingDir + fileName + " " + longitudInicial + " " + longitudFinal + " " + latitudInicial + " " + latitudFinal + " " + cellW + " " + cellH + " " + fDir+" "+taxaGroups);
+            //String commandLine = "c:/Program Files/R/R-3.0.3/bin/Rscript \"" + workingDir + "scripts/scriptDiversidad.R\" \"" + workingDir + "\" " + nameMatriz + " " + sc.getRealPath("") + fileNameRare + " " + sc.getRealPath("") + fileNameRenyi + " " + betaIndex + " " + sc.getRealPath("") + fileNameBeta + " " + imgExtraTitle;        
+
+            Process proc = Runtime.getRuntime().exec(command);
+            //Process proc = Runtime.getRuntime().exec("c:/Program Files/R/R-3.0.3/bin/Rscript " + scriptDir + "script_abundancia.R " + workingDir +" "+ scriptDir + " " +file + " " + imageName);
+            proc.waitFor();
+            InputStream inputstream = proc.getInputStream();
+            InputStreamReader inputstreamreader = new InputStreamReader(inputstream);
+            BufferedReader bufferedreader = new BufferedReader(inputstreamreader);
+            String line = "";
+            while ((line = bufferedreader.readLine()) != null) {
+                //Si el mensaje de error viene desde nuestro script de R
+                //es decir un error controlado
+                System.out.println(line);
+                if (line.indexOf("ERROR") != -1) {
+                    System.err.println(line);
+                }
+            }
+            //
+            if (proc.waitFor() != 0) {
+                System.err.println("exit value = " + proc.exitValue());
+                return false;
+            } else {
+                return true;
+            }
+        } catch (Exception e) {
+            System.out.println("" + e.getLocalizedMessage());
+            e.printStackTrace();
+            return false;
         }
     }
 

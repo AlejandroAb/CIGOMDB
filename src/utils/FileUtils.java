@@ -5,6 +5,7 @@
  */
 package utils;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -43,4 +44,14 @@ public class FileUtils {
         }
 
     }
+     public boolean validateFile(String fullPath, boolean create) {
+        File file = new File(fullPath);
+        if (create && !file.exists()) {
+            file.setWritable(true);
+            return file.mkdir();
+        } else {
+            return file.exists();
+        }
+    }
+
 }

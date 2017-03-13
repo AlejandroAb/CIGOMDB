@@ -698,11 +698,13 @@ public class DataLoader {
                     }
                     //por def true
                     loader.setGeneraArchivos(processArchivos);
-                    
+
                     if (marker_meth.equals("mv1")) {
                         log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext, output, outFileFasta, outFileMetaxa, processNotPaired, processKrona);
                     } else if (marker_meth.equals("mv2")) {
                         log += loader.parseMarkerFileFormatIPacbio(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
+                    } else if (marker_meth.equals("krona")) {
+                        loader.processKrona(input, output);
                     } else {
                         System.out.println("Para correr el programa gen se espera el parámetro -marker_meth: <mv1>");
                     }
