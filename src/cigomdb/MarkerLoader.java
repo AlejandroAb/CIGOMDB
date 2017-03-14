@@ -716,7 +716,7 @@ public class MarkerLoader {
                     boolean findHTML = false;
 
                     for (File f : kronaPath.listFiles()) {
-                        if (f.getName().endsWith("html")) {
+                        if (f.getName().equals("krona.html")) {
                             htmlName = f.getName();
                             findHTML = true;
                             //String idMarcador, String proDataPath, String fName, boolean isFromApp, FileWriter writer
