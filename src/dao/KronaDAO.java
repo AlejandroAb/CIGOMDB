@@ -55,10 +55,27 @@ public class KronaDAO {
                     // kingdom, phylum, class, orden, family, genus, species 
                     ArrayList<String> phylo = transacciones.getRegularPhylogenyByTaxID(taxa.get(0));
                     if (phylo != null && phylo.size() > 0) {
+                        int i = 0;
+                        String rank = "";
                         for (String p : phylo) {
+                            if(i==0){
+                                rank = "reino";
+                            }else if(i==1){
+                                rank = "phylum";
+                            }else if(i==2){
+                                rank = "class";
+                            }else if(i==3){
+                                rank = "orden";
+                            }else if(i==4){
+                                rank = "family";
+                            }else if(i==5){
+                                rank = "genus";
+                            }else if(i==6){
+                                rank = "species";
+                            }
                             if (p.trim().length() < 2) {
                                 if (withNoRank) {
-                                    line.append("no_rank").append("\t");
+                                    line.append("no_").append(rank).append("\t");
                                 } else {
                                     line.append("\t");
                                 }
@@ -66,6 +83,7 @@ public class KronaDAO {
                                 p = p.trim().replaceAll("\\s+", "_");
                                 line.append(p).append("\t");
                             }
+                            i++;
                         }
                         line.append("\n");
                         writer.write(line.toString());
