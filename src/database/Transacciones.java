@@ -291,6 +291,28 @@ public class Transacciones {
 
     }
 
+     /**
+     * Obtiene cual es el max id de archivo para poder asignar nuevos.
+     *
+     * @return
+     */
+    public int getNextIDStats() {
+        String query = "SELECT MAX(idstats) FROM stats";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            id = 0;
+        } else {
+            try {
+                id = Integer.parseInt((String) dbResult.get(0).get(0));
+            } catch (NumberFormatException nfe) {
+                id = 0;
+            }
+        }
+        return ++id;
+
+    }
     /**
      * Recibe un objeto de tipo estacion y en base a su nombe ve si este existe
      * si no existe, la estacion es creada en la BD
@@ -447,6 +469,28 @@ public class Transacciones {
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         if (dbResult == null || dbResult.isEmpty()) {
             return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+
+    /**
+     * Busca el ID de un marcador dado un fragmento de su path de datos
+     * procesados. Particularmete sirve para la reconstrucción de estadisticas
+     * ya que en sample viene parte del pro_data_path y en base a esto podemos
+     * identificar a que marcador se refiere
+     *
+     * @param proPath el path del marcador: ejjemplos son: E03_SED05_1,
+     * C13_MAX_1
+     * @return
+     */
+    public String getIdMarcadorByProPath(String proPath) {
+        String query = "SELECT idmarcador FFROM marcador "
+                + "WHERE pro_data_path LIKE '%/" + proPath + "/%'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult == null || dbResult.isEmpty()) {
+            return "-1";
         } else {
             return dbResult.get(0).get(0).toString();
         }

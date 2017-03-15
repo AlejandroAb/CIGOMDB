@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import bobjects.ArchivoObj;
 import bobjects.Marcador;
+import bobjects.StatsObj;
 import bobjects.Usuario;
 import dao.ArchivoDAO;
 import dao.KronaDAO;
@@ -654,6 +655,94 @@ public class MarkerLoader {
     }
 
     /**
+     * Este método se encarga de asignar las estadisticas de los amplicones
+     * procesados. Cuando se desarrolló hubo un problema para la identificación
+     * del marcador a partir de la etiqueta usada en los archivos generados por
+     * el equipo de bioinformática. Este erro esta presenta para las
+     * estadísticas de SOGOM2, pues la clave o etiqueta está como: S2_08_SED_1
+     * en lugar de S2_S08_SED_1 como lo es para SOGOM1: S01_SED_1 Es por esto
+     * que este método tiene un parche para estas etiquetas y concatena la S
+     * para dichas estadísticas
+     *
+     * @param input el archivo de entrada con las estadísticas
+     * @param output si viene este parámetro escribe a archivo, de lo conntrario
+     * escribe directo a laa BD
+     */
+    public void cargaEstadisticas(String input, String output) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(input));
+            String linea;
+            int numLinea = 0;
+            int nextIDStats = transacciones.getNextIDStats();
+            boolean toFile = false;
+            FileWriter writer = null;
+            if (output.length() > 0) {
+                toFile = true;
+                writer = new FileWriter(output);
+            }
+            while ((linea = reader.readLine()) != null) {
+                numLinea++;
+                if (!linea.startsWith("#") && linea.trim().length() > 2 && numLinea > 1) {
+                    String cols[] = linea.split(linea);
+                    if (cols.length < 10) {
+                        System.err.println("Error en linea " + numLinea + " Se esperan por lo menos 10 columnas: Sample  Total_reads     Total_bases     Long_promedio   GC(%)   Calidad_promedio        Lecturas_Ns(%)  Q20(%)  Q30(%)  flash_combined");
+                    } else {
+                        String sample = cols[0];
+                        String idMarcador;
+                        try {
+                            Integer.parseInt(sample);
+                            idMarcador = sample;
+                        } catch (NumberFormatException nfe) {
+                            idMarcador = transacciones.getIdMarcadorByProPath(sample);
+                            //parche SOGOM2 - S2_08_SED_1 to S2_S08_SED_1
+                            if (idMarcador.equals("-1") && sample.startsWith("S2")) {
+                                sample = sample.substring(0, 3) + "S" + sample.substring(4);
+                                idMarcador = transacciones.getIdMarcadorByProPath(sample);
+                            }
+                        }
+                        if (!idMarcador.equals("-1")) {
+                            StatsObj stats = new StatsObj(nextIDStats);
+                            nextIDStats++;
+                            stats.setReads(cols[1]);
+                            stats.setBases(cols[2]);
+                            stats.setLong_avg(cols[3]);
+                            stats.setGc_prc(cols[4]);
+                            stats.setQc_avg(cols[5]);
+                            stats.setNs_prc(cols[6]);
+                            stats.setQ20(cols[7]);
+                            stats.setQ30(cols[8]);
+                            stats.setCombined_prc(cols[9]);
+                            String qUpdate = "UPDATE marcador SET idstats = " + stats.getIdStats() + " WHERE idmarcador = " + idMarcador;
+                            if (toFile) {
+                                writer.write(stats.toSQLString() + "\n");
+                                writer.write(qUpdate + ";\n");
+                            } else {
+                                if (!transacciones.insertaQuery(stats.toSQLString())) {
+                                    System.err.println("Error insertando stats: " + stats.toSQLString());
+                                } else {
+                                    if (!transacciones.insertaQuery(qUpdate)) {
+                                        System.err.println("Error updating marcador-stats: " + qUpdate);
+                                    }
+                                }
+                            }
+                        } else {
+                            System.err.println("No se puede determinar el ID: " + idMarcador + " dato leído: " + sample);
+                        }
+
+                    }
+                }
+            }
+            if (toFile) {
+                writer.close();
+            }
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(MarkerLoader.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(MarkerLoader.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
      * Se encarga de anotar/ relacionar el archivo de krona, con un marcador. En
      * caso de que no exxista el archivo, este metodo tratará de crearlo, por lo
      * que puede generar el input file necesario para generar el archivo html
@@ -719,6 +808,7 @@ public class MarkerLoader {
                         if (f.getName().equals("krona.html")) {
                             htmlName = f.getName();
                             findHTML = true;
+                            System.out.println("Se encontro html en: " + f.getAbsolutePath());
                             //String idMarcador, String proDataPath, String fName, boolean isFromApp, FileWriter writer
                             addKronaFile(id, proDataPath, htmlName, false, writer);
                             break;
@@ -726,7 +816,7 @@ public class MarkerLoader {
                     }
                     if (!findHTML) {
                         htmlName = "krona.html";
-                        if (kdao.writeKronaInput(proDataPath + "matrix.krona.txt", id,withNoRank)) {
+                        if (kdao.writeKronaInput(proDataPath + "matrix.krona.txt", id, withNoRank)) {
                             addMatrixFile(id, proDataPath, "matrix.krona.txt", true, writer);
                             String command = "/scratch/share/apps/KronaTools-2.7/scripts/ImportText.pl -o " + proDataPath + htmlName + " " + proDataPath + "matrix.krona.txt," + etiqueta;
                             if (executeKronaScript(command)) {

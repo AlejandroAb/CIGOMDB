@@ -709,6 +709,8 @@ public class DataLoader {
                         log += loader.parseMarkerFileFormatIPacbio(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
                     } else if (marker_meth.equals("krona")) {
                         loader.processKrona(input, output,withNoRank);
+                    } else if (marker_meth.equals("stats")) {
+                        loader.cargaEstadisticas(input, output);
                     } else {
                         System.out.println("Para correr el programa gen se espera el parámetro -marker_meth: <mv1>");
                     }
