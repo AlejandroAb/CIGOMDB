@@ -48,6 +48,16 @@ public class MarkerLoader {
     private int nextIDMarcador = -1;
     private int nextIDArchivo = -1;
     boolean onlyComputeFiles = false;
+    private String runKrona = "/scratch/share/apps/KronaTools-2.7/scripts/ImportText.pl";
+
+    public String getRunKrona() {
+        return runKrona;
+    }
+
+    public void setRunKrona(String runKrona) {
+        this.runKrona = runKrona;
+    }
+
     /**
      * Hay veces que solo queremos regenerar las secuencias sin necesidad de
      * anotar nuevamente los archivos y las relaciones que hay entre ellos, por
@@ -683,7 +693,7 @@ public class MarkerLoader {
             while ((linea = reader.readLine()) != null) {
                 numLinea++;
                 if (!linea.startsWith("#") && linea.trim().length() > 2 && numLinea > 1) {
-                    String cols[] = linea.split(linea);
+                    String cols[] = linea.split("\t");
                     if (cols.length < 10) {
                         System.err.println("Error en linea " + numLinea + " Se esperan por lo menos 10 columnas: Sample  Total_reads     Total_bases     Long_promedio   GC(%)   Calidad_promedio        Lecturas_Ns(%)  Q20(%)  Q30(%)  flash_combined");
                     } else {
@@ -696,7 +706,7 @@ public class MarkerLoader {
                             idMarcador = transacciones.getIdMarcadorByProPath(sample);
                             //parche SOGOM2 - S2_08_SED_1 to S2_S08_SED_1
                             if (idMarcador.equals("-1") && sample.startsWith("S2")) {
-                                sample = sample.substring(0, 3) + "S" + sample.substring(4);
+                                sample = sample.substring(0, 3) + "S" + sample.substring(3);
                                 idMarcador = transacciones.getIdMarcadorByProPath(sample);
                             }
                         }
@@ -742,6 +752,10 @@ public class MarkerLoader {
         }
     }
 
+    public void procesaKraken(String input, String output, int idMetagenoma) {
+
+    }
+
     /**
      * Se encarga de anotar/ relacionar el archivo de krona, con un marcador. En
      * caso de que no exxista el archivo, este metodo tratará de crearlo, por lo
@@ -751,8 +765,8 @@ public class MarkerLoader {
      * @param inputFile archivo con ids o etiquetas de marcadores
      * @param outFile
      * @param withNoRank esta bandera es usada al momento de crear la matriz, si
-     * viene true rellena los "huecos" con false, de lo contrario lo deja en
-     * blanco
+     * viene true rellena los "huecos": no_order, no_genus, no_etc...con false,
+     * de lo contrario lo deja en blanco
      */
     public void processKrona(String inputFile, String outFile, boolean withNoRank) {
         if (nextIDArchivo == -1) {
@@ -818,7 +832,8 @@ public class MarkerLoader {
                         htmlName = "krona.html";
                         if (kdao.writeKronaInput(proDataPath + "matrix.krona.txt", id, withNoRank)) {
                             addMatrixFile(id, proDataPath, "matrix.krona.txt", true, writer);
-                            String command = "/scratch/share/apps/KronaTools-2.7/scripts/ImportText.pl -o " + proDataPath + htmlName + " " + proDataPath + "matrix.krona.txt," + etiqueta;
+
+                            String command = runKrona + " -o " + proDataPath + htmlName + " " + proDataPath + "matrix.krona.txt," + etiqueta;
                             if (executeKronaScript(command)) {
                                 addKronaFile(id, proDataPath, htmlName, true, writer);
                             } else {

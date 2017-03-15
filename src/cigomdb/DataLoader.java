@@ -55,6 +55,7 @@ public class DataLoader {
         String nodes = "C:\\Users\\Alejandro\\Documents\\Projects\\taxonomydb\\taxdmp\\nodes.dmp";
         String uri = "";
         String url = "";
+        String kronaPath = "";
         String combined_file = "";
         String nc1_file = "";
         String nc2_file = "";
@@ -237,7 +238,7 @@ public class DataLoader {
             } else if (args[i].equals("--no-rank")) {
                 withNoRank = true;
 
-            }  else if (args[i].equals("--start-at-zero") || args[i].equals("-saz")) {
+            } else if (args[i].equals("--start-at-zero") || args[i].equals("-saz")) {
                 startAtZero = true;
 
             } else if (args[i].equals("--no-hash")) {
@@ -356,6 +357,15 @@ public class DataLoader {
                     i++;
                 } catch (ArrayIndexOutOfBoundsException aiobe) {
                     System.out.println("Opcion aa - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            }  else if (args[i].equals("--krona-path")) {
+                try {
+                    kronaPath = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion --krona-path - Se esperaba un argumento\n\n");
                     printHelp();
                     System.exit(1);
                 }
@@ -702,17 +712,19 @@ public class DataLoader {
                     }
                     //por def true
                     loader.setGeneraArchivos(processArchivos);
-
+                    if(kronaPath.length()>0){
+                        loader.setRunKrona(kronaPath);
+                    }
                     if (marker_meth.equals("mv1")) {
                         log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext, output, outFileFasta, outFileMetaxa, processNotPaired, processKrona);
                     } else if (marker_meth.equals("mv2")) {
                         log += loader.parseMarkerFileFormatIPacbio(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
                     } else if (marker_meth.equals("krona")) {
-                        loader.processKrona(input, output,withNoRank);
+                        loader.processKrona(input, output, withNoRank);
                     } else if (marker_meth.equals("stats")) {
                         loader.cargaEstadisticas(input, output);
                     } else {
-                        System.out.println("Para correr el programa gen se espera el parámetro -marker_meth: <mv1>");
+                        System.out.println("Para correr el programa gen se espera el parámetro -marker_meth: <mv1><mv2><krona><stats>");
                     }
                 } else {
                     System.out.println("Para correr el programa gen se espera el parámetro marker_meth (mv1)");
