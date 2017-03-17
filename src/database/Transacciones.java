@@ -485,7 +485,7 @@ public class Transacciones {
      * @return
      */
     public String getIdMarcadorByProPath(String proPath) {
-        String query = "SELECT idmarcador FFROM marcador "
+        String query = "SELECT idmarcador FROM marcador "
                 + "WHERE pro_data_path LIKE '%/" + proPath + "/%'";
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();

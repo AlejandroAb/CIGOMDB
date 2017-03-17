@@ -49,6 +49,7 @@ public class MarkerLoader {
     private int nextIDArchivo = -1;
     boolean onlyComputeFiles = false;
     private String runKrona = "/scratch/share/apps/KronaTools-2.7/scripts/ImportText.pl";
+    boolean onlyCreateFiles = false;
 
     public String getRunKrona() {
         return runKrona;
@@ -147,6 +148,14 @@ public class MarkerLoader {
 
     public MarkerLoader(Transacciones transacciones) {
         this.transacciones = transacciones;
+    }
+
+    public boolean isOnlyCreateFiles() {
+        return onlyCreateFiles;
+    }
+
+    public void setOnlyCreateFiles(boolean onlyCreateFiles) {
+        this.onlyCreateFiles = onlyCreateFiles;
     }
 
     /**
@@ -436,36 +445,38 @@ public class MarkerLoader {
         int sec_num = 0;
         int counterTotal = 0;
         float avg = 0;
-        while ((lineFastQ = extendedReader.readLine()) != null) {
-            if (lineFastQ.startsWith("@M")) {
-                sec_num++;
-                counterTotal++;
-                String idSec = marcador.getIdSeqFormat() + counterTotal;
-                int indx = lineFastQ.indexOf(" ");
-                if (indx <= 0) {
-                    indx = lineFastQ.length() - 1;
-                }
-                String raw_seq_id = lineFastQ.substring(1, indx);
-                String sec = extendedReader.readLine();
-                avg += sec.length();
-                if (toFile) {
-                    String query = "INSERT INTO seq_marcador (idseq_marcador, idmarcador,raw_seq_id,seq,seq_length) VALUES('"
-                            + idSec + "'," + marcador.getIdMarcador() + ",'" + raw_seq_id + "','" + sec + "'," + sec.length() + ");\n";
-                    writer.write(query);
-                    if (this.splitSpecial.length() > 0) {
-                        raw_seq_id = raw_seq_id.split(splitSpecial)[0];
+        if (!onlyCreateFiles) {
+            while ((lineFastQ = extendedReader.readLine()) != null) {
+                if (lineFastQ.startsWith("@M")) {
+                    sec_num++;
+                    counterTotal++;
+                    String idSec = marcador.getIdSeqFormat() + counterTotal;
+                    int indx = lineFastQ.indexOf(" ");
+                    if (indx <= 0) {
+                        indx = lineFastQ.length() - 1;
                     }
-                    //limitacion metaxa raw id max 59
-                    if (raw_seq_id.length() > 59) {
-                        seqMap.put(raw_seq_id.substring(0, 59), idSec);
+                    String raw_seq_id = lineFastQ.substring(1, indx);
+                    String sec = extendedReader.readLine();
+                    avg += sec.length();
+                    if (toFile) {
+                        String query = "INSERT INTO seq_marcador (idseq_marcador, idmarcador,raw_seq_id,seq,seq_length) VALUES('"
+                                + idSec + "'," + marcador.getIdMarcador() + ",'" + raw_seq_id + "','" + sec + "'," + sec.length() + ");\n";
+                        writer.write(query);
+                        if (this.splitSpecial.length() > 0) {
+                            raw_seq_id = raw_seq_id.split(splitSpecial)[0];
+                        }
+                        //limitacion metaxa raw id max 59
+                        if (raw_seq_id.length() > 59) {
+                            seqMap.put(raw_seq_id.substring(0, 59), idSec);
+                        } else {
+                            seqMap.put(raw_seq_id, idSec);
+                        }
+
                     } else {
-                        seqMap.put(raw_seq_id, idSec);
-                    }
+                        if (!transacciones.insertaSeqMarcador(idSec, "" + marcador.getIdMarcador(), raw_seq_id, sec)) {
+                            System.err.println("Error insertando secuencia: " + idSec);
 
-                } else {
-                    if (!transacciones.insertaSeqMarcador(idSec, "" + marcador.getIdMarcador(), raw_seq_id, sec)) {
-                        System.err.println("Error insertando secuencia: " + idSec);
-
+                        }
                     }
                 }
             }
@@ -527,7 +538,7 @@ public class MarkerLoader {
             }
         }
 
-        if (processNotPaired) {
+        if (processNotPaired && !onlyCreateFiles) {
             avg = 0;
             sec_num = 0;
             while ((lineFastQ = nc1Reader.readLine()) != null) {
@@ -767,8 +778,10 @@ public class MarkerLoader {
      * @param withNoRank esta bandera es usada al momento de crear la matriz, si
      * viene true rellena los "huecos": no_order, no_genus, no_etc...con false,
      * de lo contrario lo deja en blanco
+     * @param force por mas de que exista el html o la matriiz, fuerza su
+     * creación
      */
-    public void processKrona(String inputFile, String outFile, boolean withNoRank) {
+    public void processKrona(String inputFile, String outFile, boolean withNoRank, boolean force) {
         if (nextIDArchivo == -1) {
             nextIDArchivo = transacciones.getNextIDArchivos();
             if (nextIDArchivo == -1) {
@@ -819,7 +832,8 @@ public class MarkerLoader {
                     boolean findHTML = false;
 
                     for (File f : kronaPath.listFiles()) {
-                        if (f.getName().equals("krona.html")) {
+                        //la bandera force hace que se creen tanto la matriz como el html por mas de que existan
+                        if (f.getName().equals("krona.html") && !force) {
                             htmlName = f.getName();
                             findHTML = true;
                             System.out.println("Se encontro html en: " + f.getAbsolutePath());
@@ -1091,8 +1105,11 @@ public class MarkerLoader {
             System.err.println("No existe directorio: " + raw_data_path);
             //  return false;
         }
-
-        return mdao.almacenaMarcador(marcador, toFile, outFile, true, true);
+        if (onlyCreateFiles) {
+            return mdao.almacenaArchivosMarcadorNew(marcador, toFile, outFile, true);
+        } else {
+            return mdao.almacenaMarcador(marcador, toFile, outFile, true, true);
+        }
 
     }
 
@@ -1170,8 +1187,10 @@ public class MarkerLoader {
                 }
             }
             String lineaMetaxa;
-            while ((lineaMetaxa = metaxaReader.readLine()) != null) {
-                metaxa.processMetaxaLine(lineaMetaxa, proc_data_path + metaxFile, splitSpecial, AnalisisClasificacion.METAXA_REGULAR, writer, seqMap);
+            if (!onlyCreateFiles) {
+                while ((lineaMetaxa = metaxaReader.readLine()) != null) {
+                    metaxa.processMetaxaLine(lineaMetaxa, proc_data_path + metaxFile, splitSpecial, AnalisisClasificacion.METAXA_REGULAR, writer, seqMap);
+                }
             }
             if (toFile) {
                 writer.close();

@@ -66,6 +66,9 @@ public class DataLoader {
         boolean processNotPaired = false; //-pnp
         boolean processKrona = false;//-pk
         boolean processArchivos = true;
+        boolean force = false;//-f --force  -> true
+        boolean onlyCreateFiles = false; //--only-files -> true
+
         int nextIDArchivo = -1;
         String raw_ext = "fastq"; //-rawe
         boolean toFile = false;
@@ -360,7 +363,7 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            }  else if (args[i].equals("--krona-path")) {
+            } else if (args[i].equals("--krona-path")) {
                 try {
                     kronaPath = args[i + 1];
                     i++;
@@ -498,6 +501,12 @@ public class DataLoader {
                 }
             } else if (args[i].equals("--no-file")) {//para marcadores no crea la relacion de archivos
                 processArchivos = false;
+
+            } else if (args[i].equals("-f") || args[i].equals("--force")) {//para algunas opciones donde se requiere reescribir cosas a pesar de que ya existan
+                force = true;
+
+            } else if (args[i].equals("--only-files")) {//para algunas opciones donde se requiere reescribir cosas a pesar de que ya existan
+                onlyCreateFiles = true;
 
             } else if (args[i].equals("-names")) {
                 try {
@@ -712,15 +721,16 @@ public class DataLoader {
                     }
                     //por def true
                     loader.setGeneraArchivos(processArchivos);
-                    if(kronaPath.length()>0){
+                    if (kronaPath.length() > 0) {
                         loader.setRunKrona(kronaPath);
                     }
+                    loader.setOnlyCreateFiles(onlyCreateFiles);
                     if (marker_meth.equals("mv1")) {
                         log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext, output, outFileFasta, outFileMetaxa, processNotPaired, processKrona);
                     } else if (marker_meth.equals("mv2")) {
                         log += loader.parseMarkerFileFormatIPacbio(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
                     } else if (marker_meth.equals("krona")) {
-                        loader.processKrona(input, output, withNoRank);
+                        loader.processKrona(input, output, withNoRank, force);
                     } else if (marker_meth.equals("stats")) {
                         loader.cargaEstadisticas(input, output);
                     } else {

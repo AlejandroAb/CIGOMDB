@@ -97,7 +97,63 @@ public class MarcadorDAO {
         return marcadorOk;
     }
 
+    public boolean almacenaArchivosMarcadorNew(Marcador marcador, boolean toFile, String outFile, boolean append) {
+        boolean marcadorOk = true;
+
+        FileWriter writer = null;
+        if (toFile) {
+            try {
+                writer = new FileWriter(outFile, append);
+            } catch (IOException ex) {
+                Logger.getLogger(MuestreoDAO.class.getName()).log(Level.SEVERE, null, ex);
+                System.err.println("Error accesando archivo: " + outFile + "\n");
+                return false;
+            }
+        }
+
+        for (ArchivoObj archivo : marcador.getArchivos()) {
+            if (!toFile) {
+                if (!transacciones.insertaQuery(archivo.toNewSQLString())) {
+                    System.err.println("Error insertando archivo obj: "
+                            + archivo.getIdArchivo() + "(idArchivo) \n");
+                } else {
+                    if (!transacciones.insertaArchivoMarcador(marcador.getIdMarcador(), archivo.getIdArchivo())) {
+                        System.err.println("Error insertando relación marcador-archivo: "
+                                + marcador.getIdMarcador() + "(idmarcador) - " + archivo.getIdArchivo() + "(idArchivo)");
+                    }
+                    for (String qUsuarios : archivo.archivoUsuariosToSQLString()) {
+                        if (!transacciones.insertaQuery(qUsuarios)) {
+                            System.err.println("Error insertando relación usuario-archivo: "
+                                    + marcador.getIdMarcador() + "(idmarcador) - " + archivo.getIdArchivo() + "(idArchivo) - q: " + qUsuarios);
+                        }
+                    }
+                }
+            } else {
+                try {
+                    writer.write(archivo.toNewSQLString() + ";\n");
+                    writer.write("INSERT INTO marcador_archivo (idmarcador, idarchivo) VALUES(" + marcador.getIdMarcador() + "," + archivo.getIdArchivo() + ");\n");
+                    for (String qUsuarios : archivo.archivoUsuariosToSQLString()) {
+                        writer.write(qUsuarios + ";\n");
+                    }
+                } catch (IOException ex) {
+                    System.err.println("Error I/O escribiendo archivo: " + outFile + "\n" + archivo.toNewSQLString() + "\n");
+                }
+            }
+        }
+
+        if (toFile) {
+            try {
+                writer.close();
+            } catch (IOException ex) {
+                Logger.getLogger(MuestreoDAO.class.getName()).log(Level.SEVERE, null, ex);
+                System.err.println("Error cerrando archivo: " + outFile + "\n");
+            }
+        }
+        return marcadorOk;
+    }
+
     /**
+     * @deprecated use almacenaArchivosMarcadorNew()
      * Este método se usa cuando el marcador ya fue escrito en archivo o en la
      * BD, por lo que solo es neceesario anexar nuevos archivos como ser los
      * fastq con las lecturas pareadas o los archivos de metaxa
