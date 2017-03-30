@@ -31,35 +31,36 @@ import utils.StringUtils;
  * @author Alejandro
  */
 public class EventProcesor {
-    
+
     private int nextIDMuestreo = -1;
     private int nextIDMuestra = -1;
     public Transacciones transacciones;
-    
+    private int idTipoEstacion = -1;
+
     public EventProcesor(Transacciones transacciones) {
         this.transacciones = transacciones;
     }
-    
+
     public int getNextIDMuestreo() {
         return nextIDMuestreo;
     }
-    
+
     public int getNextIDMuestra() {
         return nextIDMuestra;
     }
-    
+
     public void setNextIDMuestra(int nextIDMuestra) {
         this.nextIDMuestra = nextIDMuestra;
     }
-    
+
     public void setNextIDMuestreo(int nextIDMuestreo) {
         this.nextIDMuestreo = nextIDMuestreo;
     }
-    
+
     public Transacciones getTransacciones() {
         return transacciones;
     }
-    
+
     public void setTransacciones(Transacciones transacciones) {
         this.transacciones = transacciones;
     }
@@ -168,8 +169,7 @@ public class EventProcesor {
                                 idxODisuelto = toks;
                             } else if (tok.contains("FLUORES")) {//FLUORESCENCIA
                                 idxFluor = toks;
-                                
-                              
+
                             }
                         }
                     } else {
@@ -343,7 +343,7 @@ public class EventProcesor {
                                         lineaOK = false;
                                         break;
                                     }
-                                    
+
                                 }
                             } else if (tok == idxMaxF) { //PROFUNDIDAD MAX F
                                 tmpString = st.nextToken().trim();
@@ -374,7 +374,7 @@ public class EventProcesor {
                                         lineaOK = false;
                                         break;
                                     }
-                                    
+
                                 }
                             } else if (tok == idxFondo) { //PROFUNDIDAD Fondo
                                 tmpString = st.nextToken().trim();
@@ -390,7 +390,7 @@ public class EventProcesor {
                                         lineaOK = false;
                                         break;
                                     }
-                                    
+
                                 }
                             } else if (tok == idxProfundidad && muestreo.getProfundidad() == -1) { //PROFUNDIDAD "NORMAL" PARA SED y verifica que no haya sido asignada aún
                                 tmpString = st.nextToken().trim();
@@ -406,19 +406,19 @@ public class EventProcesor {
                                         lineaOK = false;
                                         break;
                                     }
-                                    
+
                                 }
                             } else if (tok == idxBioma) { //Bioma
                                 tmpString = st.nextToken().trim();
                                 if (!tmpString.equals("-") && !tmpString.equals("NA") && !tmpString.equals("ND") && !tmpString.equals("x")) {
                                     muestreo.setBioma(tmpString);
-                                    
+
                                 }
                             } else if (tok == idxEnvFeat) { //Environmental feature
                                 tmpString = st.nextToken().trim();
                                 if (!tmpString.equals("-") && !tmpString.equals("NA") && !tmpString.equals("ND") && !tmpString.equals("x")) {
                                     muestreo.setEnv_feature(tmpString);
-                                    
+
                                 }
                             } else if (tok == idxEnvMat) { //Environmental material
                                 tmpString = st.nextToken().trim();
@@ -558,7 +558,7 @@ public class EventProcesor {
                                 muestra.setContenedor("Tubos Falcon de 15 ml envueltos en papel egapack almacenados en nitrógeno líquido");//isol growth conditions
                                 muestra.setSamp_size("100 ml");
                                 nextIDMuestra++;
-                                
+
                                 Muestra muestra2 = new Muestra(nextIDMuestra, muestreo.getIdMuestreo());//0 ID de la muestra auto_increment
                                 muestra2.setProfundidad(muestreo.getProfundidad());
                                 muestra2.setEtiqueta(muestreo.getEtiqueta() + ".falcon");
@@ -566,7 +566,7 @@ public class EventProcesor {
                                 muestra2.setContenedor("Tubos Falcon almacenado a 4 grados centigrados");//isol growth conditions
                                 muestra2.setSamp_size("100 ml");
                                 nextIDMuestra++;
-                                
+
                                 Muestra muestra3 = new Muestra(nextIDMuestra, muestreo.getIdMuestreo());//0 ID de la muestra auto_increment
                                 muestra3.setProfundidad(muestreo.getProfundidad());
                                 muestra3.setEtiqueta(muestreo.getEtiqueta() + ".sterivex");
@@ -574,7 +574,7 @@ public class EventProcesor {
                                 muestra3.setSamp_size("Entre 2 y 3 lt.");
                                 muestra.setContenedor("Tubos Falcon de 15 ml envueltos en papel egapack almacenados en nitrógeno líquido");//isol growth conditions
                                 nextIDMuestra++;
-                                
+
                                 muestreo.addNewMuestra(muestra);
                                 muestreo.addNewMuestra(muestra2);
                                 muestreo.addNewMuestra(muestra3);
@@ -642,7 +642,7 @@ public class EventProcesor {
         }
         return log;
     }
-    
+
     public ArrayList<Muestreo> parseFileColectas(String inputFile, String outputFile, boolean toFile, String fileSep, int idCampana, int metodoMedida, boolean withDerrotero, boolean hardCodeInstrumento) {
         String log = "";
         if (nextIDMuestreo == -1) {
@@ -759,7 +759,11 @@ public class EventProcesor {
                             tok++;
                             if (tok == idxEst) { //ESTACION EN DERROTERO
                                 tmpString = st.nextToken();
-                                idEstacion = transacciones.testEstacionByName(tmpString);
+                                if (idTipoEstacion != -1) {
+                                    idEstacion = transacciones.testEstacionByName(tmpString);
+                                }else{
+                                    idEstacion = transacciones.testEstacionByNameAndID(tmpString, idTipoEstacion);
+                                }
                                 if (idEstacion == -1) {
                                     log += "ERROR EN linea: " + numLinea
                                             + "\nNo se puede determinar la estación con nombre: " + idEstacion
@@ -786,7 +790,7 @@ public class EventProcesor {
                                     muestreo.setIdEstacion(idEstacion);
                                     muestreo.setIdCrucero(idCampana);
                                 }
-                                
+
                             } else if (tok == idxEtiqueta) { //ETIQUETA O LABEL
                                 tmpString = st.nextToken().trim();
                                 //if (!tmpString.equals("-") && !tmpString.equals("NA") && !tmpString.equals("ND") && !tmpString.equals("x")) {                                    
@@ -981,7 +985,7 @@ public class EventProcesor {
                                         muestreo.setError("No se puede formatear la profundidad: " + tmpString);
                                         muestreo.setOk(false);
                                     }
-                                    
+
                                 }
                             } else if (tok == idxFondo) { //PROFUNDIDAD Fondo
                                 tmpString = st.nextToken().trim();
@@ -998,7 +1002,7 @@ public class EventProcesor {
                                         muestreo.setError("No se puede formatear la profundidad: " + tmpString);
                                         muestreo.setOk(false);
                                     }
-                                    
+
                                 }
                             } else if (tok == idxProfundidad) { //PROFUNDIDAD "NORMAL" PARA SED y verifica que no haya sido asignada aún
                                 tmpString = st.nextToken().trim();
@@ -1051,7 +1055,7 @@ public class EventProcesor {
                                 tmpString = st.nextToken().trim();
                                 if (!tmpString.equals("-") && !tmpString.equals("NA") && !tmpString.equals("ND") && !tmpString.equals("x")) {
                                     muestreo.setEnv_feature(tmpString);
-                                    
+
                                 }
                             } else if (tok == idxEnvMat) { //Environmental material
                                 tmpString = st.nextToken().trim();
@@ -1234,6 +1238,14 @@ public class EventProcesor {
         return muestreos;
     }
 
+    public int getIdTipoEstacion() {
+        return idTipoEstacion;
+    }
+
+    public void setIdTipoEstacion(int idTipoEstacion) {
+        this.idTipoEstacion = idTipoEstacion;
+    }
+
     /**
      * Este método se encarga de parsear un archivo que contiene lo necesario
      * para referencia una muestra en la BD
@@ -1315,7 +1327,7 @@ public class EventProcesor {
                         while (st.hasMoreTokens()) {
                             tok++;
                             if (tok == idxMuestreo) { //Muestreo
-                                 tmpString = st.nextToken().trim();
+                                tmpString = st.nextToken().trim();
                                 idMuestreo = transacciones.getMuestreoByLabel(tmpString);
                                 if (idMuestreo == -1) {
                                     log += "ERROR EN linea: " + numLinea
@@ -1374,7 +1386,7 @@ public class EventProcesor {
                             } else if (tok == idxRel2Oxy) { //pH
                                 tmpString = st.nextToken().trim();
                                 muestra.setRelToOxygen(tmpString);
-                                
+
                             } else if (idxUsuarios.contains(tok)) { //Usuarios
                                 tmpString = st.nextToken().trim();
                                 if (!tmpString.equals("-") && !tmpString.equals("NA") && !tmpString.equals("ND") && !tmpString.equals("x")) {
@@ -1390,7 +1402,7 @@ public class EventProcesor {
                                         }
                                     }
                                 }
-                                
+
                             } else {
                                 //algo no estamos leyendo pero no nos importa...por ahora
                                 st.nextToken();
@@ -1498,7 +1510,7 @@ public class EventProcesor {
             user[0] = "Error";
             user[1] = "No se encontro ningún posible usuario para: " + u;
         }
-        
+
         return user;
     }
 }

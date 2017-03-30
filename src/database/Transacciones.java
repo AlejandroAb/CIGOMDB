@@ -291,7 +291,7 @@ public class Transacciones {
 
     }
 
-     /**
+    /**
      * Obtiene cual es el max id de archivo para poder asignar nuevos.
      *
      * @return
@@ -313,6 +313,7 @@ public class Transacciones {
         return ++id;
 
     }
+
     /**
      * Recibe un objeto de tipo estacion y en base a su nombe ve si este existe
      * si no existe, la estacion es creada en la BD
@@ -352,6 +353,24 @@ public class Transacciones {
      */
     public int testEstacionByName(String est) {
         String query = "SELECT idEstacion from estacion WHERE estacion_nombre = '" + est + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            id = -1;
+        } else {
+            try {
+                id = Integer.parseInt((String) dbResult.get(0).get(0));
+            } catch (NumberFormatException nfe) {
+                id = -1;
+            }
+        }
+        return id;
+
+    }
+
+    public int testEstacionByNameAndID(String est, int idTipoEstacion) {
+        String query = "SELECT idEstacion from estacion WHERE estacion_nombre = '" + est + "' AND id_tipo_estacion = " + idTipoEstacion;
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         int id = -1;

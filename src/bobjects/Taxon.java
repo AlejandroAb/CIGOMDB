@@ -324,7 +324,7 @@ public class Taxon {
             case "infraclass":
                 this.setInfraclass(name);
                 break;
-            case "classe":
+            case "class":
                 this.setClasse(name);
                 break;
             case "subclass":

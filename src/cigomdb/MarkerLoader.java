@@ -624,10 +624,10 @@ public class MarkerLoader {
                         notCombinedFile.setSize(f.length());
                         if (f.getName().contains("1")) {
                             notCombinedFile.setDescription("Fastq con las secuencias FW que no se pudieron empalmar con las de RV");
-                        } else if (f.getName().contains("R2")) {
+                        } else if (f.getName().contains("2")) {
                             notCombinedFile.setDescription("Fastq con las secuencias RV que no se pudieron empalmar con las de FW");
                         } else {
-                            notCombinedFile.setDescription("Datos crudos de amplicones ");
+                            notCombinedFile.setDescription("Fastq con secuencias que no se pudieron empalmar");
                         }
                         notCombinedFile.setChecksum(FileUtils.getMD5File(proc_data_path + f.getName()));
                         notCombinedFile.setAlcance("Grupo de bioinformática");

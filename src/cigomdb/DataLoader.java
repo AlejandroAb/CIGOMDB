@@ -47,7 +47,7 @@ public class DataLoader {
         boolean useEquivalencias = false;
         String equivFile = "";
         boolean withNoRank = false;
-
+        
         String gffIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.gff";
         String ncIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.ffn";
         String aaIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.faa";
@@ -76,6 +76,7 @@ public class DataLoader {
         int idGenoma = -1;
         int idMetagenoma = -1;
         int metodo_medida = -1; //-mm
+        int tipoestacion = -1;
         String marker_meth = "";//para escoger el metodo de processamiento en modo markers 
         String delimiter = "\t";
         boolean debug = false;
@@ -101,7 +102,7 @@ public class DataLoader {
         modes.add("trinotate");
         modes.add("taxon");
         modes.add("ko");
-
+        
         int swissBulk = 20;
         boolean swissBatch = false;
         String mode = "";
@@ -234,24 +235,24 @@ public class DataLoader {
                 processNotPaired = true;
             } else if (args[i].equals("--no-insert-amplicon")) {
                 insertaAmplicones = false;
-
+                
             } else if (args[i].equals("--swiss-batch")) {
                 swissBatch = true;
-
+                
             } else if (args[i].equals("--no-rank")) {
                 withNoRank = true;
-
+                
             } else if (args[i].equals("--start-at-zero") || args[i].equals("-saz")) {
                 startAtZero = true;
-
+                
             } else if (args[i].equals("--no-hash")) {
                 withHash = false;
-
+                
             } else if (args[i].equals("-vc")) {//validate cog
                 validateCog = true;
-
+                
             } else if (args[i].equals("-rawe")) {
-
+                
                 try {
                     raw_ext = args[i + 1];
                     i++;
@@ -261,7 +262,7 @@ public class DataLoader {
                     System.exit(1);
                 }
             } else if (args[i].equals("-idpre")) {
-
+                
                 try {
                     idPrefix = args[i + 1];
                     i++;
@@ -271,7 +272,7 @@ public class DataLoader {
                     System.exit(1);
                 }
             } else if (args[i].equals("-gff")) {
-
+                
                 try {
                     gffIn = args[i + 1];
                     i++;
@@ -317,7 +318,7 @@ public class DataLoader {
                     System.exit(1);
                 }
             } else if (args[i].equals("-uri")) {
-
+                
                 try {
                     uri = args[i + 1];
                     i++;
@@ -327,7 +328,7 @@ public class DataLoader {
                     System.exit(1);
                 }
             } else if (args[i].equals("-url")) {
-
+                
                 try {
                     url = args[i + 1];
                     i++;
@@ -472,6 +473,19 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
+            } else if (args[i].equals("--idtipoestacion")) {
+                try {
+                    tipoestacion = Integer.parseInt(args[i + 1]);
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion --idTipoEstaccion. Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                } catch (NumberFormatException nfe) {
+                    System.out.println("Opcion  --idTipoEstacion. Se esperaba un argumento numerico\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
             } else if (args[i].equals("-sep")) {
                 try {
                     delimiter = args[i + 1];
@@ -501,13 +515,13 @@ public class DataLoader {
                 }
             } else if (args[i].equals("--no-file")) {//para marcadores no crea la relacion de archivos
                 processArchivos = false;
-
+                
             } else if (args[i].equals("-f") || args[i].equals("--force")) {//para algunas opciones donde se requiere reescribir cosas a pesar de que ya existan
                 force = true;
-
+                
             } else if (args[i].equals("--only-files")) {//para algunas opciones donde se requiere reescribir cosas a pesar de que ya existan
                 onlyCreateFiles = true;
-
+                
             } else if (args[i].equals("-names")) {
                 try {
                     names = args[i + 1];
@@ -590,7 +604,7 @@ public class DataLoader {
                     loader.setUseEquivalencia(useEquivalencias);
                 }
                 loader.splitTrinotateFile(input, group, id);
-
+                
             } else if (mode.equals("ko")) {
                 String group = "";
                 String id = "";
@@ -608,7 +622,7 @@ public class DataLoader {
                 KeggProcessor keggP = new KeggProcessor(transacciones);
                 //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
                 keggP.procesaKOList(input, group, id, output, toFile);
-
+                
             } else if (mode.equals("derrotero")) {
                 DerroteroLoader derrotero = new DerroteroLoader(transacciones);
                 derrotero.parseMatrizDerrotero(campania, input, delimiter);
@@ -619,7 +633,7 @@ public class DataLoader {
             } else if (mode.equals("taxon")) {
                 NCBITaxCreator ncbi = new NCBITaxCreator(transacciones);
                 ncbi.createTaxon(output, toFile, where);
-
+                
             } else if (mode.equals("muestreo")) {
                 int idMuestra = transacciones.getMaxIDMuestra();
                 int idMuestreo = transacciones.getMaxIDMuestreo();
@@ -636,6 +650,9 @@ public class DataLoader {
                     System.out.println("Para correr el programa muestreo se espera un metodo de medidad");
                     //printHelp();
                     System.exit(1);
+                }
+                if (tipoestacion != -1) {
+                    eventMuestreo.setIdTipoEstacion(tipoestacion);
                 }
                 ArrayList<Muestreo> muestreos = eventMuestreo.parseFileColectas(input, output, toFile, delimiter, campania, metodo_medida, false, false);
                 if (muestreos != null) {
@@ -749,7 +766,7 @@ public class DataLoader {
             System.out.println("No hay conexion con la BD.\nAsegurese de introducir de manera correcta los parametros de conexion.\nDataLoader -h para mas ayuda.");
         }
     }
-
+    
     private static void printHelp() {
         System.out.println("*********CIGOM DATABASE LOADER***************");
         System.out.println("**@author:  Alejandro Abdala              **");
