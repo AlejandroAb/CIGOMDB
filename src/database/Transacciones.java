@@ -477,6 +477,17 @@ public class Transacciones {
         }
     }
 
+    public String getIdMuestraByMetagenoma(String idMetagenoma) {
+        String query = "SELECT idMuestra FROM metagenoma WHERE idMetagenoma =" + idMetagenoma;
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult == null || dbResult.isEmpty()) {
+            return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+
     /**
      * Busca el id de unmarcador, dado su nombre
      *
@@ -536,7 +547,7 @@ public class Transacciones {
     public String getHierarchy(String taxID) {
         String query = "SELECT hierarchy FROM ncbi_node WHERE tax_id = " + taxID;
         conexion.executeStatement(query);
-        ArrayList<ArrayList> dbResult = conexion.getTabla();        
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
         if (dbResult == null || dbResult.isEmpty()) {
             return "";
         } else {
@@ -772,7 +783,7 @@ public class Transacciones {
         String query = "INSERT INTO marcador_archivo (idmarcador, idarchivo) VALUES(" + idMarcador + "," + idArchivo + ")";
         return conexion.queryUpdate(query);
     }
-    
+
     public boolean insertaArchivoMetagenoma(String idMetagenoma, int idArchivo) {
         String query = "INSERT INTO metagenoma_archivo (idmetagenoma, idarchivo) VALUES(" + idMetagenoma + "," + idArchivo + ")";
         return conexion.queryUpdate(query);

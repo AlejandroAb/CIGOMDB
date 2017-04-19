@@ -102,9 +102,13 @@ public class KrakenProcessor {
             }
         }
     }
-    /***
+
+    /**
+     * *
      * Este método se encarga de procesar la salida .out del programa Kraken
-     * @param idMetagenoma el id del metagenoma al cual esta relacionado la salida de kraken 
+     *
+     * @param idMetagenoma el id del metagenoma al cual esta relacionado la
+     * salida de kraken
      * @param inputFile el archivo .out de kraken, entrada para nosotros
      * @param outFile el archivo de salida con la sentencia sql
      */
@@ -201,6 +205,15 @@ public class KrakenProcessor {
             }
             if (toFile) {
                 writer.close();
+            }
+            if (toFile) {
+                FileWriter writerCounts = new FileWriter(outFile.substring(0, outFile.lastIndexOf(".")) + ".counts.sql");
+                String idMuestra = transacciones.getIdMuestraByMetagenoma("" + idMetagenoma);
+                for (String key : counts.keySet()) {
+                    Integer c = counts.get(key);
+                    writerCounts.write("INSERT INTO conteos_shotgun (idmetagenoma,tax_id, idMuestra, counts ) VALUES (" + idMetagenoma + "," + key + "," + idMuestra + "," + c + ");\n");
+                }
+                writerCounts.close();
             }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(KrakenProcessor.class.getName()).log(Level.SEVERE, null, ex);
