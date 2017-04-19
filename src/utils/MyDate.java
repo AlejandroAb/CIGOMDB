@@ -116,7 +116,8 @@ public class MyDate {
     public boolean splitMyDate() {
         // String regDDMMYY = "^(?:(?:31(\\/|-|\\.)(?:0?[13578]|1[02]))\\1|(?:(?:29|30)(\\/|-|\\.)(?:0?[1,3-9]|1[0-2])\\2))(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$|^(?:29(\\/|-|\\.)0?2\\3(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\\d|2[0-8])(\\/|-|\\.)(?:(?:0?[1-9])|(?:1[0-2]))\\4(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$";
         // String regMMDDYY = "^(?:(?:31(\\/|-|\\.)(?:0?[13578]|1[02]))\\1|(?:(?:29|30)(\\/|-|\\.)(?:0?[1,3-9]|1[0-2])\\2))(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$|^(?:29(\\/|-|\\.)0?2\\3(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\\d|2[0-8])(\\/|-|\\.)(?:(?:0?[1-9])|(?:1[0-2]))\\4(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$";
-        String reg_YYYYMMDD = "^\\d\\d\\d\\d(\\/|-|\\.)(0?[1-9]|1[0-2])(\\/|-|\\.)(0?[1-9]|[12][0-9]|3[01])(\\s*.*)$";
+        //String reg_YYYYMMDD = "^\\d\\d\\d\\d(\\/|-|\\.)(0?[1-9]|1[0-2])(\\/|-|\\.)(0?[1-9]|[12][0-9]|3[01])(\\s*.*)$";
+        String reg_YYYYMMDD = "^\\d\\d\\d\\d(\\/|-|\\.)(0?[0-9]|1[0-2])(\\/|-|\\.)(0?[0-9]|[12][0-9]|3[01])(\\s*.*)$";
         String reg_DDMMYYYY = "^(0?[1-9]|[12][0-9]|3[01])(\\/|-|\\.)(0?[1-9]|1[0-2])(\\/|-|\\.)\\d\\d\\d\\d(\\s*.*)$";
         String reg_MMDDYYYY = "^(0?[1-9]|1[0-2])(\\/|-|\\.)(0?[1-9]|[12][0-9]|3[01])(\\/|-|\\.)\\d\\d\\d\\d(\\s*.*)$";
         if (fecha.matches(reg_DDMMYYYY)) {
@@ -179,7 +180,7 @@ public class MyDate {
 
         if (fecha.length() >= 6) {
             try {
-                StringTokenizer st = new StringTokenizer(fecha, "/.- ");
+                StringTokenizer st = new StringTokenizer(fecha, "/.- T");
                 dia = Integer.parseInt(st.nextToken());
                 mes = Integer.parseInt(st.nextToken());
                 anio = Integer.parseInt(st.nextToken());
@@ -203,7 +204,7 @@ public class MyDate {
 
         if (fecha.length() >= 6) {
             try {
-                StringTokenizer st = new StringTokenizer(fecha, "/.- ");
+                StringTokenizer st = new StringTokenizer(fecha, "/.- T");
                 anio = Integer.parseInt(st.nextToken());
                 mes = Integer.parseInt(st.nextToken());
                 dia = Integer.parseInt(st.nextToken());
@@ -227,7 +228,7 @@ public class MyDate {
 
         if (fecha.length() >= 6) {
             try {
-                StringTokenizer st = new StringTokenizer(fecha, "/.- ");
+                StringTokenizer st = new StringTokenizer(fecha, "/.- T");
                 mes = Integer.parseInt(st.nextToken());
                 dia = Integer.parseInt(st.nextToken());
                 anio = Integer.parseInt(st.nextToken());

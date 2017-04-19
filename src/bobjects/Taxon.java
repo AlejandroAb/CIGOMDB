@@ -297,7 +297,7 @@ public class Taxon {
 
     public String toSQLString() {
         String query = "INSERT INTO taxon (tax_id, taxon, rank, kingdom, subkingdom, superphylum, phylum, subphylum, superclass, infraclass, class, subclass, parvorder, superorder, infraorder, orden, suborder, superfamily, family, subfamily, tribe, subtribe, genus, subgenus, species, species_group, species_subgroup, subspecies, forma, varietas, no_rank) "
-                + "VALUES (" + tax_id + ",'" + taxon + "','" + rank + "','" + kingdom + "','" + subkingdom + "','" + superphylum + "','" + phylum + "','" + subphylum + "','" + superclass + "','" + infraclass + "','" + classe + "','" + subclass + "','" + parvorder + "','" + superorder + "','" + infraorder + "','" + order + "','" + suborder + "','" + superfamily + "','" + family + "','" + subfamily + "','" + tribe + "','" + subtribe + "','" + genus + "','" + subgenus + "','" + species + "','" + species_group + "','" + species_subgroup + "','" + subspecies + "','" + forma + "','" + varietas + "','" + no_rank + "')";
+                + "VALUES (" + tax_id + ",'" + taxon + "','" + rank + "','" + kingdom + "','" + subkingdom + "','" + superphylum + "','" + phylum + "','" + subphylum + "','" + superclass + "','" + infraclass + "','" + classe + "','" + subclass + "','" + parvorder + "','" + superorder + "','" + infraorder + "','" + order + "','" + suborder + "','" + superfamily + "','" + family + "','" + subfamily + "','" + tribe + "','" + subtribe + "','" + genus + "','" + subgenus + "','" + species + "','" + species_group + "','" + species_subgroup + "','" + subspecies + "','" + forma + "','" + varietas + "','" + no_rank + "',0)";
         return query;
     }
 

@@ -25,6 +25,14 @@ import javax.xml.bind.DatatypeConverter;
 public class Tester {
 
     public static void main(String args[]) {        
+        String reg_YYYYMMDD = "^\\d\\d\\d\\d(\\/|-|\\.)(0?[1-9]|1[0-2])(\\/|-|\\.)(0?[1-9]|[12][0-9]|3[01])(\\s*.*)$";
+        String reg_YYYYMMDD2 = "^\\d\\d\\d\\d(\\/|-|\\.)(0?[0-9]|1[0-2])(\\/|-|\\.)(0?[0-9]|[12][0-9]|3[01])(\\s*.*)$";
+        if ("2016-09-20T00:00".matches(reg_YYYYMMDD)) {
+            System.out.println("1");
+        }
+          if ("0000-00-00T00:00".matches(reg_YYYYMMDD2)) {
+            System.out.println("2");
+        }
         System.exit(0);
         Transacciones transacciones = new Transacciones("cigomdb", "root", "localhost", "amorphis");
         String testBlastLine = "Y898_MYCBO^Y898_MYCBO^Q:147-362,H:166-381^26.73%ID^E:4e-16^RecName: Full=Uncharacterized protein Mb0898c;^Bacteria; Actinobacteria; Actinobacteridae; Actinomycetales; Corynebacterineae; Mycobacteriaceae; Mycobacterium; Mycobacterium tuberculosis complex";

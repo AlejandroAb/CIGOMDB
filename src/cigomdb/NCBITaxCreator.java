@@ -213,7 +213,7 @@ public class NCBITaxCreator {
         StringUtils su = new StringUtils();
         try {
             if (toFile) {
-                writer = new FileWriter(outFile);
+                writer = new FileWriter(outFile,true);
             }
             ArrayList<ArrayList> linaje;
             int taxones = 0;

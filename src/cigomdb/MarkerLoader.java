@@ -447,15 +447,27 @@ public class MarkerLoader {
         float avg = 0;
         if (!onlyCreateFiles) {
             while ((lineFastQ = extendedReader.readLine()) != null) {
-                if (lineFastQ.startsWith("@M")) {
+                if (lineFastQ.startsWith("@") && lineFastQ.length() < 50) {
                     sec_num++;
                     counterTotal++;
                     String idSec = marcador.getIdSeqFormat() + counterTotal;
                     int indx = lineFastQ.indexOf(" ");
-                    if (indx <= 0) {
-                        indx = lineFastQ.length() - 1;
+                    /**
+                     * Antes estaba asi.....hay que revisar por que se dejo
+                     * asi...quizas HC de algun archivo en especial...abajo se
+                     * implementó algo con mas lógica if (indx <= 0) { indx =
+                     * lineFastQ.length() - 1; } String raw_seq_id =
+                     * lineFastQ.substring(1, indx).trim();
+                     *
+                     */
+                    String raw_seq_id;
+                    if (indx >= 1) {
+                        //indx = lineFastQ.length() - 1;
+                        raw_seq_id = lineFastQ.substring(1, indx).trim();
+                    } else {
+                        raw_seq_id = lineFastQ.substring(1).trim();
                     }
-                    String raw_seq_id = lineFastQ.substring(1, indx);
+
                     String sec = extendedReader.readLine();
                     avg += sec.length();
                     if (toFile) {
@@ -505,17 +517,22 @@ public class MarkerLoader {
             MyDate date = new MyDate(tmpFile.lastModified());
             mergeFile.setDate(date);
             mergeFile.setSize(tmpFile.length());
-            mergeFile.setChecksum(FileUtils.getMD5File(proc_data_path + marcador.getExtendedFName()));
+            if (tmpFile.length() / 1048576 < 1000) {//si es menor a un Gb
+                mergeFile.setChecksum(FileUtils.getMD5File(proc_data_path + tmpFile.getName()));
+            } else {
+                mergeFile.setChecksum("TBD");
+            }
+            //mergeFile.setChecksum(FileUtils.getMD5File(proc_data_path + marcador.getExtendedFName()));
             mergeFile.setAlcance("Grupo de bioinformática");
             mergeFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
             mergeFile.setDerechos("Acceso limitado a miembros");
             mergeFile.setTags("Secuencias pareadas, amplicones");
             mergeFile.setTipo("Text");
-            Usuario user = new Usuario(20);//ALES
+            Usuario user = new Usuario(31);//ALES
             user.setAcciones("creator");
             user.setComentarios("Se encarga de ejecutar el programa Flash para parear las lecturas que da como resultado este archivo.");
             mergeFile.addUser(user);
-            Usuario user2 = new Usuario(25);//ALEXSF
+            Usuario user2 = new Usuario(9);//ALEXSF
             user2.setAcciones("contributor");
             user2.setComentarios("Investigador responsable de subproyecto");
             mergeFile.addUser(user2);
@@ -1082,21 +1099,25 @@ public class MarkerLoader {
                     } else {
                         rawFile.setDescription("Datos crudos de amplicones ");
                     }
-                    rawFile.setChecksum(FileUtils.getMD5File(raw_data_path + f.getName()));
+                    if (f.length() / 1048576 < 1000) {//si es menor a un Gb
+                        rawFile.setChecksum(FileUtils.getMD5File(raw_data_path + f.getName()));
+                    } else {
+                        rawFile.setChecksum("TBD");
+                    }
                     rawFile.setAlcance("Grupo de bioinformática");
                     rawFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
                     rawFile.setDerechos("Acceso limitado a miembros");
                     rawFile.setTags("Secuencias crudas, amplicones");
                     rawFile.setTipo("Text");
-                    Usuario user = new Usuario(26);//UUSM
+                    Usuario user = new Usuario(31);//UUSM
                     user.setAcciones("creator");
                     user.setComentarios("Se encargaron de generar las librerías que se mandaron a secuenciar y de donde se obtienen las secuencias");
                     rawFile.addUser(user);
-                    Usuario user2 = new Usuario(24);//Ricardo Grande
-                    user2.setAcciones("contributor");
-                    user2.setComentarios("Encargado de la secuenciación/envío de librerías");
-                    rawFile.addUser(user2);
-                    marcador.addArchivo(rawFile);
+                    //   Usuario user2 = new Usuario(24);//Ricardo Grande
+                    //   user2.setAcciones("contributor");
+                    //   user2.setComentarios("Encargado de la secuenciación/envío de librerías");
+                    //   rawFile.addUser(user2);
+                    //   marcador.addArchivo(rawFile);
                     // log += adao.insertaArchivo(rawFile, false, "", true);
                     //transacciones.insertaArchivoMarcador(idMarcador, rawFile.getIdArchivo());
                 }

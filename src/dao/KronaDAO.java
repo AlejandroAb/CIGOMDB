@@ -5,6 +5,7 @@
  */
 package dao;
 
+import cigomdb.NCBITaxCreator;
 import database.Transacciones;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -49,28 +50,33 @@ public class KronaDAO {
             FileWriter writer = new FileWriter(fileName);
             ArrayList<ArrayList> taxaCounts = transacciones.getCountsByMarcador(idMarcador);
             if (taxaCounts != null) {
+                NCBITaxCreator ncbi = new NCBITaxCreator(transacciones);
                 for (ArrayList<String> taxa : taxaCounts) {
                     StringBuilder line = new StringBuilder();
                     line.append(taxa.get(1)).append("\t");//primero los conteos
                     // kingdom, phylum, class, orden, family, genus, species 
                     ArrayList<String> phylo = transacciones.getRegularPhylogenyByTaxID(taxa.get(0));
+                    if (phylo == null || phylo.size() < 1) {
+                        ncbi.createTaxon("", false, " WHERE tax_id = " + taxa.get(0));
+                        phylo = transacciones.getRegularPhylogenyByTaxID(taxa.get(0));
+                    }
                     if (phylo != null && phylo.size() > 0) {
                         int i = 0;
                         String rank = "";
                         for (String p : phylo) {
-                            if(i==0){
+                            if (i == 0) {
                                 rank = "reino";
-                            }else if(i==1){
+                            } else if (i == 1) {
                                 rank = "phylum";
-                            }else if(i==2){
+                            } else if (i == 2) {
                                 rank = "class";
-                            }else if(i==3){
+                            } else if (i == 3) {
                                 rank = "orden";
-                            }else if(i==4){
+                            } else if (i == 4) {
                                 rank = "family";
-                            }else if(i==5){
+                            } else if (i == 5) {
                                 rank = "genus";
-                            }else if(i==6){
+                            } else if (i == 6) {
                                 rank = "species";
                             }
                             if (p.trim().length() < 2) {

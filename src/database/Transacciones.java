@@ -181,6 +181,7 @@ public class Transacciones {
         return dbResult;
     }
 
+    //public Arr
     public ArrayList getRegularPhylogenyByTaxID(String tax_id) {
         String query = "SELECT kingdom, phylum, class, orden, family, genus, species "
                 + "FROM taxon WHERE tax_id = " + tax_id;
@@ -532,6 +533,17 @@ public class Transacciones {
         }
     }
 
+    public String getHierarchy(String taxID) {
+        String query = "SELECT hierarchy FROM ncbi_node WHERE tax_id = " + taxID;
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();        
+        if (dbResult == null || dbResult.isEmpty()) {
+            return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+
     /**
      * Trea el nccbi tax id de un nombre de nodo
      *
@@ -757,7 +769,12 @@ public class Transacciones {
      * @return
      */
     public boolean insertaArchivoMarcador(String idMarcador, int idArchivo) {
-        String query = "INSERT INTO marcador_archivo (idUsuario, idarchivo) VALUES(" + idMarcador + "," + idArchivo + ")";
+        String query = "INSERT INTO marcador_archivo (idmarcador, idarchivo) VALUES(" + idMarcador + "," + idArchivo + ")";
+        return conexion.queryUpdate(query);
+    }
+    
+    public boolean insertaArchivoMetagenoma(String idMetagenoma, int idArchivo) {
+        String query = "INSERT INTO metagenoma_archivo (idmetagenoma, idarchivo) VALUES(" + idMetagenoma + "," + idArchivo + ")";
         return conexion.queryUpdate(query);
     }
 
