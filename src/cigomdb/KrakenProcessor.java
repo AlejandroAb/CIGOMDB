@@ -15,6 +15,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,6 +31,7 @@ public class KrakenProcessor {
 
     private Transacciones transacciones;
     int nextIDArchivo = -1;
+    HashMap<String, String> nodosObsoletos;
 
     public int getNextIDArchivo() {
         return nextIDArchivo;
@@ -40,6 +43,26 @@ public class KrakenProcessor {
 
     public KrakenProcessor(Transacciones transacciones) {
         this.transacciones = transacciones;
+        nodosObsoletos = new HashMap<>();
+        nodosObsoletos.put("710686", "212767");
+        nodosObsoletos.put("1380774", "93220");
+    }
+
+    /**
+     * *
+     * Este método se encarga de verificar si un nodo posiblemente obsoleto ya
+     * tiene anotado su nodo actual
+     *
+     * @param tax_id el taxid a verificar
+     * @return regresa el nuevo tax id o blank si no hay
+     */
+    public String verifyNCBINODE(String tax_id) {
+        String current = nodosObsoletos.get(tax_id);
+        if (current != null) {
+            return current;
+        } else {
+            return "";
+        }
     }
 
     /**
@@ -119,6 +142,7 @@ public class KrakenProcessor {
                 System.err.println("ERROR No se puede determinar el siguiente ID de archivo");
             }
         }
+        NumberFormat formatter = new DecimalFormat("##.####");
         try {
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
             String linea;
@@ -126,6 +150,7 @@ public class KrakenProcessor {
             HashMap<String, Integer> counts = new HashMap<>();
             boolean toFile = false;
             FileWriter writer = null;
+            FileWriter writerObsoletes = new FileWriter(inputFile + ".obsoletes");
             if (outFile.length() > 2) {
                 toFile = true;
                 writer = new FileWriter(outFile);
@@ -143,66 +168,99 @@ public class KrakenProcessor {
                         String classif[] = fields[4].split(" ");
                         int kmeros = 0;
                         int kmersOK = 0;
-                        String hierarchy[] = transacciones.getHierarchy(fields[2]).split(",");
-                        for (String asignacion : classif) {
-                            String assign[] = asignacion.split(":");
-                            if (assign.length < 2) {
-                                System.err.println("Error en linea: " + line + " '" + linea + "'. Parseando clasificación");
-                            } else {
-                                String taxID = assign[0];
-                                String kmers = assign[1];
-                                int ks = 0;
-                                try {
-                                    ks = Integer.parseInt(kmers);
-                                    kmeros += ks;
-                                } catch (NumberFormatException nfe) {
-                                    System.err.println("Error NFE kmers en Linea: " + line + " kmers = " + kmers);
-                                }
-                                for (String tax : hierarchy) {
-                                    //si el tax de los kmeros esta en el hierarchy o es el taxID asignado
-                                    //0=uncluss 1=root 131567 = cellular organism
-                                    if (!taxID.equals("0") && !taxID.equals("1") && !taxID.equals("131567") && (taxID.equals(fields[2]) || taxID.equals(tax))) {
-                                        kmersOK += ks;
-                                        break;
-                                    } else {
-                                        if (!taxID.equals("0") && !taxID.equals("1") && !taxID.equals("131567")) {
-                                            //la otra opcion es que el taxID sea un hijo del taxID seleccionado (campo 3)
-                                            //en ese caso también se cuenta como caso + y se suma pero hay que buscar en la jerarquía 
-                                            //de dicho posible hijo
-                                            String hierarchySon[] = transacciones.getHierarchy(tax).split(",");
-                                            for (String taxSon : hierarchySon) {
-                                                if (!taxID.equals("0") && !taxID.equals("1") && !taxID.equals("131567") && taxID.equals(taxSon)) {
-                                                    kmersOK += ks;
-                                                    break;
+                        String hierarchyAssignedTaxID = transacciones.getHierarchy(fields[2]);
+                        //si es posiblemente un nodo obsoleto
+                        if (hierarchyAssignedTaxID.length() == 0) {
+                            String tmpTaxID = verifyNCBINODE(fields[2]);
+                            //si tiene un nuevo nodo se lo asigna, sino se queda como esta
+                            fields[2] = tmpTaxID.length() > 0 ? tmpTaxID : fields[2];
+                            hierarchyAssignedTaxID = transacciones.getHierarchy(fields[2]);
+                        }
+                        String hierarchy[] = hierarchyAssignedTaxID.split(",");
+                        if (hierarchy[0].length() > 0) {
+                            for (String asignacion : classif) {
+                                String assign[] = asignacion.split(":");
+                                if (assign.length < 2) {
+                                    System.err.println("Error en linea: " + line + " '" + linea + "'. Parseando clasificación");
+                                } else {
+                                    String taxID = assign[0];
+                                    String kmers = assign[1];
+                                    int ks = 0;
+                                    try {
+                                        ks = Integer.parseInt(kmers);
+                                        kmeros += ks;
+                                    } catch (NumberFormatException nfe) {
+                                        System.err.println("Error NFE kmers en Linea: " + line + " kmers = " + kmers);
+                                    }
+                                    boolean find = false;
+                                    for (String tax : hierarchy) {
+                                        //si el tax de los kmeros esta en el hierarchy o es el taxID asignado
+                                        //0=uncluss 1=root 131567 = cellular organism
+                                        if (!taxID.equals("0") && !taxID.equals("1") && !taxID.equals("A") && !taxID.equals("131567") && (taxID.equals(fields[2]) || taxID.equals(tax))) {
+                                            kmersOK += ks;
+                                            find = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!find) {
+                                        if (!taxID.equals("0") && !taxID.equals("1") && !taxID.equals("131567") && !taxID.equals("A")) {
+                                            String hierarchySonTaxID = transacciones.getHierarchy(taxID);
+                                            if (hierarchySonTaxID.length() == 0) {
+                                                String tmpTaxID = verifyNCBINODE(taxID);
+                                                //si tiene un nuevo nodo se lo asigna, sino se queda como esta
+                                                taxID = tmpTaxID.length() > 0 ? tmpTaxID : taxID;
+                                                hierarchyAssignedTaxID = transacciones.getHierarchy(taxID);
+                                            }
+                                            if (hierarchyAssignedTaxID.length() > 0) {
+                                                String hierarchySon[] = hierarchyAssignedTaxID.split(",");
+
+                                                //la otra opcion es que el taxID sea un hijo del taxID seleccionado (campo 3)
+                                                //en ese caso también se cuenta como caso + y se suma pero hay que buscar en la jerarquía 
+                                                //de dicho posible hijo                                            
+                                                for (String taxSon : hierarchySon) {
+                                                    if (taxSon.equals(fields[2])) {
+                                                        kmersOK += ks;
+                                                        break;
+                                                    }
                                                 }
+                                            } else {
+                                                System.err.println("Nodo Obsoleto: " + taxID);
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
-                        kmeros = kmeros == 0 ? 1 : kmeros;
-                        if (counts.get(fields[2]) == null) {
-                            counts.put(fields[2], 1);
-                        } else {
-                            Integer c = counts.get(fields[2]);
-                            c++;
-                            counts.put(fields[2], c);
-                        }
-                        double prc = ((double) kmersOK * 100) / kmeros;
-                        //id analisis por default 2 poner en la BD kraken y sus params
-                        String query = "INSERT INTO seq_metagenoma_classif (tax_id, idmetagenoma, idanalisis_clasificacion, raw_id, score, longitud) "
-                                + "VALUES(" + fields[2] + "," + idMetagenoma + ",2,'" + fields[1] + "'," + prc + "," + fields[3] + ")";
-                        if (toFile) {
-                            writer.write(query + ";\n");
-                        } else {
-                            if (!transacciones.insertaQuery(query)) {
-                                System.err.println("");
+                            kmeros = kmeros == 0 ? 1 : kmeros;
+                            if (counts.get(fields[2]) == null) {
+                                counts.put(fields[2], 1);
+                            } else {
+                                Integer c = counts.get(fields[2]);
+                                c++;
+                                counts.put(fields[2], c);
                             }
+                            double prc = ((double) kmersOK * 100) / kmeros;
+                            //id analisis por default 2 poner en la BD kraken y sus params
+                            String query = "INSERT INTO seq_metagenoma_classif (tax_id, idmetagenoma, idanalisis_clasificacion, raw_id, score, longitud) "
+                                    + "VALUES(" + fields[2] + "," + idMetagenoma + ",2,'" + fields[1] + "'," + formatter.format(prc) + "," + fields[3] + ")";
+                            if (toFile) {
+                                writer.write(query + ";\n");
+                            } else {
+                                if (!transacciones.insertaQuery(query)) {
+                                    System.err.println("");
+                                }
+                            }
+                        } else {
+                            //    String query = "INSERT INTO seq_metagenoma_classif (tax_id, idmetagenoma, idanalisis_clasificacion, raw_id, score, longitud) "
+                            //         + "VALUES(" + fields[2] + "," + idMetagenoma + ",2,'" + fields[1] + "'," + -1 + "," + fields[3] + ")";
+
+                            writerObsoletes.write(linea + "\n");
+                            System.err.println("Nodo Obsoleto: " + fields[2]);
                         }
+
                     }
                 }
             }
+            writerObsoletes.close();
             if (toFile) {
                 writer.close();
             }

@@ -641,10 +641,10 @@ public class DataLoader {
             } else if (mode.equals("kraken")) {
 
                 if (idMetagenoma == -1) {
-                    System.out.println("Para correr el programa ko se espera minimo un id de genoma o id de metagenoma");
+                    System.out.println("Para correr el programa kraken se espera minimo un id de genoma o id de metagenoma");
+                    printHelp();
+                    System.exit(1);
                 }
-                printHelp();
-                System.exit(1);
 
                 KrakenProcessor kraken = new KrakenProcessor(transacciones);
                 if (nextIDArchivo != -1) {
