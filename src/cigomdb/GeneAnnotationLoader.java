@@ -347,7 +347,7 @@ public class GeneAnnotationLoader {
                             splitLineaCogTrinotate(token, geneID, writer);
                         } else if (tok == idxGOBlast || tok == idxGOPfam) {
                             splitLineaGOTrinotate(token, geneID, gos, writer);
-                        }else if (tok == idxGOBlast || tok == idxGOPfam) {
+                        }else if (tok == idxKegg) {
                             splitLineaKegg(token, "TRINITY", geneID, writer);
                         } else {
                             // st.nextToken();
@@ -627,7 +627,7 @@ public class GeneAnnotationLoader {
                             System.err.println("Error actualizando gen kegg_gen: " + gen_id + "\nQ:" + q);
                         }
                     }
-                }else if (kegg_line.startsWith("KO:") && !findGen) {
+                }else if (kegg_line.startsWith("KO:") ) {
                      String q = "INSERT INTO  gen_KO(gen_id, idKO, metodo) VALUES ('" + gen_id + "','"+kegg_line.substring(3) + "', '" +metodo+"')";
                      
                     if (toFile) {
