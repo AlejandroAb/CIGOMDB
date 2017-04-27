@@ -643,6 +643,9 @@ public class DataLoader {
                 }
                 KeggProcessor keggP = new KeggProcessor(transacciones);
                 //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
+                 if (nextIDArchivo != -1) {
+                        keggP.setNextIDArchivo(nextIDArchivo);
+                    }
                 keggP.procesaKOList(input, group, id, output, toFile);
 
             } else if (mode.equals("kraken")) {
