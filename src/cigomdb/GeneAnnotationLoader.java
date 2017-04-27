@@ -5,9 +5,13 @@
  */
 package cigomdb;
 
+import bobjects.ArchivoObj;
+import bobjects.Usuario;
+import dao.ArchivoDAO;
 import dao.MetaxaDAO;
 import database.Transacciones;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -19,6 +23,8 @@ import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import utils.FileUtils;
+import utils.MyDate;
 import utils.StringUtils;
 
 /**
@@ -36,9 +42,26 @@ public class GeneAnnotationLoader {
     private HashMap<String, String> mapaEquivalencias;
     boolean useEquivalencia;
     private String postFix = "_c0_g1";
+    private int nextIDArchivo = -1;
 
     public GeneAnnotationLoader(Transacciones transacciones) {
         this.transacciones = transacciones;
+    }
+
+    public HashMap<String, String> getMapaEquivalencias() {
+        return mapaEquivalencias;
+    }
+
+    public void setMapaEquivalencias(HashMap<String, String> mapaEquivalencias) {
+        this.mapaEquivalencias = mapaEquivalencias;
+    }
+
+    public int getNextIDArchivo() {
+        return nextIDArchivo;
+    }
+
+    public void setNextIDArchivo(int nextIDArchivo) {
+        this.nextIDArchivo = nextIDArchivo;
     }
 
     public boolean usaEquivalencias() {
@@ -175,10 +198,69 @@ public class GeneAnnotationLoader {
         return true;
     }
 
+    public void loadTrinotateFileIntoDB(String trinoFile, String outFile, String groupID, String group) {
+        ArchivoDAO adao = new ArchivoDAO(transacciones);
+        File tmpFile = new File(trinoFile);
+        ArchivoObj archivoTrino = new ArchivoObj(nextIDArchivo);
+        archivoTrino.setTipoArchivo(ArchivoObj.TIPO_FUN);
+        archivoTrino.setNombre(trinoFile.substring(trinoFile.lastIndexOf("/") + 1));
+        int idx = trinoFile.lastIndexOf("/") != -1 ? trinoFile.lastIndexOf("/") + 1 : trinoFile.length();
+        archivoTrino.setPath(trinoFile.substring(0, idx));
+        archivoTrino.setDescription("Archivo proveninete de la ejecución de Trinotate v 3.0.1 para obtener la predicción funcional de genes."
+                + "Este archivo provee la información para la anotación de COGs EggNOG, UniProt y términos GO.");
+        archivoTrino.setExtension(trinoFile.substring(trinoFile.lastIndexOf(".") + 1));
+        MyDate date = new MyDate(tmpFile.lastModified());
+        archivoTrino.setDate(date);
+        archivoTrino.setSize(tmpFile.length());
+        if (tmpFile.length() / 1048576 < 1000) {//si es menor a un Gb
+            archivoTrino.setChecksum(FileUtils.getMD5File(trinoFile));
+        } else {
+            archivoTrino.setChecksum("TBD");
+        }
+        archivoTrino.setAlcance("Grupo de bioinformática");
+        archivoTrino.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
+        archivoTrino.setDerechos("Acceso limitado a miembros");
+        archivoTrino.setTags("predicción funcional, trinotate, cogs, eggnog, uniprot");
+        archivoTrino.setTipo("Text");
+        Usuario user = new Usuario(31);//ALES
+        user.setAcciones("creator");
+        user.setComentarios("Se encarga de ejecutar el programa trinotate el cual realiza la predicción funcionaal sobre los genes predichos");
+        archivoTrino.addUser(user);
+        Usuario user2 = new Usuario(9);//ALEXSF
+        user2.setAcciones("contributor");
+        user2.setComentarios("Investigador responsable de subproyecto");
+        archivoTrino.addUser(user2);
+        int id = -1;
+        try {
+            id = Integer.parseInt(groupID);
+        } catch (NumberFormatException nfe) {
+            System.err.println("Error al determinar el ID del " + group + " val :" + group);
+        }
+        adao.insertaArchivoMetaGenoma(archivoTrino, id, groupID, outFile.length() > 2, outFile, true);
+        nextIDArchivo++;
+    }
+
+    /**
+     * Este método se encarga de cargar los archivos de trinotate. Hay que tomar
+     * en cuenta que algunos parámetros se controlan como variables de clase y
+     * se hace llamado de sus seters a la hora de invocar el metodo, el mas
+     * importante de ellos, es la variable para equivnames useEquivalencia
+     *
+     * @param inputFile trinotate.reduced
+     * @param group genoma o metagenoma
+     * @param groupID el id del metagenoma o genoma
+     * @return
+     */
     public boolean splitTrinotateFile(String inputFile, String group, String groupID) {
         try {
-            //y`
+            if (nextIDArchivo == -1) {
+                nextIDArchivo = transacciones.getNextIDArchivos();
+                if (nextIDArchivo == -1) {
+                    System.err.println("ERROR No se puede determinar el siguiente ID de archivo");
+                }
+            }
             BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), "ISO-8859-1"));
+            loadTrinotateFileIntoDB(inputFile, outFile, groupID, group);
             FileWriter writer = null;
             if (toFile) {
                 writer = new FileWriter(outFile);
@@ -196,8 +278,10 @@ public class GeneAnnotationLoader {
             int idxSignalP = 5;
             int idxTransM = 6;
             int idxCog = 7;
-            int idxGOBlast = 8;
-            int idxGOPfam = 9;
+            int idxKegg = 8;
+            int idxGOBlast = 9;
+            int idxGOPfam = 10;
+
             while ((linea = reader.readLine()) != null) {
                 numLinea++;
                 if (numLinea == 1) {
@@ -221,8 +305,10 @@ public class GeneAnnotationLoader {
                             idxSignalP = toks;
                         } else if (tok.contains("eggnog")) {
                             idxCog = toks;
-                        } else if (tok.contains("tmhmm")) {//comentarios
+                        } else if (tok.contains("tmhmm")) {
                             idxTransM = toks;
+                        } else if (tok.equals("kegg")) {
+                            idxKegg = toks;
                         }
                     }
                 } else {
@@ -261,8 +347,11 @@ public class GeneAnnotationLoader {
                             splitLineaCogTrinotate(token, geneID, writer);
                         } else if (tok == idxGOBlast || tok == idxGOPfam) {
                             splitLineaGOTrinotate(token, geneID, gos, writer);
+                        }else if (tok == idxGOBlast || tok == idxGOPfam) {
+                            splitLineaKegg(token, "TRINITY", geneID, writer);
                         } else {
                             // st.nextToken();
+                            
                         }
                     }
                 }
@@ -330,7 +419,7 @@ public class GeneAnnotationLoader {
                 if (linea.startsWith("gene_")) {
                     String genes[] = linea.split("\t");
                     String trinoGen = genes[0].substring(0, genes[0].indexOf(postFix));
-                    int index = genes[1].indexOf("|")!=-1?genes[1].indexOf("|"):genes[1].length();                    
+                    int index = genes[1].indexOf("|") != -1 ? genes[1].indexOf("|") : genes[1].length();
                     String dbMapGen = genes[1].substring(0, index);
                     mapaEquivalencias.put(trinoGen, dbMapGen);
                 }
@@ -502,6 +591,60 @@ public class GeneAnnotationLoader {
                 }
             }
 
+        }
+    }
+
+    /**
+     * Este método se encarga de anotar en la BD un resultado de asignación de
+     * ortología de kegg acorde a trinotate
+     *
+     * @param linea la linea con todo el resultado
+     * @param metodo el método con el cual fue obtenido dicho resultado, en este
+     * caso Trinity
+     * @param gen_id El id del gen para el cual fue obtenido este hit
+     * @param writer el writer para escribir el resultado
+     */
+    public void splitLineaKegg(String linea, String metodo, String gen_id, FileWriter writer) {
+        if (!linea.trim().equals(".")) {
+            // StringTokenizer st_l = new StringTokenizer(linea, "`");
+            StringUtils su = new StringUtils();
+            boolean findGen = false; //solo anota el primer gen de kegg que referencía
+            for (String kegg_line : linea.split("`")) {
+                if (kegg_line.startsWith("KEGG:") && !findGen) {
+                    findGen = true;
+                    String q = "UPDATE gen SET kegg_gen = '" + kegg_line.substring(5).replaceAll(":", "-") + "' "
+                            + "WHERE gen_id = '" + gen_id + "'";
+                    if (toFile) {
+                        try {
+                            writer.write(q + ";\n");
+                        } catch (IOException ex) {
+                            System.err.println("Error escribiendo archivo para actualizar gen kegg_gen: " + gen_id + " - " + outFile);
+                            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    } else {
+                        if (!transacciones.insertaQuery(q)) {
+                            System.err.println("Error actualizando gen kegg_gen: " + gen_id + "\nQ:" + q);
+                        }
+                    }
+                }else if (kegg_line.startsWith("KO:") && !findGen) {
+                     String q = "INSERT INTO  gen_KO(gen_id, idKO, metodo) VALUES ('" + gen_id + "','"+kegg_line.substring(3) + "', '" +metodo+"')";
+                     
+                    if (toFile) {
+                        try {
+                            writer.write(q + ";\n");
+                        } catch (IOException ex) {
+                            System.err.println("Error escribiendo archivo para gen_KO: " + gen_id + " - " + outFile);
+                            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    } else {
+                        if (!transacciones.insertaQuery(q)) {
+                            System.err.println("Error actualizando gen_KO: " + gen_id + "\nQ:" + q);
+                        }
+                    } 
+                }
+            }
         }
     }
 

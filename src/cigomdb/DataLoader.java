@@ -585,7 +585,7 @@ public class DataLoader {
                         printHelp();
                         System.exit(1);
                     }
-                    
+
                     GeneFuncLoader loader = new GeneFuncLoader(transacciones);
                     if (nextIDArchivo != -1) {
                         loader.setNextIDArchivo(nextIDArchivo);
@@ -621,6 +621,9 @@ public class DataLoader {
                 if (useEquivalencias) {
                     loader.setEquiv_names_file(equivFile);
                     loader.setUseEquivalencia(useEquivalencias);
+                }
+                if (nextIDArchivo != -1) {
+                    loader.setNextIDArchivo(nextIDArchivo);
                 }
                 loader.splitTrinotateFile(input, group, id);
 

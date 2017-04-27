@@ -14,11 +14,12 @@ import utils.MyDate;
  */
 public class ArchivoObj {
 
-    public static int TIPO_RAW = 1;
-    public static int TIPO_PRE = 2;
-    public static int TIPO_MTX = 3;
-    public static int TIPO_KRN = 4;
-    public static int TIPO_ASS = 5;
+    public static int TIPO_RAW = 1;//archivoss de datos crudos
+    public static int TIPO_PRE = 2; //preprocesamiento (ejmplo flash)
+    public static int TIPO_MTX = 3; //matrices
+    public static int TIPO_KRN = 4; //arhivos krona
+    public static int TIPO_ASS = 5; //archivos de ensamble
+    public static int TIPO_FUN = 5;//Asignacion funcional y/o metabolica
     private int idArchivo;
     private int tipoArchivo;
     private String nombre;
