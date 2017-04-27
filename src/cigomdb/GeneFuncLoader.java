@@ -8,10 +8,12 @@ import bobjects.ArchivoObj;
 import bobjects.GenObj;
 import bobjects.GenSeqObj;
 import bobjects.Intergenic;
+import bobjects.Usuario;
 import dao.ArchivoDAO;
 import dao.GenDAO;
 import database.Transacciones;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -21,8 +23,10 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import utils.FastaReader;
+import utils.FileUtils;
 import utils.GFFLine;
 import utils.GFFReader;
+import utils.MyDate;
 import utils.Sequence;
 
 /**
@@ -34,6 +38,7 @@ public class GeneFuncLoader {
 
     private Transacciones transacciones = null;
     private boolean debug = false;
+    private int nextIDArchivo = -1;
 
     public GeneFuncLoader(Transacciones transacciones) {
         this.transacciones = transacciones;
@@ -41,6 +46,22 @@ public class GeneFuncLoader {
 
     public boolean isDebug() {
         return debug;
+    }
+
+    public Transacciones getTransacciones() {
+        return transacciones;
+    }
+
+    public void setTransacciones(Transacciones transacciones) {
+        this.transacciones = transacciones;
+    }
+
+    public int getNextIDArchivo() {
+        return nextIDArchivo;
+    }
+
+    public void setNextIDArchivo(int nextIDArchivo) {
+        this.nextIDArchivo = nextIDArchivo;
     }
 
     public void setDebug(boolean debug) {
@@ -161,6 +182,162 @@ public class GeneFuncLoader {
 
     }
 
+    /**
+     * Este métoddo se encarga de ccrear los archivos y sus respectivas
+     * relaciones para un metagenoma
+     *
+     * @param id ID del metagenoma
+     * @param source metagenoma|genoma
+     * @param outFile si es a outfile nombre y path completo
+     * @param contigFile path absoluto al archivo de contigs
+     * @param protFile path absoluto al archivo de proteinas
+     * @param nucFile path absoluto al archivo de nucleótidos
+     * @param gffFile path absoluto al archivo de coordenadas
+     */
+    public void loadFiles(int id, String source, String outFile, String contigFile, String protFile, String nucFile, String gffFile) {
+        ArchivoDAO adao = new ArchivoDAO(transacciones);
+        /**
+         * Archivo de contigs
+         */
+        int idContigs = nextIDArchivo;
+        File tmpFile = new File(contigFile);
+        ArchivoObj contigA = new ArchivoObj(nextIDArchivo);
+        contigA.setTipoArchivo(ArchivoObj.TIPO_PRE);
+        contigA.setNombre(contigFile.substring(contigFile.lastIndexOf("/") + 1));
+        int idx = contigFile.lastIndexOf("/") != -1 ? contigFile.lastIndexOf("/") + 1 : contigFile.length();
+        contigA.setPath(contigFile.substring(0, idx));
+        contigA.setDescription("Archivo fasta con las secuencias de los contigs ensamblados");
+        contigA.setExtension(contigFile.substring(contigFile.lastIndexOf(".") + 1));
+        MyDate date = new MyDate(tmpFile.lastModified());
+        contigA.setDate(date);
+        contigA.setSize(tmpFile.length());
+        if (tmpFile.length() / 1048576 < 1000) {//si es menor a un Gb
+            contigA.setChecksum(FileUtils.getMD5File(contigFile));
+        } else {
+            contigA.setChecksum("TBD");
+        }
+        contigA.setAlcance("Grupo de bioinformática");
+        contigA.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
+        contigA.setDerechos("Acceso limitado a miembros");
+        contigA.setTags("Ensamble, assembly, contigs");
+        contigA.setTipo("Text");
+        Usuario user = new Usuario(31);//ALES
+        user.setAcciones("creator");
+        user.setComentarios("Se encarga de ejecutar el programa IDBA el cual realiza el ensamble de las secuencias crudas");
+        contigA.addUser(user);
+        Usuario user2 = new Usuario(9);//ALEXSF
+        user2.setAcciones("contributor");
+        user2.setComentarios("Investigador responsable de subproyecto");
+        contigA.addUser(user2);
+        adao.insertaArchivoMetaGenoma(contigA, id, source, outFile.length() > 2, outFile, true);
+        nextIDArchivo++;
+
+        /**
+         * Archivo de proteinas
+         */
+        tmpFile = new File(protFile);
+        ArchivoObj protA = new ArchivoObj(nextIDArchivo);
+        protA.setTipoArchivo(ArchivoObj.TIPO_ASS);
+        protA.setNombre(protFile.substring(protFile.lastIndexOf("/") + 1));
+        idx = protFile.lastIndexOf("/") != -1 ? protFile.lastIndexOf("/") + 1 : protFile.length();
+        protA.setPath(protFile.substring(0, idx));
+        protA.setDescription("Archivo fasta con las secuencias de proteinas predichas por MGM");
+        protA.setExtension(protFile.substring(protFile.lastIndexOf(".") + 1));
+        date = new MyDate(tmpFile.lastModified());
+        protA.setDate(date);
+        protA.setSize(tmpFile.length());
+        if (tmpFile.length() / 1048576 < 1000) {//si es menor a un Gb
+            protA.setChecksum(FileUtils.getMD5File(protFile));
+        } else {
+            protA.setChecksum("TBD");
+        }
+        protA.setAlcance("Grupo de bioinformática");
+        protA.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
+        protA.setDerechos("Acceso limitado a miembros");
+        protA.setTags("Secuencias, aminoácidos, proteínas");
+        protA.setTipo("Text");
+        protA.setOrigen("" + idContigs);
+        Usuario userP = new Usuario(31);//ALES
+        userP.setAcciones("creator");
+        userP.setComentarios("Se encarga de ejecutar el programa MetaGeneMark para predicción de CDS");
+        protA.addUser(userP);
+        Usuario user2P = new Usuario(9);//ALEXSF
+        user2P.setAcciones("contributor");
+        user2P.setComentarios("Investigador responsable de subproyecto");
+        protA.addUser(user2P);
+        adao.insertaArchivoMetaGenoma(protA, id, source, outFile.length() > 2, outFile, true);
+        nextIDArchivo++;
+        /**
+         * Archivo de nucleótidos
+         */
+        tmpFile = new File(nucFile);
+        ArchivoObj nucA = new ArchivoObj(nextIDArchivo);
+        nucA.setTipoArchivo(ArchivoObj.TIPO_ASS);
+        nucA.setNombre(nucFile.substring(nucFile.lastIndexOf("/") + 1));
+        idx = nucFile.lastIndexOf("/") != -1 ? nucFile.lastIndexOf("/") + 1 : nucFile.length();
+        nucA.setPath(nucFile.substring(0, idx));
+        nucA.setDescription("Archivo fasta con las secuencias de nucleótidos predichas por MGM");
+        nucA.setExtension(nucFile.substring(nucFile.lastIndexOf(".") + 1));
+        date = new MyDate(tmpFile.lastModified());
+        nucA.setDate(date);
+        nucA.setSize(tmpFile.length());
+        if (tmpFile.length() / 1048576 < 1000) {//si es menor a un Gb
+            nucA.setChecksum(FileUtils.getMD5File(nucFile));
+        } else {
+            nucA.setChecksum("TBD");
+        }
+        nucA.setAlcance("Grupo de bioinformática");
+        nucA.setOrigen("" + idContigs);
+        nucA.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
+        nucA.setDerechos("Acceso limitado a miembros");
+        nucA.setTags("Secuencias pareadas, amplicones");
+        nucA.setTipo("Text");
+        Usuario userN = new Usuario(31);//ALES
+        userN.setAcciones("creator");
+        userN.setComentarios("Se encarga de ejecutar el MetaGeneMark sobre el archivo de contigs.fa que da como resultado este archivo.");
+        nucA.addUser(userN);
+        Usuario user2N = new Usuario(9);//ALEXSF
+        user2N.setAcciones("contributor");
+        user2N.setComentarios("Investigador responsable de subproyecto");
+        nucA.addUser(user2N);
+        adao.insertaArchivoMetaGenoma(nucA, id, source, outFile.length() > 2, outFile, true);
+        nextIDArchivo++;
+
+        /**
+         * Archivo GFF
+         */
+        tmpFile = new File(gffFile);
+        ArchivoObj gffA = new ArchivoObj(nextIDArchivo);
+        gffA.setTipoArchivo(ArchivoObj.TIPO_PRE);
+        gffA.setNombre(gffFile.substring(gffFile.lastIndexOf("/") + 1));
+        idx = gffFile.lastIndexOf("/") != -1 ? gffFile.lastIndexOf("/") + 1 : gffFile.length();
+        gffA.setPath(gffFile.substring(0, idx));
+        gffA.setDescription("Archivo gff con las coordenadas de las genes mapeados en el archivo de contigs. Este archivo es resultado de la prediccion de genes realizada por MGM");
+        gffA.setExtension(gffFile.substring(gffFile.lastIndexOf(".") + 1));
+        date = new MyDate(tmpFile.lastModified());
+        gffA.setDate(date);
+        gffA.setSize(tmpFile.length());
+        if (tmpFile.length() / 1048576 < 1000) {//si es menor a un Gb
+            gffA.setChecksum(FileUtils.getMD5File(gffFile));
+        } else {
+            gffA.setChecksum("TBD");
+        }
+        gffA.setAlcance("Grupo de bioinformática");
+        gffA.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
+        gffA.setDerechos("Acceso limitado a miembros");
+        gffA.setTags("GFF, Predicción de genes, coordenadas");
+        gffA.setTipo("Text");
+        Usuario userG = new Usuario(31);//ALES
+        userG.setAcciones("creator");
+        userG.setComentarios("Se encarga de ejecutar el programa Flash para parear las lecturas que da como resultado este archivo.");
+        gffA.addUser(userG);
+        Usuario user2G = new Usuario(9);//ALEXSF
+        user2G.setAcciones("contributor");
+        user2G.setComentarios("Investigador responsable de subproyecto");
+        gffA.addUser(user2G);
+        adao.insertaArchivoMetaGenoma(gffA, id, source, outFile.length() > 2, outFile, true);
+    }
+    //public boolean 
     //String idPre, String gffFile, String nucFile, String aaFile, String mapPrefix
     /**
      *
@@ -191,7 +368,12 @@ public class GeneFuncLoader {
             FastaReader protReader = new FastaReader(new InputStreamReader(new FileInputStream(protFile)));
             GenDAO genDAO = new GenDAO(transacciones);
             ArchivoDAO adao = new ArchivoDAO(transacciones);
-            int nextIDArchivo = transacciones.getNextIDArchivos();
+            if (nextIDArchivo == -1) {
+                nextIDArchivo = transacciones.getNextIDArchivos();
+                if (nextIDArchivo == -1) {
+                    System.err.println("ERROR No se puede determinar el siguiente ID de archivo");
+                }
+            }
             int idx;
             int id;
             String source = "";
@@ -202,45 +384,8 @@ public class GeneFuncLoader {
                 source = "metagenoma";
                 id = idMetageno;
             }
-            ArchivoObj protA = new ArchivoObj(nextIDArchivo);
-            protA.setTipoArchivo(ArchivoObj.TIPO_PRE);
-            protA.setNombre(protFile.substring(protFile.lastIndexOf("/") + 1));
-            idx = protFile.lastIndexOf("/") != -1 ? protFile.lastIndexOf("/") + 1 : protFile.length();
-            protA.setPath(protFile.substring(0, idx));
-            protA.setDescription("Archivo fasta con las secuencias de proteinas predichas");
-            protA.setExtension(protFile.substring(protFile.lastIndexOf(".") + 1));
-            adao.insertaArchivoMetaGenoma(protA, id, source, toFile, outFile, true);
-            nextIDArchivo++;
 
-            ArchivoObj nucA = new ArchivoObj(nextIDArchivo);
-            nucA.setTipoArchivo(ArchivoObj.TIPO_PRE);
-            nucA.setNombre(nucFile.substring(nucFile.lastIndexOf("/") + 1));
-            idx = nucFile.lastIndexOf("/") != -1 ? nucFile.lastIndexOf("/") + 1 : nucFile.length();
-            nucA.setPath(nucFile.substring(0, idx));
-            nucA.setDescription("Archivo fasta con las secuencias de nucleótidos predichas");
-            nucA.setExtension(nucFile.substring(nucFile.lastIndexOf(".") + 1));
-            nextIDArchivo++;
-            adao.insertaArchivoMetaGenoma(nucA, id, source, toFile, outFile, true);
-
-            ArchivoObj contigA = new ArchivoObj(nextIDArchivo);
-            contigA.setTipoArchivo(ArchivoObj.TIPO_PRE);
-            contigA.setNombre(contigFile.substring(contigFile.lastIndexOf("/") + 1));
-            idx = contigFile.lastIndexOf("/") != -1 ? contigFile.lastIndexOf("/") + 1 : contigFile.length();
-            contigA.setPath(contigFile.substring(0, idx));
-            contigA.setDescription("Archivo fasta con las secuencias de los contigs ensamblados");
-            contigA.setExtension(contigFile.substring(contigFile.lastIndexOf(".") + 1));
-            nextIDArchivo++;
-            adao.insertaArchivoMetaGenoma(contigA, id, source, toFile, outFile, true);
-
-            ArchivoObj gffA = new ArchivoObj(nextIDArchivo);
-            gffA.setTipoArchivo(ArchivoObj.TIPO_PRE);
-            gffA.setNombre(gffFile.substring(gffFile.lastIndexOf("/") + 1));
-            idx = gffFile.lastIndexOf("/") != -1 ? gffFile.lastIndexOf("/") + 1 : gffFile.length();
-            gffA.setPath(gffFile.substring(0, idx));
-            gffA.setDescription("Archivo gff con las coordenadas de las genes mapeados en el archivo de contigs");
-            gffA.setExtension(gffFile.substring(gffFile.lastIndexOf(".") + 1));
-            nextIDArchivo++;
-            adao.insertaArchivoMetaGenoma(gffA, id, source, toFile, outFile, true);
+            loadFiles(id, source, outFile, contigFile, protFile, nucFile, gffFile);
 
             genDAO.setDebug(debug);
             GFFLine gffLine;
@@ -429,7 +574,7 @@ public class GeneFuncLoader {
                         // cincop.setSize(gen.getContig_from() - 1);
                         GenSeqObj seqObj = new GenSeqObj();
                         if (contig.getSeqId().equals(gen.getContig_id())) {
-                             System.err.println("ACA NUNCA TIENE QUE ENTRAR 3");
+                            System.err.println("ACA NUNCA TIENE QUE ENTRAR 3");
                             if (cincop.getTo() - cincop.getFrom() < 0) {
                                 cincop.setSecuenciaValidada(contig, cincop.getTo(), cincop.getFrom());
                             } else {

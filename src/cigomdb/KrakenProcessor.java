@@ -46,6 +46,12 @@ public class KrakenProcessor {
         nodosObsoletos = new HashMap<>();
         nodosObsoletos.put("710686", "212767");
         nodosObsoletos.put("1380774", "93220");
+        nodosObsoletos.put("51290", "1783257");
+        nodosObsoletos.put("131550", "1783270");
+        nodosObsoletos.put("1476208", "1755588");
+        nodosObsoletos.put("1206745", "537971");
+        nodosObsoletos.put("83553", "810");
+
     }
 
     /**
@@ -143,6 +149,8 @@ public class KrakenProcessor {
             }
         }
         NumberFormat formatter = new DecimalFormat("##.####");
+        int totalAssigned = 0;
+        int totalNotAssigned = 0;
         try {
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
             String linea;
@@ -159,6 +167,7 @@ public class KrakenProcessor {
             while ((linea = reader.readLine()) != null) {
                 line++;
                 if (linea.startsWith("C")) {
+                    totalAssigned++;
                     //0= C|U   1= SeqID   2=tax_id   3=seqLength 
                     //4= classif; taxid:kammers taxid:kammers
                     String fields[] = linea.split("\t");
@@ -209,10 +218,10 @@ public class KrakenProcessor {
                                                 String tmpTaxID = verifyNCBINODE(taxID);
                                                 //si tiene un nuevo nodo se lo asigna, sino se queda como esta
                                                 taxID = tmpTaxID.length() > 0 ? tmpTaxID : taxID;
-                                                hierarchyAssignedTaxID = transacciones.getHierarchy(taxID);
+                                                hierarchySonTaxID = transacciones.getHierarchy(taxID);
                                             }
-                                            if (hierarchyAssignedTaxID.length() > 0) {
-                                                String hierarchySon[] = hierarchyAssignedTaxID.split(",");
+                                            if (hierarchySonTaxID.length() > 0) {
+                                                String hierarchySon[] = hierarchySonTaxID.split(",");
 
                                                 //la otra opcion es que el taxID sea un hijo del taxID seleccionado (campo 3)
                                                 //en ese caso también se cuenta como caso + y se suma pero hay que buscar en la jerarquía 
@@ -224,7 +233,7 @@ public class KrakenProcessor {
                                                     }
                                                 }
                                             } else {
-                                                System.err.println("Nodo Obsoleto: " + taxID);
+                                                System.err.println("Nodo Obsoleto kmers: " + taxID);
                                             }
                                         }
                                     }
@@ -258,8 +267,14 @@ public class KrakenProcessor {
                         }
 
                     }
+                } else {
+                    totalNotAssigned++;
                 }
             }
+            FileWriter writerStats = new FileWriter(outFile.substring(0, outFile.lastIndexOf(".")) + ".stats");
+            writerStats.write("Asignados\tNo Asignados\tTotal\n");
+            writerStats.write(totalAssigned + "\t" + totalNotAssigned + "\t" + (totalNotAssigned + totalAssigned) + "\n");
+            writerStats.close();
             writerObsoletes.close();
             if (toFile) {
                 writer.close();

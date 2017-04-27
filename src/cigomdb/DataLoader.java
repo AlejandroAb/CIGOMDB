@@ -585,7 +585,11 @@ public class DataLoader {
                         printHelp();
                         System.exit(1);
                     }
+                    
                     GeneFuncLoader loader = new GeneFuncLoader(transacciones);
+                    if (nextIDArchivo != -1) {
+                        loader.setNextIDArchivo(nextIDArchivo);
+                    }
                     //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
                     loader.setDebug(debug);
                     loader.parseEnsamble(idPrefix, idMetagenoma, idGenoma, gffIn, contigIn, ncIn, aaIn, mapPrefix, startAtZero, startAtLine, withHash, toFile, output);

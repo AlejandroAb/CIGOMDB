@@ -18,6 +18,7 @@ public class ArchivoObj {
     public static int TIPO_PRE = 2;
     public static int TIPO_MTX = 3;
     public static int TIPO_KRN = 4;
+    public static int TIPO_ASS = 5;
     private int idArchivo;
     private int tipoArchivo;
     private String nombre;

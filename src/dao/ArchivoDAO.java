@@ -34,7 +34,7 @@ public class ArchivoDAO {
                 for (String qUsuarios : archivo.archivoUsuariosToSQLString()) {
                     if (!transacciones.insertaQuery(qUsuarios)) {
                         System.err.println("Error insertando relación usuario-archivo: "
-                               + archivo.getIdArchivo() + "(idArchivo) - q: " + qUsuarios);
+                                + archivo.getIdArchivo() + "(idArchivo) - q: " + qUsuarios);
                     }
                 }
             }
@@ -57,7 +57,7 @@ public class ArchivoDAO {
      *
      * @param archivo
      * @param id
-     * @param source
+     * @param source metagenoma o genoma
      * @param toFile
      * @param outFile
      * @param append
@@ -65,8 +65,8 @@ public class ArchivoDAO {
      */
     public boolean insertaArchivoMetaGenoma(ArchivoObj archivo, int id, String source, boolean toFile, String outFile, boolean append) {
 
-        String query = archivo.toSQLString();
-        String queryArchivoMetagenoma = "INSERT INTO " + source + "_archivo "
+        String query = archivo.toNewSQLString();
+        String queryArchivoMetagenoma = "INSERT INTO "+source+"_archivo "
                 + "VALUES(" + id + "," + archivo.getIdArchivo() + ")";
         FileWriter writer = null;
         if (!toFile) {
@@ -77,6 +77,13 @@ public class ArchivoDAO {
                 if (!transacciones.insertaQuery(queryArchivoMetagenoma)) {
                     System.err.println("Error insertando MetaGenoma_archivo: " + archivo.getIdArchivo() + " - " + query + "\n");
                     return false;
+                } else {
+                    for (String qUsuarios : archivo.archivoUsuariosToSQLString()) {
+                        if (!transacciones.insertaQuery(qUsuarios)) {
+                            System.err.println("Error insertando relación usuario-archivo: "
+                                    + id + "(idmetagenoma) - " + archivo.getIdArchivo() + "(idArchivo) - q: " + qUsuarios);
+                        }
+                    }
                 }
             }
         } else {
@@ -84,6 +91,9 @@ public class ArchivoDAO {
                 writer = new FileWriter(outFile, append);
                 writer.write(query + ";\n");
                 writer.write(queryArchivoMetagenoma + ";\n");
+                for (String qUsuarios : archivo.archivoUsuariosToSQLString()) {
+                    writer.write(qUsuarios + ";\n");
+                }
                 writer.close();
             } catch (IOException ex) {
                 System.err.println("Error I/O escribiendo archivo: " + outFile + "\n" + query + "\n");
