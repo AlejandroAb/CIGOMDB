@@ -213,7 +213,7 @@ public class MarkerLoader {
                     idxMarcName = -1, idxMarcDesc = -1, idxSelection = -1,
                     idxLayout = -1, idxIdMarcador = -1, idxTipoMarcador = -1,
                     idxTipoSec = -1, idxSecuenciador = -1, idxPcr = -1,
-                    idxQC = -1, idxPre = -1, idxVol = -1, idxVector = -1, idxExtended = -1, idxMetaxa = -1, idxNC1 = -1, idxNC2 = -1, idxSplit = -1;
+                    idxQC = -1,idxComments = -1, idxPre = -1, idxVol = -1, idxVector = -1, idxExtended = -1, idxMetaxa = -1, idxNC1 = -1, idxNC2 = -1, idxSplit = -1;
             int numLinea = 0;
             while (((linea = reader.readLine()) != null)) {
                 if (linea.length() > 0 && !linea.startsWith("#")) {
@@ -264,6 +264,8 @@ public class MarkerLoader {
                                 idxMetaxa = toks;
                             } else if (tok.contains("SPLIT")) {//metaxa file name
                                 idxSplit = toks;
+                            } else if (tok.contains("COMENTARIOS")) {//metaxa file name
+                                idxComments = toks;
                             }
                         }
                     } else {
@@ -365,6 +367,8 @@ public class MarkerLoader {
                                 marcador.setNc1FName(st.nextToken().trim());
                             } else if (tok == idxNC2) {
                                 marcador.setNc2FName(st.nextToken().trim());
+                            } else if (tok == idxComments) {
+                                marcador.setComentarios(st.nextToken().trim());
                             } else if (tok == idxSplit) {
                                 String tmpSplit = st.nextToken().trim();
                                 if (!tmpSplit.toUpperCase().equals("ND") && !tmpSplit.toUpperCase().equals("NA")) {

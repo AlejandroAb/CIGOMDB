@@ -236,7 +236,7 @@ public class GeneAnnotationLoader {
         } catch (NumberFormatException nfe) {
             System.err.println("Error al determinar el ID del " + group + " val :" + group);
         }
-        adao.insertaArchivoMetaGenoma(archivoTrino, id, groupID, outFile.length() > 2, outFile, true);
+        adao.insertaArchivoMetaGenoma(archivoTrino, id, groupID, toFile, outFile, true);
         nextIDArchivo++;
     }
 

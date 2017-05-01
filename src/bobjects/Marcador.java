@@ -37,6 +37,15 @@ public class Marcador {
     String extendedFName = "";
     String nc1FName = "";
     String nc2FName = "";
+    String comentarios = "";
+
+    public String getComentarios() {
+        return comentarios;
+    }
+
+    public void setComentarios(String comentarios) {
+        this.comentarios = comentarios;
+    }
 
     public String getIdMarcador() {
         return idMarcador;
@@ -165,7 +174,7 @@ public class Marcador {
                 type = "F";
             } else if (marcParts[1].equals("MIL")) {
                 type = "K";
-            }else {
+            } else {
                 type = marcParts[1].substring(0, 1);
             }
             idSec = marcParts[0].substring(0, 1) + type + marcParts[2] + marcParts[3] + "." + marcParts[4] + ".";
@@ -274,10 +283,10 @@ public class Marcador {
                 + "idtipo_secuenciacion, idSecuenciador, idpcr, marc_name, marc_desc, "
                 + "seq_num_total, library_selection, library_layout, library_vector, "
                 + "raw_data_path, pro_data_path, data_pre_process,data_qc, idstats,"
-                + "visible, cantidad_dna) "
+                + "visible, cantidad_dna,comentarios) "
                 + "VALUES(" + idMarcador + "," + idMuestra + "," + idTipoMarcador + "," + idTipoSec + "," + idSecuenciador + "," + idPcr
                 + ", '" + marc_name + "','" + marc_desc + "'," + seq_num_total + ",'" + library_selection + "','" + library_layout + "','" + library_vector + "','"
-                + raw_data_path + "','" + proc_data_path + "','" + pre_process + "','" + data_qc + "'," + idStats + "," + visible + ",'" + volumen + "')";
+                + raw_data_path + "','" + proc_data_path + "','" + pre_process + "','" + data_qc + "'," + idStats + "," + visible + ",'" + volumen + "','" + comentarios + "')";
         return sql;
 
     }
