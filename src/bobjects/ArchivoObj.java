@@ -19,7 +19,8 @@ public class ArchivoObj {
     public static int TIPO_MTX = 3; //matrices
     public static int TIPO_KRN = 4; //arhivos krona
     public static int TIPO_ASS = 5; //archivos de ensamble
-    public static int TIPO_FUN = 5;//Asignacion funcional y/o metabolica
+    public static int TIPO_FUN = 6;//Asignacion funcional y/o metabolica
+    public static int TIPO_TAX = 7;//Asignacion taxonómica
     private int idArchivo;
     private int tipoArchivo;
     private String nombre;

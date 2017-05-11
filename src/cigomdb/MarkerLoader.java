@@ -301,9 +301,12 @@ public class MarkerLoader {
                             if (tok == idxIdMuestra) {
                                 idMuestra = st.nextToken().trim();
                                 marcador.setIdMuestra(idMuestra);
-                            } else if (tok == idxRaw) {
+                            } else if (tok == idxRaw) {                                
                                 raw_data_path = st.nextToken().trim();
                                 marcador.setRaw_data_path(raw_data_path);
+                                if (!raw_data_path.endsWith("/")) {
+                                    raw_data_path += "/";
+                                }
                             } else if (tok == idxIdMarcador) {
                                 String tmpIdMarcador = st.nextToken().trim();
                                 if (!tmpIdMarcador.toUpperCase().equals("NA") && !tmpIdMarcador.toUpperCase().equals("ND")) {
@@ -328,6 +331,9 @@ public class MarkerLoader {
                             } else if (tok == idxProc) {
                                 proc_data_path = st.nextToken().trim();
                                 marcador.setProc_data_path(proc_data_path);
+                                if(!proc_data_path.endsWith("/")){
+                                    proc_data_path +="/";
+                                }
                             } else if (tok == idxMarcName) {
                                 marc_name = st.nextToken().trim();
                                 marcador.setMarc_name(marc_name);

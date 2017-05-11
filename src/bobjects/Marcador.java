@@ -227,6 +227,9 @@ public class Marcador {
     }
 
     public void setRaw_data_path(String raw_data_path) {
+        if (!raw_data_path.endsWith("/")) {
+            raw_data_path += "/";
+        }
         this.raw_data_path = raw_data_path;
     }
 
@@ -235,6 +238,9 @@ public class Marcador {
     }
 
     public void setProc_data_path(String proc_data_path) {
+        if (!proc_data_path.endsWith("/")) {
+            proc_data_path += "/";
+        }
         this.proc_data_path = proc_data_path;
     }
 

@@ -104,6 +104,7 @@ public class DataLoader {
         modes.add("taxon");
         modes.add("ko");
         modes.add("kraken");
+        modes.add("krona");//por el momento unicamnete krona para metagenomas
 
         int swissBulk = 20;
         boolean swissBatch = false;
@@ -643,9 +644,9 @@ public class DataLoader {
                 }
                 KeggProcessor keggP = new KeggProcessor(transacciones);
                 //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
-                 if (nextIDArchivo != -1) {
-                        keggP.setNextIDArchivo(nextIDArchivo);
-                    }
+                if (nextIDArchivo != -1) {
+                    keggP.setNextIDArchivo(nextIDArchivo);
+                }
                 keggP.procesaKOList(input, group, id, output, toFile);
 
             } else if (mode.equals("kraken")) {
@@ -758,6 +759,15 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
+            } else if (mode.equals("krona")) {
+                KronaProcessor loader = new KronaProcessor(transacciones);
+                if (kronaPath.length() > 0) {
+                    loader.setRunKrona(kronaPath);
+                }
+                if (nextIDArchivo > -1) {
+                    loader.setNextIDArchivo(nextIDArchivo);
+                }
+                loader.processKronaMetagenoma(input, output, withNoRank, force);
             } else if (mode.equals("markers")) {
                 if (marker_meth.length() > 0) {
                     MarkerLoader loader = new MarkerLoader(transacciones);

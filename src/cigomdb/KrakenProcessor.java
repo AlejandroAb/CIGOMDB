@@ -86,9 +86,9 @@ public class KrakenProcessor {
         File tmpFile = new File(file);
         ArchivoObj krakenFile = new ArchivoObj(nextIDArchivo);
         nextIDArchivo++;
-        krakenFile.setTipoArchivo(ArchivoObj.TIPO_PRE);
+        krakenFile.setTipoArchivo(ArchivoObj.TIPO_TAX);
         krakenFile.setNombre(file.substring(file.lastIndexOf("/") + 1));
-        krakenFile.setPath(file.substring(0, file.indexOf("/") + 1));
+        krakenFile.setPath(file.substring(0, file.lastIndexOf("/") + 1));
         krakenFile.setDescription("Archivo de salida de Kraken. Predicción taxonómica mediante espectro de kámeros");
         int tmpID = nextIDArchivo;
         krakenFile.setExtension("out");

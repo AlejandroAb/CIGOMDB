@@ -504,6 +504,22 @@ public class Transacciones {
             return dbResult.get(0).get(0).toString();
         }
     }
+    /**
+     * Busca el id de unmarcador, dado su nombre
+     *
+     * @param label
+     * @return
+     */
+    public String getIdMetagenomaByLabel(String label) {
+        String query = "SELECT idmetagenoma FROM metagenoma WHERE meta_name ='" + label + "'";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult == null || dbResult.isEmpty()) {
+            return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
 
     /**
      * Busca el ID de un marcador dado un fragmento de su path de datos
@@ -535,6 +551,23 @@ public class Transacciones {
      */
     public String getEtiquetaMarcadorByLabel(String idMarcador) {
         String query = "SELECT marc_name FROM marcador WHERE idmarcador =" + idMarcador;
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult == null || dbResult.isEmpty()) {
+            return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+    
+     /**
+     * Busca la etiqueta de un marcador dado su nombre
+     *
+     * @param idMarcador
+     * @return
+     */
+    public String getEtiquetaMetagenomaByLabel(String idMetagenoma) {
+        String query = "SELECT meta_name FROM metagenoma WHERE idmetagenoma =" + idMetagenoma;
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         if (dbResult == null || dbResult.isEmpty()) {
@@ -618,12 +651,35 @@ public class Transacciones {
         }
     }
 
+    /**
+     * Trae el path de procesamiento para un marcador
+     * @param idMarcador
+     * @return 
+     */
     public String getProcessDataPathByMarcadorID(String idMarcador) {
         String query = "SELECT pro_data_path FROM marcador WHERE idMarcador = " + idMarcador;
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         if (dbResult == null || dbResult.isEmpty()) {
             System.err.println("No se puede enconrar el path para ID: " + idMarcador);
+            System.err.println("Q: " + query);
+            return "";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
+    
+    /**
+     * Trae el path donde se encuentra el archivo kraken.out
+     * @param idmetagenoma
+     * @return 
+     */
+    public String getKrakenPathByMetagenomaID(String idmetagenoma) {
+        String query = "SELECT path FROM archivo WHERE idmetagenoma = " + idmetagenoma +" AND idtipo_archivo = 7";
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        if (dbResult == null || dbResult.isEmpty()) {
+            System.err.println("No se puede enconrar el path para ID: " + idmetagenoma);
             System.err.println("Q: " + query);
             return "";
         } else {
