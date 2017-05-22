@@ -38,17 +38,17 @@ public class KronaDAO {
      * input file para crear el krona.
      *
      * @param fileName el nombre y path completo de la matriz a crear
-     * @param idMarcador el marcador paara el cual se crea la matriz
+     * @param idMetagenoma el metagenoma para el cual se crea la matriz
      * @param withNoRank en caso de que no exista un nivel taxonómico, ya sea de
      * los niveles intermedios o de los más específicos, si esta bandera está en
      * true, estos valores serán creados con la palabra no_rank en ese nivel si
      * viene en false, este campo simplemente tendrá un tabulador.
      * @return
      */
-    public boolean writeKronaInput(String fileName, String idMarcador, boolean withNoRank) {
+    public boolean writeKronaInput(String fileName, String idMetagenoma, boolean withNoRank) {
         try {
             FileWriter writer = new FileWriter(fileName);
-            ArrayList<ArrayList> taxaCounts = transacciones.getCountsByMarcador(idMarcador);
+            ArrayList<ArrayList> taxaCounts = transacciones.getCountsByMetagenoma(idMetagenoma);
             if (taxaCounts != null) {
                 NCBITaxCreator ncbi = new NCBITaxCreator(transacciones);
                 for (ArrayList<String> taxa : taxaCounts) {

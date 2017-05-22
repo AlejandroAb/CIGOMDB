@@ -180,7 +180,12 @@ public class Transacciones {
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         return dbResult;
     }
-
+     public ArrayList<ArrayList> getCountsByMetagenoma(String idMetagenoma) {
+        String query = "SELECT tax_id, counts FROM conteos_shotgun where idmetagenoma = " + idMetagenoma;
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        return dbResult;
+    }
     //public Arr
     public ArrayList getRegularPhylogenyByTaxID(String tax_id) {
         String query = "SELECT kingdom, phylum, class, orden, family, genus, species "
@@ -675,7 +680,9 @@ public class Transacciones {
      * @return 
      */
     public String getKrakenPathByMetagenomaID(String idmetagenoma) {
-        String query = "SELECT path FROM archivo WHERE idmetagenoma = " + idmetagenoma +" AND idtipo_archivo = 7";
+        String query = "SELECT path FROM archivo "
+                + "INNER JOIN metagenoma_archivo AS ma ON ma.idarchivo = archivo.idarchivo "
+                + "WHERE idmetagenoma = " + idmetagenoma +" AND idtipo_archivo = 7";
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         if (dbResult == null || dbResult.isEmpty()) {
