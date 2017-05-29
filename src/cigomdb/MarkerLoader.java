@@ -289,7 +289,6 @@ public class MarkerLoader {
                         String library_layout = "";
                         String library_vector = "";
                         String idMarcador = "" + nextIDMarcador;
-                        String pathClasificacion = "";
                         marcador.setIdMarcador(idMarcador);
                         nextIDMarcador++;
                         String idTipoMarcador = "";
@@ -1310,8 +1309,12 @@ public class MarkerLoader {
             }
             String lineaParallel;
             if (!onlyCreateFiles) {
+                int numLinea = 0;
                 while ((lineaParallel = parallelReader.readLine()) != null) {
-                    cDAO.processParallelLine(lineaParallel, proc_data_path + parallelFile, splitSpecial, AnalisisClasificacion.PARALLEL_W_METAXADB, writer, seqMap);
+                    if (!lineaParallel.startsWith("#") && numLinea > 0) {
+                        cDAO.processParallelLine(lineaParallel, proc_data_path + parallelFile, splitSpecial, AnalisisClasificacion.PARALLEL_W_METAXADB, writer, seqMap);
+                    }
+                    numLinea++;
                 }
             }
             if (toFile) {

@@ -461,6 +461,9 @@ public class Transacciones {
         if (dbResult == null || dbResult.isEmpty()) {
             return "";
         } else {
+            if(dbResult.size()>1){
+                System.err.println("RAW_ID repetido: " + raw_seq_id);
+            }
             return dbResult.get(0).get(0).toString();
         }
     }
