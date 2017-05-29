@@ -168,7 +168,7 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            } else if (args[i].equals("-metodo-taxonia")) {
+            } else if (args[i].equals("-metodo-taxonomia")) {
                 try {
                     metodoTaxo = args[i + 1];
                     i++;
