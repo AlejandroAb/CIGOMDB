@@ -8,7 +8,7 @@ package cigomdb;
 import bobjects.ArchivoObj;
 import bobjects.Usuario;
 import dao.ArchivoDAO;
-import dao.MetaxaDAO;
+import dao.ClasificacionDAO;
 import database.Transacciones;
 import java.io.BufferedReader;
 import java.io.File;
@@ -487,7 +487,7 @@ public class GeneAnnotationLoader {
                      } */ else {//no está anotada
                         //transacciones inserta SWISS_PROT
 
-                        MetaxaDAO mdao = new MetaxaDAO(transacciones);
+                        ClasificacionDAO mdao = new ClasificacionDAO(transacciones);
                         String taxo[] = mdao.searchNCBINode(tax);
                         String q = "INSERT INTO swiss_prot (uniprot_id, uniprot_acc, ncbi_tax_id, prot_name) "
                                 + "VALUES('" + id1 + "','-1','" + taxo[0] + "','" + function + "')";

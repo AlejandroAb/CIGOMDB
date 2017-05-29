@@ -47,7 +47,7 @@ public class DataLoader {
         boolean useEquivalencias = false;
         String equivFile = "";
         boolean withNoRank = false;
-
+        String metodoTaxo = "";
         String gffIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.gff";
         String ncIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.ffn";
         String aaIn = "C:\\Users\\Alejandro\\Documents\\Projects\\pemex\\8 Metagenomas\\results_func\\genes_prediction\\metagolfos_FGS.faa";
@@ -165,6 +165,15 @@ public class DataLoader {
                     i++;
                 } catch (ArrayIndexOutOfBoundsException aiobe) {
                     System.out.println("Opcion -outmetaxa - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            } else if (args[i].equals("-metodo-taxonia")) {
+                try {
+                    metodoTaxo = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion -metodo-taxonomia - Se esperaba un argumento\n\n");
                     printHelp();
                     System.exit(1);
                 }
@@ -796,7 +805,7 @@ public class DataLoader {
                     }
                     loader.setOnlyCreateFiles(onlyCreateFiles);
                     if (marker_meth.equals("mv1")) {
-                        log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext, output, outFileFasta, outFileMetaxa, processNotPaired, processKrona);
+                        log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext, output, outFileFasta, outFileMetaxa, processNotPaired, processKrona,metodoTaxo);
                     } else if (marker_meth.equals("mv2")) {
                         log += loader.parseMarkerFileFormatIPacbio(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
                     } else if (marker_meth.equals("krona")) {

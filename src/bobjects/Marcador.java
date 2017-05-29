@@ -34,6 +34,7 @@ public class Marcador {
     String volumen = "";
     ArrayList<ArchivoObj> archivos = new ArrayList<>();
     String metaxaFName = "";
+    String clasificacionFName = "";
     String extendedFName = "";
     String nc1FName = "";
     String nc2FName = "";
@@ -41,6 +42,14 @@ public class Marcador {
 
     public String getComentarios() {
         return comentarios;
+    }
+
+    public String getClasificacionFName() {
+        return clasificacionFName;
+    }
+
+    public void setClasificacionFName(String clasificacionFName) {
+        this.clasificacionFName = clasificacionFName;
     }
 
     public void setComentarios(String comentarios) {
@@ -51,12 +60,19 @@ public class Marcador {
         return idMarcador;
     }
 
+    /**
+     * Como se aceptan multiples forms de anotacion taxonomica, y por legado
+     * existia solo para metaxa. Ahora todo esta dirigido a una sola variable
+     * que es: clasificacionFName. Razón por la cual cambia el getter y setter
+     * de metaxaFName
+     *
+     */
     public String getMetaxaFName() {
-        return metaxaFName;
+        return clasificacionFName;
     }
 
     public void setMetaxaFName(String metaxaFName) {
-        this.metaxaFName = metaxaFName;
+        this.clasificacionFName = metaxaFName;
     }
 
     public String getExtendedFName() {

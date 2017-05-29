@@ -871,6 +871,11 @@ public class Transacciones {
                 + idAnalisis + "," + identity + "," + eval + "," + score + "," + length + ",'" + comments + "')";
         return conexion.queryUpdate(query);
     }
+public boolean insertMarcadorClassificationParallel(String taxID, String idseq_marcador, int idAnalisis, String identity, String eval, String score, String length, String comments) {
+        String query = "INSERT INTO seq_marcador_classif_parallel VALUES(" + taxID + ",'" + idseq_marcador + "', "
+                + idAnalisis + "," + identity + "," + eval + "," + score + "," + length + ",'" + comments + "')";
+        return conexion.queryUpdate(query);
+    }
 
     public boolean updateTaxaSeqMarcador(String taxid, String idseq) {
         String query = "UPDATE seq_marcador SET taxon_tax_id = " + taxid + " WHERE idseq_marcador = '" + idseq + "';\n";

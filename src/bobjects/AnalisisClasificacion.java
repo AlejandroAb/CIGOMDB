@@ -15,4 +15,5 @@ package bobjects;
  */
 public class AnalisisClasificacion {
     public static int METAXA_REGULAR = 1; //analisis regular de metaxa (el  que se corrio tanto para SOGOM1 como MET Y MMF1
+    public static int PARALLEL_W_METAXADB = 2; //analisis realizado con Parallel meta utilizando la base de datos de metaxa
 }

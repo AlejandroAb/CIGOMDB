@@ -22,7 +22,7 @@ import bobjects.Usuario;
 import dao.ArchivoDAO;
 import dao.KronaDAO;
 import dao.MarcadorDAO;
-import dao.MetaxaDAO;
+import dao.ClasificacionDAO;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
@@ -167,8 +167,8 @@ public class MarkerLoader {
      * false si estos ya estan en la BD y se corre el programa para actualizar
      * datos procesados
      * @param processOut true si va a procesar los archivos de secuencias
-     * @param processMetaxa true si va a procesar archivos de metaxa para cargar
-     * la matriz
+     * @param processTaxonomia true si va a procesar archivos de clasificación
+     * taxonómica para cargar la matriz
      * @param raw_ext la extención del archivo crudo por default es fastq o
      * fastq.gz
      * @param outFile el archivo donde se guarda todo lo referente a los
@@ -183,12 +183,13 @@ public class MarkerLoader {
      * archivo html y en caso de que no venga, crea un arhcivo de salida que
      * tiene el script necesario para generar el html y de toddos moddos anota
      * el archivo e la BD, para que pueda ser llamado desde la aplicación
+     * @param metodoTaxo Método taxonómico bajo el cual se va a anotar
      * @processNotPaired Si es true procesa los archivos de fragmentos no
      * pareados, default es false
      * @return String con log de l proceso de anotación.
      *
      */
-    public String parseMarkerFileFormatI(String inputFile, boolean insertAmplicones, boolean processOut, boolean processMetaxa, String raw_ext, String outFile, String outFileFasta, String outFileMetaxa, boolean processNotPaired, boolean processKrona) {
+    public String parseMarkerFileFormatI(String inputFile, boolean insertAmplicones, boolean processOut, boolean processTaxonomia, String raw_ext, String outFile, String outFileFasta, String outFileMetaxa, boolean processNotPaired, boolean processKrona, String metodoTaxo) {
         String log = "";
         try {
             if (nextIDMarcador == -1) {
@@ -206,14 +207,14 @@ public class MarkerLoader {
             BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), "UTF-8"));
             String linea;
             ArchivoDAO adao = new ArchivoDAO(transacciones);
-            MetaxaDAO metaxa = new MetaxaDAO(transacciones);
+            ClasificacionDAO cDAO = new ClasificacionDAO(transacciones);
             MarcadorDAO mdao = new MarcadorDAO(transacciones);
             HashMap<String, String> seqMap = new HashMap<>();
             int idxIdMuestra = -1, idxTag = -1, idxRaw = -1, idxProc = -1,
                     idxMarcName = -1, idxMarcDesc = -1, idxSelection = -1,
                     idxLayout = -1, idxIdMarcador = -1, idxTipoMarcador = -1,
-                    idxTipoSec = -1, idxSecuenciador = -1, idxPcr = -1,
-                    idxQC = -1,idxComments = -1, idxPre = -1, idxVol = -1, idxVector = -1, idxExtended = -1, idxMetaxa = -1, idxNC1 = -1, idxNC2 = -1, idxSplit = -1;
+                    idxTipoSec = -1, idxSecuenciador = -1, idxPcr = -1, idxClasificacion = -1,
+                    idxQC = -1, idxComments = -1, idxPre = -1, idxVol = -1, idxVector = -1, idxExtended = -1, idxMetaxa = -1, idxNC1 = -1, idxNC2 = -1, idxSplit = -1;
             int numLinea = 0;
             while (((linea = reader.readLine()) != null)) {
                 if (linea.length() > 0 && !linea.startsWith("#")) {
@@ -254,10 +255,12 @@ public class MarkerLoader {
                                 idxVol = toks;
                             } else if (tok.contains("ID") && tok.contains("MARCADOR")) {//PROC DATA PATH
                                 idxIdMarcador = toks;
-                            } else if (tok.contains("VECTOR")) {//PROC DATA PATH
+                            } else if (tok.contains("VECTOR")) {
                                 idxVector = toks;
-                            } else if (tok.contains("QC")) {//PROC DATA PATH
+                            } else if (tok.contains("QC")) {
                                 idxQC = toks;
+                            } else if (tok.contains("CLASIFICACION")) {//ARCHIVO DE CLASIFICACION TAXONOMICA
+                                idxClasificacion = toks;
                             } else if (tok.contains("EXTENDED")) {//Extended file name
                                 idxExtended = toks;
                             } else if (tok.contains("METAXA")) {//metaxa file name
@@ -286,6 +289,7 @@ public class MarkerLoader {
                         String library_layout = "";
                         String library_vector = "";
                         String idMarcador = "" + nextIDMarcador;
+                        String pathClasificacion = "";
                         marcador.setIdMarcador(idMarcador);
                         nextIDMarcador++;
                         String idTipoMarcador = "";
@@ -301,7 +305,7 @@ public class MarkerLoader {
                             if (tok == idxIdMuestra) {
                                 idMuestra = st.nextToken().trim();
                                 marcador.setIdMuestra(idMuestra);
-                            } else if (tok == idxRaw) {                                
+                            } else if (tok == idxRaw) {
                                 raw_data_path = st.nextToken().trim();
                                 marcador.setRaw_data_path(raw_data_path);
                                 if (!raw_data_path.endsWith("/")) {
@@ -331,8 +335,8 @@ public class MarkerLoader {
                             } else if (tok == idxProc) {
                                 proc_data_path = st.nextToken().trim();
                                 marcador.setProc_data_path(proc_data_path);
-                                if(!proc_data_path.endsWith("/")){
-                                    proc_data_path +="/";
+                                if (!proc_data_path.endsWith("/")) {
+                                    proc_data_path += "/";
                                 }
                             } else if (tok == idxMarcName) {
                                 marc_name = st.nextToken().trim();
@@ -369,6 +373,8 @@ public class MarkerLoader {
                                 marcador.setExtendedFName(st.nextToken().trim());
                             } else if (tok == idxMetaxa) {
                                 marcador.setMetaxaFName(st.nextToken().trim());
+                            } else if (tok == idxClasificacion) {
+                                marcador.setClasificacionFName(st.nextToken().trim());
                             } else if (tok == idxNC1) {
                                 marcador.setNc1FName(st.nextToken().trim());
                             } else if (tok == idxNC2) {
@@ -388,6 +394,7 @@ public class MarkerLoader {
                             idMuestra = transacciones.getIdMuestraByLabel(tag);
                             marcador.setIdMuestra(idMuestra);
                         }
+                        //Inserta marcadores
                         if (insertAmplicones) {
                             if (idMuestra.length() == 0) {
                                 System.err.println("No se encontró el ID  de la muestra y no se pudo determinar mediante la etiqueta: " + tag);
@@ -400,9 +407,15 @@ public class MarkerLoader {
                             processSecuencias(marcador, processNotPaired, proc_data_path, outFileFasta, seqMap, adao);
                         }
                         //    marcadorInsertado = mdao.almacenaMarcador(marcador, toFile, outFile, true, true);
-                        if (processMetaxa && processOut) {
+                        if (processTaxonomia /*&& processOut*/) {
                             //to impl cargar metaxa
-                            processMeta(proc_data_path, marcador.getMetaxaFName(), marcador.getIdMarcador(), adao, metaxa, outFileMetaxa, seqMap, processNotPaired);
+                            if (metodoTaxo.toUpperCase().equals("METAXA")) {
+                                processMeta(proc_data_path, marcador.getMetaxaFName(), marcador.getIdMarcador(), adao, cDAO, outFileMetaxa, seqMap, processNotPaired);
+                            } else if (metodoTaxo.toUpperCase().equals("PARALLEL")) {
+                                processParallel(proc_data_path, marcador.getMetaxaFName(), marcador.getIdMarcador(), adao, cDAO, outFileMetaxa, seqMap, processNotPaired);
+                            } else {
+                                System.err.println("El método de asignación taxonómica: " + metodoTaxo + " aún no está implementado!");
+                            }
                             seqMap = new HashMap<>();
                         }
                         if (processKrona) {
@@ -457,7 +470,7 @@ public class MarkerLoader {
         float avg = 0;
         if (!onlyCreateFiles) {
             while ((lineFastQ = extendedReader.readLine()) != null) {
-                if (lineFastQ.startsWith("@") && lineFastQ.length() < 50) {
+                if (lineFastQ.startsWith("@M") /*&& lineFastQ.length() < 50*/) {
                     sec_num++;
                     counterTotal++;
                     String idSec = marcador.getIdSeqFormat() + counterTotal;
@@ -1155,7 +1168,7 @@ public class MarkerLoader {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    public boolean processMeta(String proc_data_path, String metaxFile, String idMarcador, ArchivoDAO adao, MetaxaDAO metaxa, String outFile, HashMap<String, String> seqMap, boolean processNotPaired) throws FileNotFoundException, IOException {
+    public boolean processMeta(String proc_data_path, String metaxFile, String idMarcador, ArchivoDAO adao, ClasificacionDAO metaxa, String outFile, HashMap<String, String> seqMap, boolean processNotPaired) throws FileNotFoundException, IOException {
         File metaxaF = new File(proc_data_path + metaxFile);
         boolean toFile = outFile.length() > 0;
         //FileUtils fUtils = new FileUtils();
@@ -1233,6 +1246,84 @@ public class MarkerLoader {
         return true;
     }
 
+    public boolean processParallel(String proc_data_path, String parallelFile, String idMarcador, ArchivoDAO adao, ClasificacionDAO cDAO, String outFile, HashMap<String, String> seqMap, boolean processNotPaired) throws FileNotFoundException, IOException {
+        File parallelF = new File(proc_data_path + parallelFile);
+        boolean toFile = outFile.length() > 0;
+        //FileUtils fUtils = new FileUtils();
+        if (parallelF.exists()) {
+            BufferedReader parallelReader = new BufferedReader(new FileReader(proc_data_path + parallelFile));
+            FileWriter writer = null;
+            if (generaArchivos) {
+                ArchivoObj pFile = new ArchivoObj(nextIDArchivo);
+                nextIDArchivo++;
+                pFile.setTipoArchivo(ArchivoObj.TIPO_MTX);
+                pFile.setNombre(parallelFile.substring(parallelFile.lastIndexOf("/") + 1));
+                pFile.setPath(proc_data_path + parallelFile.substring(0, parallelFile.indexOf("/") + 1));
+                //metaxaFile.setPath(proc_data_path + "metaxa/");
+                pFile.setDescription("Este archivo tiene toda la asignación taxonómica por secuencia. Es generado a partir del programa ParallelMeta con la base de datos de Metaxa");
+                pFile.setExtension("txt");
+                int tmpID = nextIDArchivo;
+                /*String tmpSource = "";
+                 if (processNotPaired) {
+                 tmpSource += "" + (tmpID - 1);//NC2;
+                 tmpSource += "," + (tmpID - 2);//NC1;
+                 tmpSource += "," + (tmpID - 3);//MERGE FILE            
+                 } else {
+                 tmpSource += "" + (tmpID - 1);//MERGE FILE
+                 }
+
+                 pFile.setOrigen(tmpSource);*/
+                MyDate date = new MyDate(parallelF.lastModified());
+                pFile.setDate(date);
+                pFile.setSize(parallelF.getTotalSpace());
+                pFile.setChecksum(FileUtils.getMD5File(proc_data_path + parallelFile));
+                pFile.setAlcance("Grupo de bioinformática");
+                pFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
+                pFile.setDerechos("Acceso limitado a miembros");
+                pFile.setTags("Asignación taxonómica,ParallelMetaMetaxa DB, amplicones");
+                pFile.setTipo("Text");
+                Usuario user = new Usuario(20);//ALES
+                user.setAcciones("creator");
+                user.setComentarios("Desarrollo y ejecución del pipeline para obtener la clasificación taxonómica según ParallelMeta con la base de datos de Metaxa");
+                pFile.addUser(user);
+                Usuario user2 = new Usuario(25);//ALEXSF
+                user2.setAcciones("contributor");
+                user2.setComentarios("Investigador responsable de subproyecto");
+                pFile.addUser(user2);
+                if (toFile) {
+                    writer = new FileWriter(outFile, true);
+                    writer.write(pFile.toNewSQLString() + ";\n");
+                    writer.write("INSERT INTO marcador_archivo VALUES(" + idMarcador + "," + pFile.getIdArchivo() + ");\n");
+                    for (String qUsuarios : pFile.archivoUsuariosToSQLString()) {
+                        writer.write(qUsuarios + ";\n");
+                    }
+                } else {
+                    adao.insertaArchivo(pFile, false, "", true);
+                    transacciones.insertaArchivoMarcador(idMarcador, pFile.getIdArchivo());
+                    for (String qUsuarios : pFile.archivoUsuariosToSQLString()) {
+                        if (!transacciones.insertaQuery(qUsuarios)) {
+                            System.err.println("Error insertando relación usuario-archivo-metaxa: "
+                                    + idMarcador + "(idmarcador) - " + pFile.getIdArchivo() + "(idArchivo) - q: " + qUsuarios);
+                        }
+                    }
+                }
+            }
+            String lineaParallel;
+            if (!onlyCreateFiles) {
+                while ((lineaParallel = parallelReader.readLine()) != null) {
+                    cDAO.processParallelLine(lineaParallel, proc_data_path + parallelFile, splitSpecial, AnalisisClasificacion.PARALLEL_W_METAXADB, writer, seqMap);
+                }
+            }
+            if (toFile) {
+                writer.close();
+            }
+            parallelReader.close();
+        } else {
+            System.err.println("no se puede encontrar archivo de clasificacion: " + proc_data_path + parallelFile + "\nidMarcador = " + idMarcador);
+        }
+        return true;
+    }
+
     /**
      * Método igual a parseMarkerFileFormatI pero con unas modificaciones pues
      * no hay un pre procesamiento como es el de flash por lo que el fasta a
@@ -1258,7 +1349,7 @@ public class MarkerLoader {
             BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), "ISO-8859-1"));
             String linea;
             ArchivoDAO adao = new ArchivoDAO(transacciones);
-            MetaxaDAO metaxa = new MetaxaDAO(transacciones);
+            ClasificacionDAO metaxa = new ClasificacionDAO(transacciones);
             nextIDArchivo = transacciones.getNextIDArchivos();
             while (((linea = reader.readLine()) != null)) {
                 if (linea.length() > 0 && !linea.startsWith("#")) {

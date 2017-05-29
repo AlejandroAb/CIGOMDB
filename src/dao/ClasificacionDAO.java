@@ -1,7 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * Esta clase se encarga de todo lo DAO para anotaciión de clasificaciones
+ * taxonómicas. Antes era MetaxaDAO, con la llegada de Parallel se decidió tener
+ * un solo DAO para todas las clasificaciones
  */
 package dao;
 
@@ -17,11 +17,11 @@ import utils.StringUtils;
  *
  * @author Alejandro
  */
-public class MetaxaDAO {
+public class ClasificacionDAO {
 
     public Transacciones transacciones;
 
-    public MetaxaDAO(Transacciones transacciones) {
+    public ClasificacionDAO(Transacciones transacciones) {
         this.transacciones = transacciones;
     }
 
@@ -78,7 +78,6 @@ public class MetaxaDAO {
             if (toFile) {
                 if (splitSpecial.length() > 0) {
                     String tmpraw_id = raw_id.split(splitSpecial)[0];
-                    seq_id = seqMap.get(tmpraw_id);
                 } else {
                     seq_id = seqMap.get(raw_id);
                 }
@@ -126,6 +125,105 @@ public class MetaxaDAO {
             }
         } catch (NoSuchElementException nsee) {
             System.err.println("Error archivo: " + fileName + "\nLine:" + mtxLine);
+            return "";
+        }
+
+    }
+
+    /**
+     * Méodo para anotar parallel meta
+     * @param parallelLine la linea del archivo con la clasificacion taxonomica segun parallel
+     * @param fileName el nombre del achivo del cual se está tomando la anotación
+     * @param splitSpecial si es que hay que dividir el archivo de alguna forma
+     * @param idAnalisis_clasificacion el id del anáññisis por el cual se llegó a esta clasificación
+     * @param writer si es aa archivo es el writer para escribir
+     * @param seqMap si se procesaron los archivos crudos, en este hashmap tenemos la equivalencia seq_id raw_seq_id
+     * @return
+     * @throws IOException 
+     */
+    public String processParallelLine(String parallelLine, String fileName, String splitSpecial, int idAnalisis_clasificacion, FileWriter writer, HashMap<String, String> seqMap) throws IOException {
+        try {
+            boolean toFile = writer != null;
+//Sequence_id     Database_id     Percentage_identity     E-value Classification
+            StringTokenizer st = new StringTokenizer(parallelLine, "\t");
+            String raw_id = st.nextToken();
+            String dbID = st.nextToken();
+            String identity = st.nextToken();
+            String evalue = st.nextToken();
+            String classify = st.nextToken();
+
+            try {
+                Double.parseDouble(identity);
+            } catch (NumberFormatException nfe) {
+                identity = "null";
+            }
+
+            try {
+                Double.parseDouble(evalue);
+            } catch (NumberFormatException nfe) {
+                evalue = "null";
+            }
+            String seq_id = "";
+            if (splitSpecial.length() > 0) {
+                String tmpraw_id = raw_id.split(splitSpecial)[0];
+            } else {
+                seq_id = seqMap.get(raw_id);
+            }
+            if (seqMap != null && !seqMap.isEmpty()) {
+                seq_id = seqMap.get(raw_id);
+            } else {
+                seq_id = transacciones.getSecMarcadorByRawID(raw_id);
+            }
+            /*if (toFile) {
+                if (splitSpecial.length() > 0) {
+                    String tmpraw_id = raw_id.split(splitSpecial)[0];
+                } else {
+                    seq_id = seqMap.get(raw_id);
+                }
+            } else {
+                seq_id = transacciones.getSecMarcadorByRawID(raw_id);
+            }*/
+            if (seq_id == null || seq_id.length() == 0 || seq_id.equals("")) {
+                String tmpraw_id = raw_id.split("[_ \t]")[0];
+                if (seqMap != null && !seqMap.isEmpty()) {
+                    seq_id = seqMap.get(tmpraw_id);
+                } else {
+                    seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id);
+                }
+                if (seq_id == null || seq_id.length() == 0) {
+                    //caso: /data/cigom_proc_data/MMF1/amplicon/samples/B6_MIN_2/metaxa/metaxa_out.taxonomy.txt.extended
+                    tmpraw_id = raw_id.split("#")[0];
+                    if (seqMap != null && !seqMap.isEmpty()) {
+                        seq_id = seqMap.get(tmpraw_id);
+                    } else {
+                        seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id);
+                    }
+                    if (seq_id == null || seq_id.length() == 0) {
+                        System.err.println("ERROR. No se encontró secuencia con raw_id = " + raw_id + "\nEn archivo: " + fileName);
+                    }
+                }
+            }
+            String taxid[] = searchNCBINode(classify);
+            if (toFile) {
+                String query = "INSERT INTO seq_marcador_classif_parallel VALUES(" + taxid[0] + ",'" + seq_id + "', "
+                        + idAnalisis_clasificacion + "," + identity + "," + evalue + ",-1,0,'" + taxid[1] + "');\n";
+                writer.write(query);
+                String query2 = "UPDATE seq_marcador SET taxon_tax_id = " + taxid[0] + " WHERE idseq_marcador = '" + seq_id + "';\n";
+                writer.write(query2);
+                return "";
+            } else {
+                if (!transacciones.insertMarcadorClassificationParallel(taxid[0], seq_id, idAnalisis_clasificacion, identity, evalue, "-1", "0", taxid[1])) {
+                    System.err.println("Error insertando seq_marcador_classif: " + "INSERT INTO seq_marcador_classif VALUES(" + taxid[0] + ",'" + seq_id + "', "
+                            + idAnalisis_clasificacion + "," + identity + ","+evalue+",-1,'" + taxid[1] + "')");
+                } else {
+                    if (!transacciones.updateTaxaSeqMarcador(taxid[0], seq_id)) {
+                        System.err.println("Error actualizando seq_marcador --  taxid: " + taxid[0] + "    seqid: " + seq_id);
+                    }
+                }
+                return "";
+            }
+        } catch (NoSuchElementException nsee) {
+            System.err.println("Error archivo: " + fileName + "\nLine:" + parallelLine);
             return "";
         }
 
