@@ -454,8 +454,8 @@ public class Transacciones {
      * @param raw_seq_id
      * @return
      */
-    public String getSecMarcadorByRawID(String raw_seq_id) {
-        String query = "SELECT idseq_marcador FROM seq_marcador WHERE raw_seq_id ='" + raw_seq_id + "'";
+    public String getSecMarcadorByRawID(String raw_seq_id, String idmarcador) {
+        String query = "SELECT idseq_marcador FROM seq_marcador WHERE raw_seq_id ='" + raw_seq_id + "' AND idmarcador = " + idmarcador;
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         if (dbResult == null || dbResult.isEmpty()) {

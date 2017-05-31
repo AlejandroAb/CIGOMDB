@@ -146,7 +146,7 @@ public class ClasificacionDAO {
      * @return
      * @throws IOException
      */
-    public String processParallelLine(String parallelLine, String fileName, String splitSpecial, int idAnalisis_clasificacion, FileWriter writer, HashMap<String, String> seqMap) throws IOException {
+    public String processParallelLine(String parallelLine,String idMarcador, String fileName, String splitSpecial, int idAnalisis_clasificacion, FileWriter writer, HashMap<String, String> seqMap) throws IOException {
         try {
             boolean toFile = writer != null;
 //Sequence_id     Database_id     Percentage_identity     E-value Classification
@@ -177,10 +177,10 @@ public class ClasificacionDAO {
             if (seqMap != null && !seqMap.isEmpty()) {
                 seq_id = seqMap.get(raw_id);
             } else {
-                seq_id = transacciones.getSecMarcadorByRawID(raw_id);
+                seq_id = transacciones.getSecMarcadorByRawID(raw_id,idmarcador);
                 if (seq_id.equals("")) {//si no encontró nada es que hay el error de que falta un carcter al final del raw_id
                     String tmpRawID = raw_id.substring(0, raw_id.length() - 1);
-                    seq_id = transacciones.getSecMarcadorByRawID(tmpRawID);
+                    seq_id = transacciones.getSecMarcadorByRawID(tmpRawID,idmarcador);
                     if (toFile) {
                         String query = "UPDATE seq_marcador SET raw_seq_id = '" + raw_id + "' WHERE idseq_marcador = '" + seq_id + "';\n";
                         writer.write(query);

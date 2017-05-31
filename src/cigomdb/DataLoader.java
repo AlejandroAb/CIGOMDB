@@ -145,7 +145,7 @@ public class DataLoader {
                 try {
                     outFileFasta = args[i + 1];
                     i++;
-                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                } catch (ArrayIndexOutOfBoundsExceptiMAon aiobe) {
                     System.out.println("Opcion -outseq - Se esperaba un argumento\n\n");
                     printHelp();
                     System.exit(1);
@@ -159,7 +159,7 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            } else if (args[i].equals("-outmetaxa")) {
+            } else if (args[i].equals("-outmetaxa") || args[i].equals("-outclassif")) {
                 try {
                     outFileMetaxa = args[i + 1];
                     i++;
