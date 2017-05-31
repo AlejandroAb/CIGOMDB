@@ -21,6 +21,11 @@ public class Marcador {
     String idPcr = "-1";
     String marc_name = "";
     String marc_desc = "";
+    String idLibreria = "";
+    String procesamiento = "";
+    String analisis = "";
+    String clean_up_kit = "";
+    String clean_up_method = "";
     int seq_num_total = 0;
     String library_selection = "";
     String library_layout = "";
@@ -39,9 +44,58 @@ public class Marcador {
     String nc1FName = "";
     String nc2FName = "";
     String comentarios = "";
+    String cite = "";
+
+    public String getCite() {
+        return cite;
+    }
+
+    public void setCite(String cite) {
+        this.cite = cite;
+    }
 
     public String getComentarios() {
         return comentarios;
+    }
+
+    public String getIdLibreria() {
+        return idLibreria;
+    }
+
+    public void setIdLibreria(String idLibreria) {
+        this.idLibreria = idLibreria;
+    }
+
+    public String getProcesamiento() {
+        return procesamiento;
+    }
+
+    public void setProcesamiento(String procesamiento) {
+        this.procesamiento = procesamiento;
+    }
+
+    public String getAnalisis() {
+        return analisis;
+    }
+
+    public void setAnalisis(String analisis) {
+        this.analisis = analisis;
+    }
+
+    public String getClean_up_kit() {
+        return clean_up_kit;
+    }
+
+    public void setClean_up_kit(String clean_up_kit) {
+        this.clean_up_kit = clean_up_kit;
+    }
+
+    public String getClean_up_method() {
+        return clean_up_method;
+    }
+
+    public void setClean_up_method(String clean_up_method) {
+        this.clean_up_method = clean_up_method;
     }
 
     public String getClasificacionFName() {
@@ -302,13 +356,14 @@ public class Marcador {
 
     public String toSQLString() {
         String sql = "INSERT INTO marcador (idmarcador, idMuestra, idtipo_marcador, "
-                + "idtipo_secuenciacion, idSecuenciador, idpcr, marc_name, marc_desc, "
-                + "seq_num_total, library_selection, library_layout, library_vector, "
-                + "raw_data_path, pro_data_path, data_pre_process,data_qc, idstats,"
-                + "visible, cantidad_dna,comentarios) "
+                + "idtipo_secuenciacion, idSecuenciador, idpcr,idlibreria, idstats, marc_name, marc_desc, "
+                + "raw_data_path, pro_data_path, analisis,clean_up_kit, clean_up_method,cantidad_dna,"
+                + "procesamiento, comentarios, cite, visible, seq_num_total) "
                 + "VALUES(" + idMarcador + "," + idMuestra + "," + idTipoMarcador + "," + idTipoSec + "," + idSecuenciador + "," + idPcr
-                + ", '" + marc_name + "','" + marc_desc + "'," + seq_num_total + ",'" + library_selection + "','" + library_layout + "','" + library_vector + "','"
-                + raw_data_path + "','" + proc_data_path + "','" + pre_process + "','" + data_qc + "'," + idStats + "," + visible + ",'" + volumen + "','" + comentarios + "')";
+                + ", " + idLibreria + "," + idStats + ", '" + marc_name + "','" + marc_desc + "', '"
+                + raw_data_path + "','" + proc_data_path + "','" + analisis + "','" + clean_up_kit + "','" + clean_up_method
+                + "','" + volumen + "','" + procesamiento + "','" + comentarios + "','" + cite + "',"
+                + visible + "," + seq_num_total + ")";
         return sql;
 
     }
