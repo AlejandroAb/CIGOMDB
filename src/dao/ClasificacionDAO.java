@@ -132,14 +132,19 @@ public class ClasificacionDAO {
 
     /**
      * Méodo para anotar parallel meta
-     * @param parallelLine la linea del archivo con la clasificacion taxonomica segun parallel
-     * @param fileName el nombre del achivo del cual se está tomando la anotación
+     *
+     * @param parallelLine la linea del archivo con la clasificacion taxonomica
+     * segun parallel
+     * @param fileName el nombre del achivo del cual se está tomando la
+     * anotación
      * @param splitSpecial si es que hay que dividir el archivo de alguna forma
-     * @param idAnalisis_clasificacion el id del anáññisis por el cual se llegó a esta clasificación
+     * @param idAnalisis_clasificacion el id del anáññisis por el cual se llegó
+     * a esta clasificación
      * @param writer si es aa archivo es el writer para escribir
-     * @param seqMap si se procesaron los archivos crudos, en este hashmap tenemos la equivalencia seq_id raw_seq_id
+     * @param seqMap si se procesaron los archivos crudos, en este hashmap
+     * tenemos la equivalencia seq_id raw_seq_id
      * @return
-     * @throws IOException 
+     * @throws IOException
      */
     public String processParallelLine(String parallelLine, String fileName, String splitSpecial, int idAnalisis_clasificacion, FileWriter writer, HashMap<String, String> seqMap) throws IOException {
         try {
@@ -173,16 +178,28 @@ public class ClasificacionDAO {
                 seq_id = seqMap.get(raw_id);
             } else {
                 seq_id = transacciones.getSecMarcadorByRawID(raw_id);
+                if (seq_id.equals("")) {//si no encontró nada es que hay el error de que falta un carcter al final del raw_id
+                    String tmpRawID = raw_id.substring(0, raw_id.length() - 1);
+                    seq_id = transacciones.getSecMarcadorByRawID(tmpRawID);
+                    if (toFile) {
+                        String query = "UPDATE seq_marcador SET raw_seq_id = '" + raw_id + "' WHERE idseq_marcador = '" + seq_id + "';\n";
+                        writer.write(query);
+                    } else {
+                        if (/*transacciones.IMPLENTAR_QUERY UPDATE*/false) {
+                            System.err.println("Error actualizando");
+                        }
+                    }
+                }
             }
             /*if (toFile) {
-                if (splitSpecial.length() > 0) {
-                    String tmpraw_id = raw_id.split(splitSpecial)[0];
-                } else {
-                    seq_id = seqMap.get(raw_id);
-                }
-            } else {
-                seq_id = transacciones.getSecMarcadorByRawID(raw_id);
-            }*/
+             if (splitSpecial.length() > 0) {
+             String tmpraw_id = raw_id.split(splitSpecial)[0];
+             } else {
+             seq_id = seqMap.get(raw_id);
+             }
+             } else {
+             seq_id = transacciones.getSecMarcadorByRawID(raw_id);
+             }*/
             if (seq_id == null || seq_id.length() == 0 || seq_id.equals("")) {
                 String tmpraw_id = raw_id.split("[_ \t]")[0];
                 if (seqMap != null && !seqMap.isEmpty()) {
@@ -214,7 +231,7 @@ public class ClasificacionDAO {
             } else {
                 if (!transacciones.insertMarcadorClassificationParallel(taxid[0], seq_id, idAnalisis_clasificacion, identity, evalue, "-1", "0", taxid[1])) {
                     System.err.println("Error insertando seq_marcador_classif: " + "INSERT INTO seq_marcador_classif VALUES(" + taxid[0] + ",'" + seq_id + "', "
-                            + idAnalisis_clasificacion + "," + identity + ","+evalue+",-1,'" + taxid[1] + "')");
+                            + idAnalisis_clasificacion + "," + identity + "," + evalue + ",-1,'" + taxid[1] + "')");
                 } else {
                     if (!transacciones.updateTaxaSeqMarcador(taxid[0], seq_id)) {
                         System.err.println("Error actualizando seq_marcador --  taxid: " + taxid[0] + "    seqid: " + seq_id);

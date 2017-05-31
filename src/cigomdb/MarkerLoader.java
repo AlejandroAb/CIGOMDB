@@ -417,9 +417,7 @@ public class MarkerLoader {
                             }
                             seqMap = new HashMap<>();
                         }
-                        if (processKrona) {
-                            //  processKrona(proc_data_path, idMarcador, "");
-                        }
+                       
                     }
                 }
             }
