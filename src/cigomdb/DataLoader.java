@@ -145,7 +145,7 @@ public class DataLoader {
                 try {
                     outFileFasta = args[i + 1];
                     i++;
-                } catch (ArrayIndexOutOfBoundsExceptiMAon aiobe) {
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
                     System.out.println("Opcion -outseq - Se esperaba un argumento\n\n");
                     printHelp();
                     System.exit(1);

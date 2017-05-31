@@ -1259,7 +1259,7 @@ public class MarkerLoader {
             String lineaMetaxa;
             if (!onlyCreateFiles) {
                 while ((lineaMetaxa = metaxaReader.readLine()) != null) {
-                    metaxa.processMetaxaLine(lineaMetaxa, proc_data_path + metaxFile, splitSpecial, AnalisisClasificacion.METAXA_REGULAR, writer, seqMap);
+                    metaxa.processMetaxaLine(lineaMetaxa,idMarcador, proc_data_path + metaxFile, splitSpecial, AnalisisClasificacion.METAXA_REGULAR, writer, seqMap);
                 }
             }
             if (toFile) {
@@ -1339,7 +1339,7 @@ public class MarkerLoader {
                 int numLinea = 0;
                 while ((lineaParallel = parallelReader.readLine()) != null) {
                     if (!lineaParallel.startsWith("#") && numLinea > 0) {
-                        cDAO.processParallelLine(lineaParallel, proc_data_path + parallelFile, splitSpecial, AnalisisClasificacion.PARALLEL_W_METAXADB, writer, seqMap);
+                        cDAO.processParallelLine(lineaParallel,idMarcador, proc_data_path + parallelFile, splitSpecial, AnalisisClasificacion.PARALLEL_W_METAXADB, writer, seqMap);
                     }
                     numLinea++;
                 }

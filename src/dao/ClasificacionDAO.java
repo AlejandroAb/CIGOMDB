@@ -49,7 +49,7 @@ public class ClasificacionDAO {
      * @param idAnalisis_clasificacion el id del tipo de analisis que se realizó
      * @return log del proceso
      */
-    public String processMetaxaLine(String mtxLine, String fileName, String splitSpecial, int idAnalisis_clasificacion, FileWriter writer, HashMap<String, String> seqMap) throws IOException {
+    public String processMetaxaLine(String mtxLine, String fileName, String idMarcador, String splitSpecial, int idAnalisis_clasificacion, FileWriter writer, HashMap<String, String> seqMap) throws IOException {
         try {
             StringTokenizer st = new StringTokenizer(mtxLine, "\t");
             String raw_id = st.nextToken();
@@ -82,14 +82,14 @@ public class ClasificacionDAO {
                     seq_id = seqMap.get(raw_id);
                 }
             } else {
-                seq_id = transacciones.getSecMarcadorByRawID(raw_id);
+                seq_id = transacciones.getSecMarcadorByRawID(raw_id,idMarcador);
             }
             if (seq_id == null || seq_id.length() == 0) {
                 String tmpraw_id = raw_id.split("[_ \t]")[0];
                 if (toFile) {
                     seq_id = seqMap.get(tmpraw_id);
                 } else {
-                    seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id);
+                    seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id,idMarcador);
                 }
                 if (seq_id == null || seq_id.length() == 0) {
                     //caso: /data/cigom_proc_data/MMF1/amplicon/samples/B6_MIN_2/metaxa/metaxa_out.taxonomy.txt.extended
@@ -97,7 +97,7 @@ public class ClasificacionDAO {
                     if (toFile) {
                         seq_id = seqMap.get(tmpraw_id);
                     } else {
-                        seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id);
+                        seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id,idMarcador);
                     }
                     if (seq_id == null || seq_id.length() == 0) {
                         System.err.println("ERROR. No se encontró secuencia con raw_id = " + raw_id + "\nEn archivo: " + fileName);
@@ -177,10 +177,10 @@ public class ClasificacionDAO {
             if (seqMap != null && !seqMap.isEmpty()) {
                 seq_id = seqMap.get(raw_id);
             } else {
-                seq_id = transacciones.getSecMarcadorByRawID(raw_id,idmarcador);
+                seq_id = transacciones.getSecMarcadorByRawID(raw_id,idMarcador);
                 if (seq_id.equals("")) {//si no encontró nada es que hay el error de que falta un carcter al final del raw_id
                     String tmpRawID = raw_id.substring(0, raw_id.length() - 1);
-                    seq_id = transacciones.getSecMarcadorByRawID(tmpRawID,idmarcador);
+                    seq_id = transacciones.getSecMarcadorByRawID(tmpRawID,idMarcador);
                     if (toFile) {
                         String query = "UPDATE seq_marcador SET raw_seq_id = '" + raw_id + "' WHERE idseq_marcador = '" + seq_id + "';\n";
                         writer.write(query);
@@ -205,7 +205,7 @@ public class ClasificacionDAO {
                 if (seqMap != null && !seqMap.isEmpty()) {
                     seq_id = seqMap.get(tmpraw_id);
                 } else {
-                    seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id);
+                    seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id,idMarcador);
                 }
                 if (seq_id == null || seq_id.length() == 0) {
                     //caso: /data/cigom_proc_data/MMF1/amplicon/samples/B6_MIN_2/metaxa/metaxa_out.taxonomy.txt.extended
@@ -213,7 +213,7 @@ public class ClasificacionDAO {
                     if (seqMap != null && !seqMap.isEmpty()) {
                         seq_id = seqMap.get(tmpraw_id);
                     } else {
-                        seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id);
+                        seq_id = transacciones.getSecMarcadorByRawID(tmpraw_id,idMarcador);
                     }
                     if (seq_id == null || seq_id.length() == 0) {
                         System.err.println("ERROR. No se encontró secuencia con raw_id = " + raw_id + "\nEn archivo: " + fileName);
