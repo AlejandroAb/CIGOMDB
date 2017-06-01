@@ -151,8 +151,8 @@ public class ClasificacionDAO {
             boolean toFile = writer != null;
 //Sequence_id     Database_id     Percentage_identity     E-value Classification
             StringTokenizer st = new StringTokenizer(parallelLine, "\t");
-            String raw_id = st.nextToken();
-            String dbID = st.nextToken();
+            String raw_id = st.nextToken().trim();
+            String dbID = st.nextToken().trim();
             String identity = st.nextToken();
             String evalue = st.nextToken();
             String classify = st.nextToken();
