@@ -1162,6 +1162,7 @@ public class MarkerLoader {
                     user.setAcciones("creator");
                     user.setComentarios("Se encargaron de generar las librerías que se mandaron a secuenciar y de donde se obtienen las secuencias");
                     rawFile.addUser(user);
+                    marcador.addArchivo(rawFile);
                     //   Usuario user2 = new Usuario(24);//Ricardo Grande
                     //   user2.setAcciones("contributor");
                     //   user2.setComentarios("Encargado de la secuenciación/envío de librerías");
@@ -1284,7 +1285,7 @@ public class MarkerLoader {
                 nextIDArchivo++;
                 pFile.setTipoArchivo(ArchivoObj.TIPO_MTX);
                 pFile.setNombre(parallelFile.substring(parallelFile.lastIndexOf("/") + 1));
-                pFile.setPath(proc_data_path + parallelFile.substring(0, parallelFile.indexOf("/") + 1));
+                pFile.setPath(proc_data_path + parallelFile.substring(0, parallelFile.lastIndexOf("/") + 1));
                 //metaxaFile.setPath(proc_data_path + "metaxa/");
                 pFile.setDescription("Este archivo tiene toda la asignación taxonómica por secuencia. Es generado a partir del programa ParallelMeta con la base de datos de Metaxa");
                 pFile.setExtension("txt");
