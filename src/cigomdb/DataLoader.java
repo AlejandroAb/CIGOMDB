@@ -44,6 +44,7 @@ public class DataLoader {
         String contigIn = "";
         String postFix = "";
         String where = "";
+        String idanalisis = "";
         boolean useEquivalencias = false;
         String equivFile = "";
         boolean withNoRank = false;
@@ -168,7 +169,16 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            } else if (args[i].equals("-metodo-taxonomia")) {
+            } else if (args[i].equals("-idanalisis")) {
+                try {
+                    idanalisis = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion -outmetaxa - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            }else if (args[i].equals("-metodo-taxonomia")) {
                 try {
                     metodoTaxo = args[i + 1];
                     i++;
@@ -809,7 +819,7 @@ public class DataLoader {
                     } else if (marker_meth.equals("mv2")) {
                         log += loader.parseMarkerFileFormatIPacbio(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
                     } else if (marker_meth.equals("krona")) {
-                        loader.processKrona(input, output, withNoRank, force);
+                        loader.processKrona(input, output, withNoRank, force, idanalisis);
                     } else if (marker_meth.equals("stats")) {
                         loader.cargaEstadisticas(input, output);
                     } else {

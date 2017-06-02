@@ -214,9 +214,9 @@ public class MarkerLoader {
                     idxMarcName = -1, idxMarcDesc = -1, idxSelection = -1,
                     idxLayout = -1, idxIdMarcador = -1, idxTipoMarcador = -1,
                     idxTipoSec = -1, idxSecuenciador = -1, idxPcr = -1, idxClasificacion = -1,
-                    idxQC = -1, idxComments = -1, idxPre = -1, idxVol = -1, idxVector = -1, 
+                    idxQC = -1, idxComments = -1, idxPre = -1, idxVol = -1, idxVector = -1,
                     idxExtended = -1, idxMetaxa = -1, idxNC1 = -1, idxNC2 = -1, idxSplit = -1,
-                    idxProcesamiento=-1, idxAnalisis=-1, idxKit=-1, idxCleanMethod=-1, idxIdLib=-1, idxCita=-1;
+                    idxProcesamiento = -1, idxAnalisis = -1, idxKit = -1, idxCleanMethod = -1, idxIdLib = -1, idxCita = -1;
             int numLinea = 0;
             while (((linea = reader.readLine()) != null)) {
                 if (linea.length() > 0 && !linea.startsWith("#")) {
@@ -273,22 +273,22 @@ public class MarkerLoader {
                                 idxComments = toks;
                             } else if (tok.contains("ANALISIS")) {//ANALISIS DEL MARCADOR
                                 idxAnalisis = toks;
-                            }else if (tok.contains("PROCESAMIENTO")) {//PROCESAMIENTO DE LA MUESTRA
+                            } else if (tok.contains("PROCESAMIENTO")) {//PROCESAMIENTO DE LA MUESTRA
                                 idxProcesamiento = toks;
-                            }else if (tok.contains("KIT")) {//CLEAN UP KIT
+                            } else if (tok.contains("KIT")) {//CLEAN UP KIT
                                 idxKit = toks;
-                            }else if (tok.contains("METHOD") && tok.contains("CLEAN")) {//CLEAN UP METHOD
+                            } else if (tok.contains("METHOD") && tok.contains("CLEAN")) {//CLEAN UP METHOD
                                 idxCleanMethod = toks;
-                            }else if (tok.contains("ID") && tok.contains("LIBRERIA")) {//LIBRERIA
+                            } else if (tok.contains("ID") && tok.contains("LIBRERIA")) {//LIBRERIA
                                 idxIdLib = toks;
-                            }else if (tok.contains("CITA") || tok.contains("REFERENCIA")) {//CITAR ESTA LIBRERIA
+                            } else if (tok.contains("CITA") || tok.contains("REFERENCIA")) {//CITAR ESTA LIBRERIA
                                 idxCita = toks;
-                            }else if (tok.contains("NC1")) {//Fragmentos no extendidos 1
+                            } else if (tok.contains("NC1")) {//Fragmentos no extendidos 1
                                 idxNC1 = toks;
-                            }else if (tok.contains("NC2") ) {//Fragmentos no extendidos 2
+                            } else if (tok.contains("NC2")) {//Fragmentos no extendidos 2
                                 idxNC2 = toks;
                             }
-                            
+
                         }
                     } else {
                         StringTokenizer st = new StringTokenizer(linea, "\t");
@@ -399,15 +399,15 @@ public class MarkerLoader {
                                 marcador.setNc2FName(st.nextToken().trim());
                             } else if (tok == idxComments) {
                                 marcador.setComentarios(st.nextToken().trim());
-                            }else if (tok == idxIdLib) {
+                            } else if (tok == idxIdLib) {
                                 marcador.setIdLibreria(st.nextToken().trim());
-                            }else if (tok == idxKit) {
+                            } else if (tok == idxKit) {
                                 marcador.setClean_up_kit(st.nextToken().trim());
-                            }else if (tok == idxCleanMethod) {
+                            } else if (tok == idxCleanMethod) {
                                 marcador.setClean_up_method(st.nextToken().trim());
-                            }else if (tok == idxAnalisis) {
+                            } else if (tok == idxAnalisis) {
                                 marcador.setAnalisis(st.nextToken().trim());
-                            }else if (tok == idxProcesamiento) {
+                            } else if (tok == idxProcesamiento) {
                                 marcador.setProcesamiento(st.nextToken().trim());
                             } else if (tok == idxSplit) {
                                 String tmpSplit = st.nextToken().trim();
@@ -446,7 +446,7 @@ public class MarkerLoader {
                             }
                             seqMap = new HashMap<>();
                         }
-                       
+
                     }
                 }
             }
@@ -847,7 +847,7 @@ public class MarkerLoader {
      * @param force por mas de que exista el html o la matriiz, fuerza su
      * creación
      */
-    public void processKrona(String inputFile, String outFile, boolean withNoRank, boolean force) {
+    public void processKrona(String inputFile, String outFile, boolean withNoRank, boolean force, String idanalisis) {
         if (nextIDArchivo == -1) {
             nextIDArchivo = transacciones.getNextIDArchivos();
             if (nextIDArchivo == -1) {
@@ -872,7 +872,13 @@ public class MarkerLoader {
             while ((line = reader.readLine()) != null) {
                 if (line.trim().length() > 0 && !line.startsWith("#")) {
                     boolean esID = false;
-                    String id = line.trim();
+                    String tmpLine[] = line.split("\t");
+                    String id = "";
+                    if (tmpLine.length > 1) {
+                        id = tmpLine[0].trim();
+                    } else {
+                        id = line.trim();
+                    }
                     String etiqueta = "";
                     try {
                         Integer.parseInt(id);
@@ -881,7 +887,12 @@ public class MarkerLoader {
 
                     }
                     if (!esID) {
-                        etiqueta = id;
+                        if (tmpLine.length > 1) {
+                            etiqueta = tmpLine[1].trim();
+                        } else {
+                            etiqueta = id;
+                        }
+
                         id = transacciones.getIdMarcadorByLabel(etiqueta);
                     } else {
                         etiqueta = transacciones.getEtiquetaMarcadorByLabel(id);
@@ -910,7 +921,7 @@ public class MarkerLoader {
                     }
                     if (!findHTML) {
                         htmlName = "krona.html";
-                        if (kdao.writeKronaInput(proDataPath + "matrix.krona.txt", id, withNoRank)) {
+                        if (kdao.writeKronaInputMarcador(proDataPath + "matrix.krona.txt", id, withNoRank, idanalisis)) {
                             addMatrixFile(id, proDataPath, "matrix.krona.txt", true, writer);
 
                             String command = runKrona + " -o " + proDataPath + htmlName + " " + proDataPath + "matrix.krona.txt," + etiqueta;
@@ -1260,7 +1271,7 @@ public class MarkerLoader {
             String lineaMetaxa;
             if (!onlyCreateFiles) {
                 while ((lineaMetaxa = metaxaReader.readLine()) != null) {
-                    metaxa.processMetaxaLine(lineaMetaxa,idMarcador, proc_data_path + metaxFile, splitSpecial, AnalisisClasificacion.METAXA_REGULAR, writer, seqMap);
+                    metaxa.processMetaxaLine(lineaMetaxa, idMarcador, proc_data_path + metaxFile, splitSpecial, AnalisisClasificacion.METAXA_REGULAR, writer, seqMap);
                 }
             }
             if (toFile) {
@@ -1340,7 +1351,7 @@ public class MarkerLoader {
                 int numLinea = 0;
                 while ((lineaParallel = parallelReader.readLine()) != null) {
                     if (!lineaParallel.startsWith("#") && numLinea > 0) {
-                        cDAO.processParallelLine(lineaParallel,idMarcador, proc_data_path + parallelFile, splitSpecial, AnalisisClasificacion.PARALLEL_W_METAXADB, writer, seqMap);
+                        cDAO.processParallelLine(lineaParallel, idMarcador, proc_data_path + parallelFile, splitSpecial, AnalisisClasificacion.PARALLEL_W_METAXADB, writer, seqMap);
                     }
                     numLinea++;
                 }

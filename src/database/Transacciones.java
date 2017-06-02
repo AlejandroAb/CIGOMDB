@@ -174,8 +174,8 @@ public class Transacciones {
         return dbResult;
     }
 
-    public ArrayList<ArrayList> getCountsByMarcador(String idMarcador) {
-        String query = "SELECT tax_id, counts FROM conteos where idmarcador = " + idMarcador;
+    public ArrayList<ArrayList> getCountsByMarcador(String idMarcador, String idanalisis) {
+        String query = "SELECT tax_id, counts FROM conteos where idmarcador = " + idMarcador+ " AND idanalisis_clasificacion = " + idanalisis;
         conexion.executeStatement(query);
         ArrayList<ArrayList> dbResult = conexion.getTabla();
         return dbResult;
