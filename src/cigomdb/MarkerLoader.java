@@ -921,10 +921,15 @@ public class MarkerLoader {
                     }
                     if (!findHTML) {
                         htmlName = "krona.html";
-                        if (kdao.writeKronaInputMarcador(proDataPath + "matrix.krona.txt", id, withNoRank, idanalisis)) {
-                            addMatrixFile(id, proDataPath, "matrix.krona.txt", true, writer);
+                        String matrixName = "matrix.krona.txt";
+                        if (idanalisis.equals("2")) {//paralle-meta
+                            htmlName = "krona_p.html";
+                            matrixName = "matrix.krona.parallel.txt";
+                        }
+                        if (kdao.writeKronaInputMarcador(proDataPath + matrixName, id, withNoRank, idanalisis)) {
+                            addMatrixFile(id, proDataPath, matrixName, true, writer);
 
-                            String command = runKrona + " -o " + proDataPath + htmlName + " " + proDataPath + "matrix.krona.txt," + etiqueta;
+                            String command = runKrona + " -o " + proDataPath + htmlName + " " + proDataPath + matrixName+"," + etiqueta;
                             if (executeKronaScript(command)) {
                                 addKronaFile(id, proDataPath, htmlName, true, writer);
                             } else {
@@ -1038,7 +1043,7 @@ public class MarkerLoader {
         MyDate date = new MyDate(f.lastModified());
         matrixFile.setDate(date);
         matrixFile.setSize(f.length());
-        matrixFile.setDescription("Archivo generado a partir de las anotaciones realizadas en la base de datos");
+        matrixFile.setDescription("Archivo generado a partir de las anotaciones taxonómicas realizadas en la base de datos, a partir de las predicciones obtenidas con Parallel Meta");
         matrixFile.setChecksum(FileUtils.getMD5File(proDataPath + fName));
         matrixFile.setAlcance("CIGOM - bioinformática");
         matrixFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
@@ -1061,6 +1066,7 @@ public class MarkerLoader {
             matrixFile.addUser(user);
         }
         if (writer != null) {
+            //writer.write("DELETE FROM archivo WHERE idmarcador " + ";\n");
             writer.write(matrixFile.toNewSQLString() + ";\n");
             writer.write("INSERT INTO marcador_archivo VALUES(" + idMarcador + "," + matrixFile.getIdArchivo() + ");\n");
             for (String qUsuarios : matrixFile.archivoUsuariosToSQLString()) {
