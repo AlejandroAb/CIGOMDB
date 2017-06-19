@@ -105,7 +105,8 @@ public class DataLoader {
         modes.add("taxon");
         modes.add("ko");
         modes.add("kraken");
-        modes.add("krona");//por el momento unicamnete krona para metagenomas
+        modes.add("cobertura");
+        modes.add("x");//por el momento unicamnete krona para metagenomas
 
         int swissBulk = 20;
         boolean swissBatch = false;
@@ -178,7 +179,7 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
-            }else if (args[i].equals("-metodo-taxonomia")) {
+            } else if (args[i].equals("-metodo-taxonomia")) {
                 try {
                     metodoTaxo = args[i + 1];
                     i++;
@@ -778,6 +779,20 @@ public class DataLoader {
                     printHelp();
                     System.exit(1);
                 }
+            } else if (mode.equals("cobertura")) {
+                if (idMetagenoma == -1) {
+                    System.err.println("Para correr el programa cobertura se espera el id del metagenoma");
+                    printHelp();
+                    System.exit(1);
+                }
+                GeneAnnotationLoader loader = new GeneAnnotationLoader(transacciones);
+                //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
+                if (toFile) {
+                    loader.setToFile(toFile);
+                    loader.setOutFile(output);
+                }
+                loader.creaCoverage(idMetagenoma, input);
+
             } else if (mode.equals("krona")) {
                 KronaProcessor loader = new KronaProcessor(transacciones);
                 if (kronaPath.length() > 0) {
@@ -815,7 +830,7 @@ public class DataLoader {
                     }
                     loader.setOnlyCreateFiles(onlyCreateFiles);
                     if (marker_meth.equals("mv1")) {
-                        log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext, output, outFileFasta, outFileMetaxa, processNotPaired, processKrona,metodoTaxo);
+                        log += loader.parseMarkerFileFormatI(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext, output, outFileFasta, outFileMetaxa, processNotPaired, processKrona, metodoTaxo);
                     } else if (marker_meth.equals("mv2")) {
                         log += loader.parseMarkerFileFormatIPacbio(input, insertaAmplicones, processOutAmplicones, processMetaxaAmplicones, raw_ext);
                     } else if (marker_meth.equals("krona")) {

@@ -658,6 +658,20 @@ public class Transacciones {
             return dbResult.get(0).get(0).toString();
         }
     }
+ public String getGeneIDByContigInfo(String group, String groupID, String contigId, String from, String to) {
+        String query = "SELECT gen_id FROM gen WHERE id" + group + " = " + groupID + " "
+                + "AND contig_id = '" + contigId +"' AND contig_from = " + from +" AND contig_to = " + to;
+        conexion.executeStatement(query);
+        ArrayList<ArrayList> dbResult = conexion.getTabla();
+        int id = -1;
+        if (dbResult == null || dbResult.isEmpty()) {
+            System.err.println("No se puede enconrar gen_id para contig_id = '" + contigId +"' AND contig_from = " + from +" AND contig_to = " + to);
+            System.err.println("Q: " + query);
+            return "ERROR";
+        } else {
+            return dbResult.get(0).get(0).toString();
+        }
+    }
 
     /**
      * Trae el path de procesamiento para un marcador

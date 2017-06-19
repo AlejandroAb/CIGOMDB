@@ -222,11 +222,52 @@ public class GeneAnnotationLoader {
         archivoTrino.setDerechos("Acceso limitado a miembros");
         archivoTrino.setTags("predicción funcional, trinotate, cogs, eggnog, uniprot");
         archivoTrino.setTipo("Text");
-        Usuario user = new Usuario(31);//ALES
+        Usuario user = new Usuario(20);//ALES 31 bio cicese
         user.setAcciones("creator");
         user.setComentarios("Se encarga de ejecutar el programa trinotate el cual realiza la predicción funcionaal sobre los genes predichos");
         archivoTrino.addUser(user);
-        Usuario user2 = new Usuario(9);//ALEXSF
+        Usuario user2 = new Usuario(25);//ALEXSF   9 alexey
+        user2.setAcciones("contributor");
+        user2.setComentarios("Investigador responsable de subproyecto");
+        archivoTrino.addUser(user2);
+        int id = -1;
+        try {
+            id = Integer.parseInt(groupID);
+        } catch (NumberFormatException nfe) {
+            System.err.println("Error al determinar el ID del " + group + " val :" + group);
+        }
+        adao.insertaArchivoMetaGenoma(archivoTrino, id, groupID, toFile, outFile, true);
+        nextIDArchivo++;
+    }
+
+    public void loadCovergaeFileIntoDB(String covergaeFile, String outFile, String groupID, String group) {
+        ArchivoDAO adao = new ArchivoDAO(transacciones);
+        File tmpFile = new File(covergaeFile);
+        ArchivoObj archivoTrino = new ArchivoObj(nextIDArchivo);
+        archivoTrino.setTipoArchivo(ArchivoObj.TIPO_FUN);
+        archivoTrino.setNombre(covergaeFile.substring(covergaeFile.lastIndexOf("/") + 1));
+        int idx = covergaeFile.lastIndexOf("/") != -1 ? covergaeFile.lastIndexOf("/") + 1 : covergaeFile.length();
+        archivoTrino.setPath(covergaeFile.substring(0, idx));
+        archivoTrino.setDescription("Archivo con las coverturas de los genes mapeados acorde a los ensambles y predicción de genes realizada. Este archivo es generado mediante sam y bam tools.");
+        archivoTrino.setExtension(covergaeFile.substring(covergaeFile.lastIndexOf(".") + 1));
+        MyDate date = new MyDate(tmpFile.lastModified());
+        archivoTrino.setDate(date);
+        archivoTrino.setSize(tmpFile.length());
+        if (tmpFile.length() / 1048576 < 1000) {//si es menor a un Gb
+            archivoTrino.setChecksum(FileUtils.getMD5File(covergaeFile));
+        } else {
+            archivoTrino.setChecksum("TBD");
+        }
+        archivoTrino.setAlcance("Grupo de bioinformática");
+        archivoTrino.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
+        archivoTrino.setDerechos("Acceso limitado a miembros");
+        archivoTrino.setTags("cobertura, mapeo, sam, bam, coverage");
+        archivoTrino.setTipo("Text");
+        Usuario user = new Usuario(20);//ALES
+        user.setAcciones("creator");
+        user.setComentarios("Se encarga de ejecutar el programa trinotate el cual realiza la predicción funcionaal sobre los genes predichos");
+        archivoTrino.addUser(user);
+        Usuario user2 = new Usuario(25);//ALEXSF
         user2.setAcciones("contributor");
         user2.setComentarios("Investigador responsable de subproyecto");
         archivoTrino.addUser(user2);
@@ -347,11 +388,11 @@ public class GeneAnnotationLoader {
                             splitLineaCogTrinotate(token, geneID, writer);
                         } else if (tok == idxGOBlast || tok == idxGOPfam) {
                             splitLineaGOTrinotate(token, geneID, gos, writer);
-                        }else if (tok == idxKegg) {
+                        } else if (tok == idxKegg) {
                             splitLineaKegg(token, "TRINITY", geneID, writer);
                         } else {
                             // st.nextToken();
-                            
+
                         }
                     }
                 }
@@ -368,6 +409,54 @@ public class GeneAnnotationLoader {
             Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
         }
         return true;
+    }
+
+    /**
+     * Método para capturar las coberuras
+     *
+     * @param idmetagenoma el id del metagenoma para el cual corresponde la
+     * cobertura
+     * @param inputFile el archivo dde entrada con las coberturas
+     * @return
+     */
+    public String creaCoverage(int idmetagenoma, String inputFile) {
+        String log = "";
+        if (nextIDArchivo == -1) {
+            nextIDArchivo = transacciones.getNextIDArchivos();
+            if (nextIDArchivo == -1) {
+                System.err.println("ERROR No se puede determinar el siguiente ID de archivo");
+            }
+        }
+        try {
+            FileWriter writer = null;
+            if (toFile) {
+                writer = new FileWriter(outFile);
+            }
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile)));
+            loadCovergaeFileIntoDB(inputFile, outFile, "" + idmetagenoma, "metagenoma");
+            String line;
+            String query;
+            while ((line = reader.readLine()) != null) {
+                String parts[] = line.split("\t");
+                String gen_id = transacciones.getGeneIDByContigInfo("metagenoma", "" + idmetagenoma, parts[0], parts[1], parts[2]);
+                query = "UPDATE gen SET cobertura = " + parts[3] + " WHERE gen_id = '" + gen_id + "'";
+                if (!gen_id.equals("ERROR")) {
+                    if (toFile) {
+                        writer.write(query+";\n");
+                    }
+                }
+            }
+            if (toFile) {
+                writer.close();
+            }
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(GeneAnnotationLoader.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return log;
+
     }
 
     public String getEquiv_names_file() {
@@ -627,9 +716,9 @@ public class GeneAnnotationLoader {
                             System.err.println("Error actualizando gen kegg_gen: " + gen_id + "\nQ:" + q);
                         }
                     }
-                }else if (kegg_line.startsWith("KO:") ) {
-                     String q = "INSERT INTO  gen_KO(gen_id, idKO, metodo) VALUES ('" + gen_id + "','"+kegg_line.substring(3) + "', '" +metodo+"')";
-                     
+                } else if (kegg_line.startsWith("KO:")) {
+                    String q = "INSERT INTO  gen_KO(gen_id, idKO, metodo) VALUES ('" + gen_id + "','" + kegg_line.substring(3) + "', '" + metodo + "')";
+
                     if (toFile) {
                         try {
                             writer.write(q + ";\n");
@@ -642,7 +731,7 @@ public class GeneAnnotationLoader {
                         if (!transacciones.insertaQuery(q)) {
                             System.err.println("Error actualizando gen_KO: " + gen_id + "\nQ:" + q);
                         }
-                    } 
+                    }
                 }
             }
         }
