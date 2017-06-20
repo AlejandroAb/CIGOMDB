@@ -346,7 +346,7 @@ public class GeneFuncLoader {
         gffA.setTipo("Text");
         Usuario userG = new Usuario(21);//ALES
         userG.setAcciones("creator");
-        userG.setComentarios("Se encarga de ejecutar el programa Flash para parear las lecturas que da como resultado este archivo.");
+        userG.setComentarios("Se encarga de ejecutar el predictor de genes para obbtener las coordenadas en los contigs.");
         gffA.addUser(userG);
         Usuario user2G = new Usuario(25);//ALEXSF
         user2G.setAcciones("contributor");

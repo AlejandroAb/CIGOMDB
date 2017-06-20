@@ -49,13 +49,21 @@ public class GenDAO {
 
     public boolean almacenaValidaGen(GenObj gen, boolean toFile, String outFile) {
         boolean log = true;
+        if(gen.getGen_length()<1){
+            for(GenSeqObj seq : gen.getSequences()){
+                if(seq.getSeqType().startsWith("NC")){
+                    gen.setGen_length(seq.getSeq_size());
+                    break;
+                }
+            }
+        }
         FileWriter writer = null;
         String query = "INSERT INTO gen (gen_id,idmetagenoma, idgenoma, gen_src, gen_map_id,gen_name, gen_type,"
-                + "gen_strand,gen_function,gen_length, gen_num, gen_score,contig_id,contig_gen_id,contig_from,contig_to) "
+                + "gen_strand,gen_length, gen_num, gen_score,contig_id,contig_gen_id,contig_from,contig_to) "
                 + "VALUES ("
                 + "'" + gen.getGenID() + "'," + gen.getIdMetagenoma() + "," + gen.getIdGenoma() + ",'" + gen.getGen_src()
                 + "','" + gen.getGene_map_id() + "','" + gen.getGen_name() + "', '" + gen.getGenType() + "','" + gen.getGen_strand()
-                + "', '" + gen.getGen_function() + "', " + gen.getGen_length() + "," + gen.getGen_num() + "," + gen.getGen_score() + ",'" + gen.getContig_id()
+                + "', " + gen.getGen_length() + "," + gen.getGen_num() + "," + gen.getGen_score() + ",'" + gen.getContig_id()
                 + "', '" + gen.getContig_gen_id() + "', '" + gen.getContig_from() + "', '" + gen.getContig_to() + "')";
         if (!toFile) {
             if (!transacciones.insertaQuery(query)) {
