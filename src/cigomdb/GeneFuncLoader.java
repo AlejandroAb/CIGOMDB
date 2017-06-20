@@ -238,11 +238,11 @@ public class GeneFuncLoader {
         contigA.setDerechos("Acceso limitado a miembros");
         contigA.setTags("Ensamble, assembly, contigs");
         contigA.setTipo("Text");
-        Usuario user = new Usuario(31);//ALES
+        Usuario user = new Usuario(21);//ALES
         user.setAcciones("creator");
         user.setComentarios("Se encarga de ejecutar el programa IDBA el cual realiza el ensamble de las secuencias crudas");
         contigA.addUser(user);
-        Usuario user2 = new Usuario(9);//ALEXSF
+        Usuario user2 = new Usuario(25);//ALEXSF
         user2.setAcciones("contributor");
         user2.setComentarios("Investigador responsable de subproyecto");
         contigA.addUser(user2);
@@ -274,11 +274,11 @@ public class GeneFuncLoader {
         protA.setTags("Secuencias, aminoácidos, proteínas");
         protA.setTipo("Text");
         protA.setOrigen("" + idContigs);
-        Usuario userP = new Usuario(31);//ALES
+        Usuario userP = new Usuario(21);//ALES
         userP.setAcciones("creator");
         userP.setComentarios("Se encarga de ejecutar el programa MetaGeneMark para predicción de CDS");
         protA.addUser(userP);
-        Usuario user2P = new Usuario(9);//ALEXSF
+        Usuario user2P = new Usuario(25);//ALEXSF
         user2P.setAcciones("contributor");
         user2P.setComentarios("Investigador responsable de subproyecto");
         protA.addUser(user2P);
@@ -309,11 +309,11 @@ public class GeneFuncLoader {
         nucA.setDerechos("Acceso limitado a miembros");
         nucA.setTags("Secuencias pareadas, amplicones");
         nucA.setTipo("Text");
-        Usuario userN = new Usuario(31);//ALES
+        Usuario userN = new Usuario(21);//ALES
         userN.setAcciones("creator");
         userN.setComentarios("Se encarga de ejecutar el MetaGeneMark sobre el archivo de contigs.fa que da como resultado este archivo.");
         nucA.addUser(userN);
-        Usuario user2N = new Usuario(9);//ALEXSF
+        Usuario user2N = new Usuario(25);//ALEXSF
         user2N.setAcciones("contributor");
         user2N.setComentarios("Investigador responsable de subproyecto");
         nucA.addUser(user2N);
@@ -344,11 +344,11 @@ public class GeneFuncLoader {
         gffA.setDerechos("Acceso limitado a miembros");
         gffA.setTags("GFF, Predicción de genes, coordenadas");
         gffA.setTipo("Text");
-        Usuario userG = new Usuario(31);//ALES
+        Usuario userG = new Usuario(21);//ALES
         userG.setAcciones("creator");
         userG.setComentarios("Se encarga de ejecutar el programa Flash para parear las lecturas que da como resultado este archivo.");
         gffA.addUser(userG);
-        Usuario user2G = new Usuario(9);//ALEXSF
+        Usuario user2G = new Usuario(25);//ALEXSF
         user2G.setAcciones("contributor");
         user2G.setComentarios("Investigador responsable de subproyecto");
         gffA.addUser(user2G);
