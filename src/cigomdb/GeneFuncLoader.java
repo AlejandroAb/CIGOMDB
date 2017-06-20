@@ -39,9 +39,26 @@ public class GeneFuncLoader {
     private Transacciones transacciones = null;
     private boolean debug = false;
     private int nextIDArchivo = -1;
-
+    private String raw_ext="";
+    private String raw_data_path = "";
     public GeneFuncLoader(Transacciones transacciones) {
         this.transacciones = transacciones;
+    }
+
+    public String getRaw_ext() {
+        return raw_ext;
+    }
+
+    public void setRaw_ext(String raw_ext) {
+        this.raw_ext = raw_ext;
+    }
+
+    public String getRaw_data_path() {
+        return raw_data_path;
+    }
+
+    public void setRaw_data_path(String raw_data_path) {
+        this.raw_data_path = raw_data_path;
     }
 
     public boolean isDebug() {
@@ -337,6 +354,69 @@ public class GeneFuncLoader {
         gffA.addUser(user2G);
         adao.insertaArchivoMetaGenoma(gffA, id, source, outFile.length() > 2, outFile, true);
     }
+
+    /**
+     * Método que da de alta los archivos crudos en la base de datos.
+     *
+     * @param idgroup
+     * @param group
+     * @param outFile
+     * @param raw_data_path
+     * @param raw_ext
+     */
+    public void loadRawFileIntoDB(int idgroup, String group, String outFile, String raw_data_path, String raw_ext) {
+        ArchivoDAO adao = new ArchivoDAO(transacciones);
+        File rawFolder = new File(raw_data_path);
+        if (rawFolder.exists()) {
+            for (File f : rawFolder.listFiles()) {
+                if (f.getName().endsWith(raw_ext)) {
+                    ArchivoObj rawFile = new ArchivoObj(nextIDArchivo);
+                    nextIDArchivo++;
+                    rawFile.setTipoArchivo(ArchivoObj.TIPO_RAW);
+                    rawFile.setNombre(f.getName());
+                    rawFile.setPath(raw_data_path);
+                    rawFile.setExtension(raw_ext);
+                    MyDate date = new MyDate(f.lastModified());
+                    rawFile.setDate(date);
+                    rawFile.setSize(f.length());
+
+                    if (f.getName().contains("R1")) {
+                        rawFile.setDescription("Secuencias crudas de " + group + ". Secuencias FW");
+                    } else if (f.getName().contains("R2")) {
+                        rawFile.setDescription("Secueencias crudas de " + group + ". Secuencias RV");
+                    } else {
+                        rawFile.setDescription("Secuencias crudas de " + group);
+                    }
+                    if (f.length() / 1048576 < 1000) {//si es menor a un Gb
+                        rawFile.setChecksum(FileUtils.getMD5File(raw_data_path + f.getName()));
+                    } else {
+                        rawFile.setChecksum("TBD");
+                    }
+                    rawFile.setAlcance("Grupo de bioinformática");
+                    rawFile.setEditor("CIGOM, Línea de acción 4 - Degradación Natural de Hidrocarburos");
+                    rawFile.setDerechos("Acceso limitado a miembros");
+                    rawFile.setTags("Secuencias crudas, amplicones");
+                    rawFile.setTipo("Text");
+                    Usuario user = new Usuario(24);//UUSM
+                    user.setAcciones("creator");
+                    user.setComentarios("Se encargaron de generar las librerías que se mandaron a secuenciar y de donde se obtienen las secuencias");
+                    rawFile.addUser(user);
+
+                    Usuario user2 = new Usuario(26);//unidad de secuenciacion
+                    user2.setAcciones("contributor");
+                    user2.setComentarios("Centro de secuenciación");
+                    rawFile.addUser(user2);
+                    //marcador.addArchivo(rawFile);
+                    adao.insertaArchivoMetaGenoma(rawFile, idgroup, group, true, outFile, true);
+                    //log += adao.insertaArchivo(rawFile, false, "", true);
+                    //transacciones.insertaArchivoMarcador(idMarcador, rawFile.getIdArchivo());
+                }
+            }
+        } else {
+            System.err.println("No existe directorio: " + raw_data_path);
+            //  return false;
+        }
+    }
     //public boolean 
     //String idPre, String gffFile, String nucFile, String aaFile, String mapPrefix
     /**
@@ -386,7 +466,7 @@ public class GeneFuncLoader {
             }
 
             loadFiles(id, source, outFile, contigFile, protFile, nucFile, gffFile);
-
+            loadRawFileIntoDB(id,source,outFile,raw_data_path,raw_ext);
             genDAO.setDebug(debug);
             GFFLine gffLine;
             int gen_num = 0;

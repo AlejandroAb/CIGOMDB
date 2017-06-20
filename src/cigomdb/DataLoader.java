@@ -73,6 +73,7 @@ public class DataLoader {
         int nextIDArchivo = -1;
         int nextIDMarcador = -1;
         String raw_ext = "fastq"; //-rawe
+        String raw_path = ""; //-rawp
         boolean toFile = false;
         int campania = -1;
         int idGenoma = -1;
@@ -281,6 +282,16 @@ public class DataLoader {
                     i++;
                 } catch (ArrayIndexOutOfBoundsException aiobe) {
                     System.out.println("Opcion rawe - Se esperaba un argumento\n\n");
+                    printHelp();
+                    System.exit(1);
+                }
+            }else if (args[i].equals("-rawp")) {
+
+                try {
+                    raw_path = args[i + 1];
+                    i++;
+                } catch (ArrayIndexOutOfBoundsException aiobe) {
+                    System.out.println("Opcion rawp - Se esperaba un argumento\n\n");
                     printHelp();
                     System.exit(1);
                 }
@@ -611,6 +622,8 @@ public class DataLoader {
                     if (nextIDArchivo != -1) {
                         loader.setNextIDArchivo(nextIDArchivo);
                     }
+                    loader.setRaw_ext(raw_ext);
+                    loader.setRaw_data_path(raw_path);
                     //String idPrefix, int idMetageno, int idGenoma, String gffFile, String contigFile, String nucFile, String protFile, String mapPrefix
                     loader.setDebug(debug);
                     loader.parseEnsamble(idPrefix, idMetagenoma, idGenoma, gffIn, contigIn, ncIn, aaIn, mapPrefix, startAtZero, startAtLine, withHash, toFile, output);
