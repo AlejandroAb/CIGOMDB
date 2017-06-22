@@ -10,6 +10,7 @@ import database.Transacciones;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -33,12 +34,38 @@ public class SwissProt {
 
     private Transacciones transacciones;
     private static final String UNIPROT_SERVER = "http://www.uniprot.org/uniprot/?query=entry:";
+    private String outFile = "";
+    private boolean toFile = false;
 
     public SwissProt(Transacciones transacciones) {
         this.transacciones = transacciones;
     }
 
     public SwissProt() {
+    }
+
+    public Transacciones getTransacciones() {
+        return transacciones;
+    }
+
+    public void setTransacciones(Transacciones transacciones) {
+        this.transacciones = transacciones;
+    }
+
+    public String getOutFile() {
+        return outFile;
+    }
+
+    public void setOutFile(String outFile) {
+        this.outFile = outFile;
+    }
+
+    public boolean isToFile() {
+        return toFile;
+    }
+
+    public void setToFile(boolean toFile) {
+        this.toFile = toFile;
     }
 
     public String loadSwissProtFromWEB(boolean debug) {
@@ -83,9 +110,9 @@ public class SwissProt {
         int toInsert = 0;
         for (ArrayList<String> prot : allProts) {
             String prot_id = prot.get(0).trim();
-            if (transacciones.validaUniprotID(prot_id)) {
+            if (transacciones.validaUniprotID(prot_id)) {//si existe regresa true
                 //SI EXISTE PERO HAY QUE VER SI TIENE TODOS LOS DATOS ACC- 1 -> viene de anotación
-                if (!transacciones.validaUniprotAcc(prot_id)) {
+                if (!transacciones.validaUniprotAcc(prot_id)) {//si tiene -1 en uniprot_acc  entonces hay que actualizar
                     swissProts2Update.add(prot_id);
                     toUpdate++;
                 }
@@ -255,6 +282,10 @@ public class SwissProt {
         //SwissProtObj swissObj = new SwissProtObj(ids);
         StringUtils sUtils = new StringUtils();
         try {
+            FileWriter writer = null;
+            if (toFile) {
+                writer = new FileWriter(outFile, true);
+            }
             URI uri = new URI("http", null, "www.uniprot.org/uniprot/", -1, null, "query=entry:" + ids + "&columns=entry name,id,genes(PREFERRED),protein names,organism-id,ec,comment(PATHWAY),comment(ALTERNATIVE PRODUCTS),comment(TEMPERATURE DEPENDENCE),comment(PH DEPENDENCE)&format=tab", null);
             URL url = uri.toURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -325,13 +356,22 @@ public class SwissProt {
                         }
                         i++;
                     }
-                    if (toInsert) {
-                        if (!transacciones.insertaQuery(swissObj.toSQLString())) {
-                            System.err.println("Error insertando: " + swissObj.toSQLString());
+                    if (toFile) {
+                        if (toInsert) {
+                            writer.write(swissObj.toSQLString());
+
+                        } else {
+                            writer.write(swissObj.toSQLUpdateString());
                         }
                     } else {
-                        if (!transacciones.insertaQuery(swissObj.toSQLUpdateString())) {
-                            System.err.println("Error insertando: " + swissObj.toSQLString());
+                        if (toInsert) {
+                            if (!transacciones.insertaQuery(swissObj.toSQLString())) {
+                                System.err.println("Error insertando: " + swissObj.toSQLString());
+                            }
+                        } else {
+                            if (!transacciones.insertaQuery(swissObj.toSQLUpdateString())) {
+                                System.err.println("Error insertando: " + swissObj.toSQLString());
+                            }
                         }
                     }
                 }
@@ -341,6 +381,9 @@ public class SwissProt {
                         + url.toString());
             }
             conn.disconnect();
+            if (toFile) {
+                writer.close();
+            }
         } catch (MalformedURLException ex) {
             Logger.getLogger(SwissProt.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {

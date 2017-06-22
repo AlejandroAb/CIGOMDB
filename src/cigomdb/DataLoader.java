@@ -593,6 +593,10 @@ public class DataLoader {
             long start = System.currentTimeMillis();
             if (mode.equals("swiss")) {
                 SwissProt swiss = new SwissProt(transacciones);
+                if(toFile){
+                    swiss.setToFile(true);
+                    swiss.setOutFile(output);
+                }
                 if (swissBatch) {
                     swiss.loadSwissProtFromWEBBulk(debug, swissBulk);
                 } else {

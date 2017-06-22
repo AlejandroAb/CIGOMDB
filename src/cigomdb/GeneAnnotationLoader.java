@@ -236,7 +236,7 @@ public class GeneAnnotationLoader {
         } catch (NumberFormatException nfe) {
             System.err.println("Error al determinar el ID del " + group + " val :" + group);
         }
-        adao.insertaArchivoMetaGenoma(archivoTrino, id, groupID, toFile, outFile, true);
+        adao.insertaArchivoMetaGenoma(archivoTrino, id, group, toFile, outFile, true);
         nextIDArchivo++;
     }
 
@@ -304,7 +304,7 @@ public class GeneAnnotationLoader {
             loadTrinotateFileIntoDB(inputFile, outFile, groupID, group);
             FileWriter writer = null;
             if (toFile) {
-                writer = new FileWriter(outFile);
+                writer = new FileWriter(outFile,true);
             }
             if (usaEquivalencias()) {
                 llenaHashEquivalencias();
