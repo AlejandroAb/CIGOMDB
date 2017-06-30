@@ -19,6 +19,7 @@ public class Instrumento {
     public static int ROSSETTA = 3;
     public static int NUC_KASTEN = 4; 
     public static int NUC_REINECK = 5;    
+    public static int NUC_HESSLER = 6; 
     private int idInsrumento=-1;
     private int idTipoInstrumento=-1;
     private String nombre="";

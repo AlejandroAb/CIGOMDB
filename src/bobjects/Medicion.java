@@ -14,6 +14,7 @@ public class Medicion {
     int idMetodoMedida;
     public static int MEDIDO_CTD = 1;//1 =  medido por CTD en la BD
     public static int MEDIDO_PCTESTER_TM_35 = 2;//1 =  medido por CTD en la BD
+    public static int INSPECCION_VISUAL = 3;//3
     private String medicion_t1;
     private String medicion_t2;
     private String medicion_t3;

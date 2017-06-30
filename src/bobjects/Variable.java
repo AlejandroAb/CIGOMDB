@@ -18,6 +18,11 @@ public class Variable {
     public static int PH=2;
     public static int O2_DISUELTO=3;
     public static int FLUORESCENCIA=7;
+    public static int REDOX=8;
+    public static int PERTURBADA=9;
+    public static int PENETRACION=10;
+    public static int INTERSTICIAL=11;
+    
     private int idVariable;
     private int idTipoVariable;
     private int idTipoDato;

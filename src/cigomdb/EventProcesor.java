@@ -97,7 +97,7 @@ public class EventProcesor {
                     idxLongF = -1/*(LONGITUD F% || LONG%F%)*/, idxProfundidad = -1/*(PROFUNDIDAD)*/,
                     idxMaxF = -1/* %MAX%F% */, idxMinO = -1 /*%MIN%O*/, idx1K = -1/* %1000% */, idxFondo = -1,
                     idxBioma = -1, idxEnvFeat = -1, idxEnvMat = -1, idxSampSize = -1/*(tama)*/, idxComentarios = -1,
-                    idxProtocolo = -1, idxTemp = -1, idxSalinidad = -1, idxpH = -1, idxODisuelto = -1, idxFluor = -1;
+                    idxProtocolo = -1, idxTemp = -1, idxSalinidad = -1, idxpH = -1, idxODisuelto = -1, idxFluor = -1,idxRedox=-1, idxPenetracion = -1, idxPerturbada = -1, idxIntersticial = -1;
             ArrayList<Integer> idxInstrumentos = new ArrayList<Integer>();
             ArrayList<Integer> idxUsuarios = new ArrayList<Integer>();
             while ((linea = reader.readLine()) != null) {
@@ -169,7 +169,18 @@ public class EventProcesor {
                                 idxODisuelto = toks;
                             } else if (tok.contains("FLUORES")) {//FLUORESCENCIA
                                 idxFluor = toks;
+                            }else if (tok.contains("PENETRACION")) {//PENETRACION
+                                idxPenetracion = toks;
+                                //idxPenetracion = -1, idxPerturbada = -1, idxIntersticial = -1;
 
+                            }else if (tok.contains("PERTURBADA")) {//PERTURBADA
+                                idxPerturbada = toks;
+
+                            }else if (tok.contains("INTERSTICIAL")) {//INTERS
+                                idxIntersticial = toks;
+                            }
+                            else if (tok.contains("REDOX")) {//REDOX
+                                idxRedox = toks;
                             }
                         }
                     } else {
@@ -499,6 +510,42 @@ public class EventProcesor {
                                     medicion.setIdMetodoMedida(Medicion.MEDIDO_CTD);
                                     muestreo.addNewMedicion(medicion);
                                 }
+                            } else if (tok == idxRedox) { //REDOX
+                                tmpString = st.nextToken().trim();
+                                if (!tmpString.equals("-") && !tmpString.equals("NA") && !tmpString.equals("ND") && !tmpString.equals("x")) {
+                                    Medicion medicion = new Medicion(muestreo.getIdMuestreo(), Variable.REDOX);
+                                    medicion.setMedicion_t1(tmpString);
+                                    medicion.setOrden(1);
+                                    medicion.setIdMetodoMedida(Medicion.MEDIDO_PCTESTER_TM_35);
+                                    muestreo.addNewMedicion(medicion);
+                                }
+                            }else if (tok == idxIntersticial) { //intersticial
+                                tmpString = st.nextToken().trim();
+                                if (!tmpString.equals("-") && !tmpString.equals("NA") && !tmpString.equals("ND") && !tmpString.equals("x")) {
+                                    Medicion medicion = new Medicion(muestreo.getIdMuestreo(), Variable.INTERSTICIAL);
+                                    medicion.setMedicion_t1(tmpString);
+                                    medicion.setOrden(1);
+                                    medicion.setIdMetodoMedida(Medicion.INSPECCION_VISUAL);
+                                    muestreo.addNewMedicion(medicion);
+                                }
+                            }else if (tok == idxPenetracion) { //PENETRACION
+                                tmpString = st.nextToken().trim();
+                                if (!tmpString.equals("-") && !tmpString.equals("NA") && !tmpString.equals("ND") && !tmpString.equals("x")) {
+                                    Medicion medicion = new Medicion(muestreo.getIdMuestreo(), Variable.PENETRACION);
+                                    medicion.setMedicion_t1(tmpString);
+                                    medicion.setOrden(1);
+                                    medicion.setIdMetodoMedida(Medicion.INSPECCION_VISUAL);
+                                    muestreo.addNewMedicion(medicion);
+                                }
+                            }else if (tok == idxPerturbada) { //PERTURBADO
+                                tmpString = st.nextToken().trim();
+                                if (!tmpString.equals("-") && !tmpString.equals("NA") && !tmpString.equals("ND") && !tmpString.equals("x")) {
+                                    Medicion medicion = new Medicion(muestreo.getIdMuestreo(), Variable.PERTURBADA);
+                                    medicion.setMedicion_t1(tmpString);
+                                    medicion.setOrden(1);
+                                    medicion.setIdMetodoMedida(Medicion.INSPECCION_VISUAL);
+                                    muestreo.addNewMedicion(medicion);
+                                }
                             } else if (idxInstrumentos.contains(tok)) { //INSTRUMENTOS
 
                                 tmpString = st.nextToken().trim();
@@ -519,12 +566,9 @@ public class EventProcesor {
                                     muestreo.addNewInstrumento(instrumento2);
                                     muestreo.addNewInstrumento(instrumento3);
                                 } else if (muestreo.getIdTipoMuestra() == Muestreo.MATRIZ_SEDIMENTO) {
-                                    Instrumento instrumento1 = new Instrumento(Instrumento.NUC_KASTEN);
-                                    instrumento1.setCantidad("1");
-                                    Instrumento instrumento2 = new Instrumento(Instrumento.CTD);
-                                    instrumento2.setCantidad("1");
-                                    muestreo.addNewInstrumento(instrumento1);
-                                    muestreo.addNewInstrumento(instrumento2);
+                                    Instrumento instrumento1 = new Instrumento(Instrumento.NUC_HESSLER);
+                                    instrumento1.setCantidad("1");                                    
+                                    muestreo.addNewInstrumento(instrumento1);                                    
                                 }
                             } else if (idxUsuarios.contains(tok)) { //Usuarios
                                 tmpString = st.nextToken().trim();
@@ -533,10 +577,13 @@ public class EventProcesor {
                                  }*/
                                 Usuario usuario1 = new Usuario(3);//A estradaSe inocul
                                 usuario1.setAcciones("Coordinación de toma de muestras");
-                                Usuario usuario2 = new Usuario(4);//D Ramirez
+                                Usuario usuario2 = new Usuario(17);//Wendy
+                                usuario2.setAcciones("Toma de muestras");
+                                Usuario usuario3 = new Usuario(34);//Emanuel Alvizo
                                 usuario2.setAcciones("Toma de muestras");
                                 muestreo.addNewUsuario(usuario1);
                                 muestreo.addNewUsuario(usuario2);
+                                muestreo.addNewUsuario(usuario3);
                             } else {
                                 //algo no estamos leyendo pero no nos importa...por ahora
                                 st.nextToken();
@@ -761,7 +808,7 @@ public class EventProcesor {
                                 tmpString = st.nextToken();
                                 if (idTipoEstacion != -1) {
                                     idEstacion = transacciones.testEstacionByName(tmpString);
-                                }else{
+                                } else {
                                     idEstacion = transacciones.testEstacionByNameAndID(tmpString, idTipoEstacion);
                                 }
                                 if (idEstacion == -1) {
@@ -810,6 +857,9 @@ public class EventProcesor {
                                 } else if (tmpString.toLowerCase().contains("sedimento")) {
                                     muestreo.setIdTipoMuestra(Muestreo.MATRIZ_SEDIMENTO);
                                     muestreo.setIdTipoMuestreo(Muestreo.M_SEDIMENTO);
+                                } else if (tmpString.toLowerCase().contains("superficial")) {
+                                    muestreo.setIdTipoMuestra(Muestreo.MATRIZ_AGUA);
+                                    muestreo.setIdTipoMuestreo(Muestreo.M_AGUAS_SOMERAS);
                                 } else {
                                     muestreo.setError("Tipo de matriz no válida: " + tmpString);
                                     muestreo.setOk(false);

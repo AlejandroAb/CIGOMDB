@@ -29,15 +29,15 @@ public class MyDate {
         String tmpDate = dateFormat.format(d);
         String tmp[] = tmpDate.split("[/ ]");
         if (tmp.length >= 3) {
-            try{
-            anio = Integer.parseInt(tmp[0]);
-            mes = Integer.parseInt(tmp[1]);
-            dia = Integer.parseInt(tmp[2]);
-            }catch(NumberFormatException nfe){
+            try {
+                anio = Integer.parseInt(tmp[0]);
+                mes = Integer.parseInt(tmp[1]);
+                dia = Integer.parseInt(tmp[2]);
+            } catch (NumberFormatException nfe) {
                 System.err.println("Error parsing date: " + tmpDate);
                 dia = 0;
-            mes = 1;
-            anio = 2;
+                mes = 1;
+                anio = 2;
             }
         } else {
             dia = 0;
@@ -184,6 +184,7 @@ public class MyDate {
                 dia = Integer.parseInt(st.nextToken());
                 mes = Integer.parseInt(st.nextToken());
                 anio = Integer.parseInt(st.nextToken());
+
                 return true;
             } catch (NumberFormatException nfe) {
                 System.out.println("Error NFE splitDDMMYY(): " + fecha);
@@ -208,6 +209,9 @@ public class MyDate {
                 anio = Integer.parseInt(st.nextToken());
                 mes = Integer.parseInt(st.nextToken());
                 dia = Integer.parseInt(st.nextToken());
+                if (st.hasMoreTokens()) {//significa que trae la 
+                    time = st.nextToken();
+                }
                 return true;
             } catch (NumberFormatException nfe) {
                 System.out.println("Error NFE splitDDMMYY(): " + fecha);
